@@ -21,64 +21,18 @@ import os.path as path
 # }
 
 Project_Path = path.dirname(path.realpath(__file__))
+Assets_Path = os.path.join(Project_Path, "assets")
 
 
-Thread: int = 20
+Thread: int = 30
+Block: int = 0.05
+# Block: int = 2
 
-Block: int = 20
+Proxy_Able = True
+# Proxy_Able = False
 
-auir = {
-    "name": 'auir',
-    "allow": [
-        'ProxyAction',
-        'IpProxyParse'
-    ],
-    "prepare": "IpProxyPrepare",
-    "conserve": "printConserve",
-}
 
-scjst = {
-    "name": 'auir',
-    "allow": [
-        'viewStateParse',
-        'ReqNextPageAction',
-        'ReqProjectParse',
-    ],
-    "prepare": "ScjstPrepare",
-    "conserve": "printConserve",
-}
 
-pp = {
-    "name": "blink",
-    "allow": [
-        "ProxyGetAction",
-        "NextPageAction",
-        "ProjectInfoParse",
-    ],
-    "prepare": "PP_Prepare",
-    "conserve": "ProxyInfoConserve",
-}
-
-agent = {
-    'name': 'agent',
-    'allow': [
-        'AgentAction',
-        'AgentParse',
-    ],
-    'prepare': 'AgentPrepare',
-    'conserve': 'AgentConserve',
-}
-
-scjst_single = {
-    'job': 'hope',
-    'allow': [
-        'xpath',
-        'next',
-        "xpathParse",
-    ],
-
-    'conserve': "hope",
-}
 
 ProxyInfo = {
     'job': 'hope',
@@ -92,10 +46,14 @@ ProxyInfo = {
 scjst_thread = {
     'job': 'hope',
     'allow': [
-        'ActionName',
         'xpath',
         'next',
-        "xpathParse",
+        " ",
+    ],
+    "models": [
+        "ViewstateModel",
+        "ProjectModel",
+        "ProjectInfoModel",
     ],
     'prepare': "xmgk",
     'conserve': "hope",
@@ -115,3 +73,50 @@ xxgx_thread = {
     "prepare": "query",
     'conserve': "nope",
 }
+
+test_conf = {
+    "job": "hope",
+    "allow": [
+        "xpath",
+    ],
+    "models": [
+        'ProxyInfoModel'
+    ],
+    "prepare": "test_thread_prepare",
+    "conserve": "test_conserve",
+}
+
+
+re_scjst_base = {
+    'job': 'scjst_base',
+    'allow': [
+        'xpath',
+        'next',
+        # 'xpath',
+        'ProjectBaseParse',
+    ],
+    "models": [
+        "ViewstateModel",
+        "ProjectBaseModel",
+    ],
+    'prepare': "ProjectBasePrepare",
+    'conserve': "re_save_project_base",
+}
+
+query_scjst_xmgk = {
+    'job': 'scjst_base',
+    'allow': [
+        'query_name',
+        'QueryParse',
+        'query_code',
+        'QueryParse',
+
+    ],
+    "models": [
+        "ProjectIDModel",
+        # "ProjectBaseModel",
+    ],
+    'prepare': "QueryProjectPrepare",
+    'conserve': "QueryConserve",
+}
+

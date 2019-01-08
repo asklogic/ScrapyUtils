@@ -38,14 +38,9 @@ class QueryConserve(Conserve):
         self.dataList = []
 
     def end_conserve(self):
-        # print("end! Count:" + str(self.count))
         pass
 
-    # @allow(CountModel)
-    # def feed_function(self, model: CountModel):
-    #     model: CountModel
-    #     self.count = self.count + model.count
-    #     print("Count: ", self.count)
+
 
     @allow(ProjectInfoModel)
     def feed_project(self,model: ProjectInfoModel):

@@ -1,28 +1,48 @@
-from base.lib import Parse, ModelManager
+from typing import Generator
 
-from old.base.tools import xpathParse
-from scjst_base.model import *
+from base.Model import ModelManager, Model
+from base.Parse import Parse
 
-class Scjst_baseParse(Parse):
-    def parsing(self, content: str, manager: ModelManager):
+from base.tool import xpathParse
+
+
+from scjst_base.peewee_connect import ProjectBase
+
+class ProjectBaseParse(Parse):
+    def parsing(cls, content: str, manager: ModelManager) -> Model or Generator[Model]:
         urls = xpathParse(content, '//*[@class="page-content"]/table/tr/td[3]/a/@href')
         titles = xpathParse(content, '//*[@class="page-content"]/table/tr/td[3]/a')
         locations = xpathParse(content, '//*[@class="page-content"]/table/tr/td[2]')
-        xpathParse(content, '//*[@class="page-content"]//tr/td[2]')
+        codes = xpathParse(content, '//*[@class="page-content"]/table/tr/td[4]')
+        dates = xpathParse(content, r'//*[@class="page-content"]/table/tr/td[5]')
+        page = xpathParse(content, r'//*[@class="cpb"]')
+
+        data = []
         for i in range(len(urls)):
-            p = Scjst_baseModel()
+            p = manager.model("ProjectIDModel")
             p.url = urls[i]
             p.title = titles[i]
             p.location = locations[i]
+            p.code = codes[i]
+            p.date = dates[i]
+            # p.page = page
 
-            yield p
+            # if ProjectBase.select().where(ProjectBase.url == p.url):
+            #     continue
+
+            data.append(p)
+        if len(data) != 20:
+            raise Exception('wat?')
+        return data
 
 
-class ViewStateParse(Parse):
+class QueryParse(Parse):
+    def parsing(cls, content: str, manager: ModelManager) -> Model or Generator[Model]:
+        import json
+        data = json.loads(content)["Data"]
+        # print(json.loads(content)["Count"])
 
-    def parsing(self, content: str, manager: ModelManager):
-        v = ViewStateModel()
-        v.viewstate = xpathParse(content, '//*[@id="__VIEWSTATE"]//@value')[0]
-        v.generator = xpathParse(content, '//*[@id="__VIEWSTATEGENERATOR"]//@value')[0]
-        v.validation = xpathParse(content, '//*[@id="__EVENTVALIDATION"]//@value')[0]
-        yield v
+        for item in data:
+            m = manager.model("ProjectIDModel")
+            m.id = item["XMBH"]
+            yield m

@@ -41,7 +41,7 @@ xpath 添加 默认scheme添加
 
 #### 19.1.6
 feature todo list
-> 注册各类Container    
+> 注册各类Container  
 > 自带Count / Proxy / Failed Container 和 Model(s) Container    
 > Container 和 Conserve的互通  
 > 各个组件加载 重构engine逻辑  
@@ -49,4 +49,28 @@ feature todo list
 > 修改日志类  
 > generator设置   
 > 添加异常处理机制   
+
+#### 19.1.7
+Done
+> 注册各类Container  
+> 自带Count / Proxy / Failed Container 和 Model(s) Container  (Proxy完成
+> Container 和 Conserve的互通  
+> 各个组件加载 重构engine逻辑  
+
+TODO feature
 > generator设置   
+> 修改日志类  
+> 添加Check函数 启动  
+> xpath Hidden 等自带parse函数
+> model name加载和注册
+> model Filed问题
+
+
+bugs:
+```
+不存在parse 等文件时 会出错
+conserve 进程冲突
+```
+
+其他:
+conserve 与 container 比较 冲突?

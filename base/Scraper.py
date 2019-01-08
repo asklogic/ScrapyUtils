@@ -14,7 +14,6 @@ class BaseScraper(object):
 
 class Scraper(BaseScraper, metaclass=ABCMeta):
     timeout: int = 10
-    # TODO proxy_container
     current_proxy: str = {}
     proxies: Container = None
 

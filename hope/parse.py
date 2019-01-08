@@ -3,7 +3,7 @@ from typing import Generator
 from base.Model import ModelManager, Model
 from base.Parse import Parse
 from base.tool import xpathParse
-from .model import ProxyModel
+from .model import ProxyInfoModel
 
 
 class NewParse(Parse):

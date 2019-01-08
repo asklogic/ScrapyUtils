@@ -1,11 +1,22 @@
-from base.lib import Action, Task
-from old.base.tools import requestScraper
+from base.Action import Action
+from base.Model import ModelManager
+from base.Scraper import Scraper, RequestScraper
+from base.lib import Task
+import time
+
+from urllib import parse
 
 
-class Scjst_baseAction(Action):
-    def scraping(self, task: Task, scraper):
-        scraper: requestScraper
-        v = self.manager.get("ViewStateModel")[0]
+class NextPageAction(Action):
+    name = "next"
+
+    def delay(self):
+        time.sleep(0.05)
+
+    @classmethod
+    def scraping(cls, task: Task, scraper: Scraper, manager: ModelManager) -> str:
+        scraper: RequestScraper
+        v = manager.get("ViewstateModel")[0]
         data = {
             '__VIEWSTATE': v.viewstate,
             '__VIEWSTATEGENERATOR': v.generator,
@@ -22,3 +33,57 @@ class Scjst_baseAction(Action):
             'UBottom1:dg6': '',
         }
         return scraper.post(url=task.url, data=data)
+
+
+class QueryNameAction(Action):
+    name = "query_name"
+
+    @classmethod
+    def scraping(cls, task: Task, scraper: Scraper, manager: ModelManager) -> str:
+        url = task.url
+        scraper: RequestScraper = scraper
+        scraper._headers["Referer"] = "http://xxgx.scjst.gov.cn/Project/pList.aspx"
+        trueQuery = {
+            "lb": "",
+            "bh": "",
+            "mc": task.param.split("-:-")[1],
+            "dw": "",
+            "dq": "",
+            "validate": "",
+        }
+
+        trueQuery = str(trueQuery).replace("'", '"')
+
+        params = {
+            "id": parse.quote_plus(trueQuery)
+        }
+        url = url + "?id=" + parse.quote_plus(trueQuery)
+        return scraper.get(url=url)
+
+
+class QueryCodeAction(Action):
+    name = "query_code"
+
+    @classmethod
+    def scraping(cls, task: Task, scraper: Scraper, manager: ModelManager) -> str:
+        time.sleep(0.1)
+
+        url = task.url
+        scraper: RequestScraper = scraper
+        scraper._headers["Referer"] = "http://xxgx.scjst.gov.cn/Project/pList.aspx"
+        trueQuery = {
+            "lb": "",
+            "bh": task.param.split("-:-")[0],
+            "mc": "",
+            "dw": "",
+            "dq": "",
+            "validate": "",
+        }
+
+        trueQuery = str(trueQuery).replace("'", '"')
+
+        params = {
+            "id": parse.quote_plus(trueQuery)
+        }
+        url = url + "?id=" + parse.quote_plus(trueQuery)
+        return scraper.get(url=url)

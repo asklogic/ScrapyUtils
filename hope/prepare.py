@@ -17,7 +17,7 @@ class XmgkPrepare(Prepare):
 
     @classmethod
     def task_prepared(cls) -> List[Task]:
-        for i in range(1, 201):
+        for i in range(1, 200):
             t = Task()
             t.url = "http://xmgk.scjst.gov.cn/QueryInfo/Project/ProjectList.aspx"
             t.param = i

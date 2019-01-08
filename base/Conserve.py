@@ -3,6 +3,8 @@ from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 
 from base.Model import Model
 
+import threading
+lock = threading.Lock()
 
 
 class BaseConserve(object):
@@ -10,9 +12,6 @@ class BaseConserve(object):
 
 
 class Conserve(object):
-
-    def __del__(self):
-        self.end_conserve()
 
     @abstractmethod
     def start_conserve(self):
@@ -28,7 +27,7 @@ class Conserve(object):
 
     def model(self, model: Model):
         """
-        讲model分别给赋给所有feed开头的方法
+        将model分别给赋给conserve所有feed开头的方法
         :param model: model实例
         :return:
         """

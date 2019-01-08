@@ -8,11 +8,19 @@ from base.Scraper import Scraper
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, ModelManager
 from base.Conserve import Conserve
+from base.Container import Container, JsonContainer, BaseContainer
 from base.lib import Task, Config
+from base.tool import get_proxy_model
+
+import scrapy_config
+import threading
+
+lock = threading.Lock()
 
 from base.log import getLog
 
 log = getLog()
+
 
 def load(job: str, module: str, current_type: type) -> List[type]:
     """
@@ -40,8 +48,9 @@ def load(job: str, module: str, current_type: type) -> List[type]:
 
 
 def load_prepare(prepare_name: str, job: str = "") -> Prepare:
+    prepares: List[type(Prepare)]
     try:
-        prepares = load(job, "prepare", Prepare)
+        prepares = load(job, "prepare", Prepare) + load("", "prepare", Prepare)
     except ModuleNotFoundError as mnfe:
         prepares = load("", "prepare", Prepare)
 
@@ -69,15 +78,43 @@ def load_models(allow_model: List[str], job: str) -> List[Model]:
         allow_model_list: List[Model] = []
         for allow in allow_model:
             for model in models_list:
+                # FIXME
                 if model.__name__ == allow:
                     allow_model_list.append(model)
                     break
-        return allow_model_list
+        return allow_model_list + load_default_models()
 
+    return models_list + load_default_models()
+
+
+def load_default_models() -> List[Model]:
+    models_list: List[Model] = load("base", "Model", Model)
     return models_list
 
 
-def register_manager(allow_model: List[str], job: str) -> ModelManager:
+def register_containers(allow_models: List[str], job: str, conserve: Conserve = None) -> Dict[str, Container]:
+    models = load_models(allow_models, job)
+
+    containers: Dict[str, Container] = {}
+    for model in models:
+        # TODO temp
+        if hasattr(model, "container"):
+            if model.container == "json":
+                # TODO 默认container设置
+                containers[model.__name__] = JsonContainer(model.__name__)
+
+            if model.container == "proxy":
+                containers[model.__name__] = Container(supply_func=get_proxy_model, supply=scrapy_config.Thread * 2)
+
+            if model.container == "base":
+                containers[model.__name__] = BaseContainer()
+
+        else:
+            containers[model.__name__] = Container(conserve=conserve)
+    return containers
+
+
+def register_manager(allow_model: List[str], job) -> ModelManager:
     models = load_models(allow_model, job)
     return ModelManager(models)
 
@@ -137,8 +174,9 @@ def scrapy(scheme_list: List[Action or Parse], manager: ModelManager, task: Task
     return True
 
 
-def do_action(action: Action, task: Task, scraper: Scraper, manager: ModelManager) -> str:
-    current_action = action()
+def do_action(action: type(Action), task: Task, scraper: Scraper, manager: ModelManager) -> str:
+    current_action: Action = action()
+    current_action.delay()
     content = current_action.scraping(task=task, scraper=scraper, manager=manager)
     return content
 
@@ -158,8 +196,9 @@ def do_parse(parse: Parse, content: str, manager: ModelManager):
 
 
 def load_conserve(conserve_name: str = "default", job: str = "") -> type(Conserve):
+    conserves = List[type(Conserve)]
     try:
-        conserves = load(job, "conserve", Conserve)
+        conserves = load(job, "conserve", Conserve) + load("", "conserve", Conserve)
     except ModuleNotFoundError as mnfe:
         conserves = load("", "conserve", Conserve)
 
@@ -169,6 +208,13 @@ def load_conserve(conserve_name: str = "default", job: str = "") -> type(Conserv
         if conserve.__name__ == conserve_name or (hasattr(conserve, "name") and conserve.name == conserve_name):
             return conserve
     raise ModuleNotFoundError("not found conserve named: {0}".format(conserve_name))
+
+
+def build_conserve(conserve: type(Conserve)):
+    # TODO temp: 使用类方法代替
+    current_conserve = conserve()
+    current_conserve.start_conserve()
+    return current_conserve
 
 
 def do_conserve(manager: ModelManager, conserve: Conserve) -> bool:
@@ -183,34 +229,35 @@ def do_conserve(manager: ModelManager, conserve: Conserve) -> bool:
     return True
 
 
-def load_conf(conf: Dict) -> Config:
-    config = Config()
-
-    job = conf.get("job")
-    schemes = conf.get("allow")
-    models = conf.get("models")
-    prepare = conf.get("prepare")
-    conserve = conf.get("conserve")
-
-    if not (job and schemes):
-        raise KeyError("set your job and schemes")
-    if not models:
-        models = []
-    if not prepare:
-        prepare = "default"
-    if not conserve:
-        conserve = "default"
-
-    config.job = job
-    config.schemes = schemes
-    config.models = models
-    config.prepare = prepare
-    config.conserve = conserve
-    return config
+# abort
+# def load_conf(conf: Dict) -> Config:
+#     config = Config()
+#
+#     job = conf.get("job")
+#     schemes = conf.get("allow")
+#     models = conf.get("models")
+#     prepare = conf.get("prepare")
+#     conserve = conf.get("conserve")
+#
+#     if not (job and schemes):
+#         raise KeyError("set your job and schemes")
+#     if not models:
+#         models = []
+#     if not prepare:
+#         prepare = "default"
+#     if not conserve:
+#         conserve = "default"
+#
+#     config.job = job
+#     config.schemes = schemes
+#     config.models = models
+#     config.prepare = prepare
+#     config.conserve = conserve
+#     return config
 
 
 def thread_check(task: Task, scheme_state=True, conserve_state=True) -> Task or None:
-    if task.count >= 3:
+    if task.count >= 5:
         # print("failed! task end! task: url:{0} param:{1}".format(task.url, task.param))
         log.info("failed! task end! task: url:{0} param:{1}".format(task.url, task.param))
         return
@@ -234,6 +281,28 @@ def thread_reset(scraper: Scraper, manager: ModelManager):
     scraper.clear_session()
     manager.clear_data()
     scraper.switch_proxy()
+
+
+def thread_conserve(manager: ModelManager, containers: Dict[str, Container]):
+    # FIXME manager register不符合
+    # lock.acquire()
+    # try:
+    #     for model in manager.models.keys():
+    #         container = containers.get(model)
+    #         model_data = manager.get(model)
+    #         for model_data_item in model_data:
+    #             container.add(model_data_item)
+    # except Exception as e:
+    #     return False
+    # finally:
+    #     lock.acquire()
+
+    for model in manager.models.keys():
+        container = containers.get(model)
+        model_data = manager.get(model)
+        for model_data_item in model_data:
+            container.add(model_data_item)
+    return True
 
 
 if __name__ == '__main__':

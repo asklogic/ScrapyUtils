@@ -21,7 +21,7 @@
 
 #### TODO
 
-√线程同步 (临界资源 lock)
+√线程同步 (临界资源 )
 守护线程 - 数据保存 数据库连接,全局变量,日志等
 √解析 (更快捷) xpath - items
 execl √json csv container

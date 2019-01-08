@@ -21,7 +21,7 @@ class NextPageAction(Action):
     @classmethod
     def scraping(cls, task: Task, scraper: Scraper, manager: ModelManager) -> str:
         scraper: RequestScraper
-        v = manager.get("view")[0]
+        v = manager.get("ViewstateModel")[0]
         data = {
             '__VIEWSTATE': v.viewstate,
             '__VIEWSTATEGENERATOR': v.generator,

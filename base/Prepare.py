@@ -73,3 +73,8 @@ class DefaultRequestPrepare(Prepare):
     def scraper_prepared(cls) -> Scraper:
         r = RequestScraper()
         return r
+# or ?
+# FIXME
+def get_default_scraper():
+    r = RequestScraper()
+    return r

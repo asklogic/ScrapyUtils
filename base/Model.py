@@ -1,8 +1,6 @@
 from abc import abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator, Any
 
-import peewee
-
 
 class Field(object):
     xpath: str = ""
@@ -25,7 +23,6 @@ class Model(object):
                     self._mapper[f] = filed.xpath
                 self._data[f] = None
 
-
     def __setattr__(self, key, value):
         super(Model, self).__setattr__(key, value)
         if key.startswith("_"):
@@ -45,8 +42,6 @@ class Model(object):
 
     def pure_data(self):
         return self._data
-
-
 
     @abstractmethod
     def feed_back(self):
@@ -95,11 +90,17 @@ class ModelManager(object):
 
 
 class ProxyModel(Model):
+    container = "proxy"
+
     ip = Field()
     port = Field()
 
 
+class FailedTaskModel(Model):
+    # container = "proxy"
+    url = Field()
+    param = Field()
+
 
 if __name__ == '__main__':
-
     pass

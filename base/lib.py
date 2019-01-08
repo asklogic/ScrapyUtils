@@ -18,12 +18,39 @@ class Task(object):
 
 
 class Config(object):
+
+    def __init__(self, conf: Dict):
+        job = conf.get("job")
+        schemes = conf.get("allow")
+        models = conf.get("models")
+        prepare = conf.get("prepare")
+        conserve = conf.get("conserve")
+
+        if not (job and schemes):
+            raise KeyError("set your job and schemes")
+
+        if not type(schemes) == list:
+            raise TypeError('allow must be a list')
+        if not type(models) == list:
+            raise TypeError('models must be a list')
+        if not models:
+            models = []
+        if not prepare:
+            prepare = "default"
+        if not conserve:
+            conserve = "default"
+
+        self.job = job
+        self.schemes = schemes
+        self.models = models
+        self.prepare = prepare
+        self.conserve = conserve
+
     job: str
     schemes: List[str]
     models: List[str]
     prepare: str
     conserve: str
-
 
 ### model
 #

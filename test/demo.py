@@ -4,7 +4,11 @@ import requests
 import os
 import json
 import scrapy_config
+from base.Model import Model
 from scjst_base.peewee_connect import ProjectBase
+from base.gate import Process, Pipeline
+from faker import Faker
+import threadpool
 
 
 def init():
@@ -73,6 +77,119 @@ def detect():
     print(len(newdata))
 
 
+def insert_test():
+    import peewee
+
+    db = peewee.MySQLDatabase('scjst', user='root', password='87886700', host='logic-ol.me', port=3306,
+                              charset='utf8mb4')
+
+    class ProjectTest(peewee.Model):
+        UID = peewee.PrimaryKeyField()
+        location = peewee.CharField(null=True)
+        url = peewee.CharField(null=False)
+        code = peewee.CharField(null=True)
+
+        class Meta:
+            table_name = "Project_Test"
+
+    ProjectTest.bind(db)
+    ProjectTest.drop_table()
+    ProjectTest.create_table()
+
+    f = Faker(locale='zh_CN')
+    data = []
+
+    for i in range(5000):
+        data.append({
+            "location": f.address(),
+            "url": f.image_url() + f.image_url(),
+            "code": f.random_int(),
+        })
+
+    data.extend(data)
+    data.extend(data)
+    data.extend(data)
+    data.extend(data)
+    print(len(data))
+
+    # ProjectTest.insert_many(data).execute()
+    print("prepared!")
+    p = Pipeline()
+
+    class PrintProcess(Process):
+
+        def process_item(self, model: Model):
+            # print(model.get('location'))
+            return model
+
+    class InsertProcess(Process):
+        def start_process(self):
+            self.data = []
+            pass
+
+        def process_item(self, model: Model):
+            self.data.append(model)
+            return model
+
+        def end_process(self):
+            ProjectTest.insert_many(self.data).execute()
+
+    p.add_process(PrintProcess())
+    p.add_process(InsertProcess())
+
+    p.process_all(data[:])
+
+
+def finish(obj1, obj2):
+    print(obj1)
+    print(obj2)
+    print("finish!")
+
+def exception_callback(obj1:threadpool.WorkRequest, obj2):
+    print(obj1.args[0])
+    print(obj2)
+    print("get !")
+
+def add_threadpool(pool: threadpool.ThreadPool, target, args):
+    pool.putRequest(threadpool.makeRequests(target, args, finish,exception_callback)[0])
+
+
+import time
+import threading
+
+
+def threadpool_test():
+    pool = threadpool.ThreadPool(3)
+
+    def sel(seq):
+        raise Exception("if raise")
+
+        time.sleep(5)
+        print(seq)
+        return "sel_return"
+
+    class testThread(threading.Thread):
+        def run(self):
+            raise Exception("if raise")
+
+            time.sleep(5)
+            print(self)
+            return "sel_return"
+
+
+    add_threadpool(pool, testThread, ("theseq"))
+    add_threadpool(pool, testThread, ("theseq"))
+    add_threadpool(pool, testThread, ("theseq"))
+    add_threadpool(pool, testThread, ("theseq"))
+    add_threadpool(pool, testThread, ("theseq"))
+    pool.wait()
+    print("end")
+
+
 # init()
-inti_code_name()
+# inti_code_name()
 # detect()
+
+# insert_test()
+
+threadpool_test()

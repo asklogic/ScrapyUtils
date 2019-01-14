@@ -2,18 +2,33 @@ from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any
 from base.Conserve import Conserve, allow
 from base.Model import Model, ProxyModel
+from base.gate import Pipeline, Process
 import scrapy_config
 import os
 import time
 import json
 import queue
-
+import threadpool
 from base.tool import jinglin
 
 # temp
 import threading
 
 lock = threading.Lock()
+
+pool = threadpool.ThreadPool(1)
+
+
+def add_requests(pool: threadpool.ThreadPool, target, args):
+    pool.putRequest(threadpool.makeRequests(target, args, callback=req_callback, exc_callback=req_callback)[0])
+
+
+def req_callback(req: threadpool.WorkRequest, obj):
+    pass
+
+
+def dump_models(container):
+    pass
 
 
 class BaseContainer(object):
@@ -40,20 +55,24 @@ class BaseContainer(object):
 
 class Container(BaseContainer):
 
-    def __init__(self, supply_func=None, conserve: Conserve = None, supply: int = 10, gather: int = 10, timeout=0):
+    def __init__(self, timeout=0, supply_func=None, pipeline: Pipeline = None, supply: int = 20, gather: int = 5000):
         super().__init__(timeout)
         # max 超出会执行gather方法
         self.gather_limit = gather
         # min 小于会执行supply方法
         self.supply_limit = supply
-        # data container
-        self.data: queue.Queue[Any] = queue.Queue()
-        # conserve to gather data
-        self.conserve: Conserve = conserve
-        # supply func
+
+        self.pipeline = pipeline
         self.supply_func = supply_func
 
-    def pop(self) -> Any:
+    def add(self, model: Any):
+        lock.acquire()
+        if self.pipeline and self.data.qsize() > self.gather_limit:
+            self.gather()
+        lock.release()
+        super().add(model)
+
+    def pop(self):
         lock.acquire()
         if self.supply_func and self.data.qsize() < self.supply_limit / 3:
             self.supply()
@@ -61,77 +80,122 @@ class Container(BaseContainer):
 
         return super().pop()
 
+    def gather(self):
+        if self.pipeline:
+            data = []
+            for i in range(self.gather_limit):
+                data.append(self.data.get())
+            # print("add pool data len:", len(data))
+            add_requests(pool, self.pipeline.process_all, args=(data, self.__class__.__name__))
+            # self.pipeline.process_all(data)
+
     def supply(self):
         supply_data = self.supply_func(self.supply_limit)
         for item in supply_data:
             self.data.put(item)
 
-    def add(self, model: Any):
-        if self.conserve and self.data.qsize() >= self.gather_limit:
-            self.gather()
-
-        super().add(model)
-
-    def gather(self):
-        if self.conserve:
-            for i in range(self.gather_limit):
-                self.conserve.model(self.data.get())
-
     def dump(self):
-        if self.conserve:
+        if self.pipeline:
+            data = []
             for i in range(self.data.qsize()):
-                self.conserve.model(self.data.get())
+                data.append(self.data.get())
+            add_requests(pool, self.pipeline.process_all, args=(data, self.__class__.__name__))
 
 
-class JsonContainer(Container):
+# class Container(BaseContainer):
+#
+#     def __init__(self, supply_func=None, conserve: Conserve = None, supply: int = 10, gather: int = 10, timeout=0):
+#         super().__init__(timeout)
+#         # max 超出会执行gather方法
+#         self.gather_limit = gather
+#         # min 小于会执行supply方法
+#         self.supply_limit = supply
+#         # data container
+#         self.data: queue.Queue[Any] = queue.Queue()
+#         # conserve to gather data
+#         self.conserve: Conserve = conserve
+#         # supply func
+#         self.supply_func = supply_func
+#
+#     def pop(self) -> Any:
+#         lock.acquire()
+#         if self.supply_func and self.data.qsize() < self.supply_limit / 3:
+#             self.supply()
+#         lock.release()
+#
+#         return super().pop()
+#
+#     def supply(self):
+#         supply_data = self.supply_func(self.supply_limit)
+#         for item in supply_data:
+#             self.data.put(item)
+#
+#     def add(self, model: Any):
+#         if self.conserve and self.data.qsize() >= self.gather_limit:
+#             self.gather()
+#
+#         super().add(model)
+#
+#     def gather(self):
+#         if self.conserve:
+#             for i in range(self.gather_limit):
+#                 self.conserve.model(self.data.get())
+#
+#     def dump(self):
+#         if self.conserve:
+#             for i in range(self.data.qsize()):
+#                 self.conserve.model(self.data.get())
 
-    def __init__(self, name, mapper, supply_func=None, supply: int = 10, gather: int = 10, count=30):
-        super().__init__(supply_func, None, supply, gather)
-        self.count = 0
-        self.max_count = count
 
-        self.file_path = os.path.join(scrapy_config.Project_Path, "assets", name + ".json")
-
-        if not os.path.isfile(self.file_path):
-            with open(self.file_path, "w") as f:
-                json.dump([], f)
-
-        origin = []
-        with open(self.file_path) as f:
-            origin = json.load(f)
-
-        # TODO mapper 方法
-        for item in origin:
-            m = ProxyModel()
-            m.ip = item.split(':')[0]
-            m.port = item.split(':')[1]
-            self.data.put(m)
-
-    def pop(self) -> Any:
-        self.count = self.count + 1
-
-        if self.count > self.max_count:
-            self.dump_file()
-            self.count = 0
-        return super().pop()
-
-    def dump_file(self):
-        data = []
-        q = queue.Queue()
-        for i in range(self.data.qsize()):
-            item = self.data.get()
-            data.append(item.ip + ":" + item.port)
-        with open(self.file_path, "w") as f:
-            json.dump(data, f)
-        for i in range(q.qsize()):
-            self.data.put(q.get())
-
-    def dump(self):
-        data = []
-        for i in range(self.data.qsize()):
-            data.append(self.data.get())
-        with open(self.file_path, "w") as f:
-            json.dump(data, f)
+# class JsonContainer(Container):
+#
+#     def __init__(self, name, mapper, supply_func=None, supply: int = 10, gather: int = 10, count=30):
+#         super().__init__(supply_func, None, supply, gather)
+#         self.count = 0
+#         self.max_count = count
+#
+#         self.file_path = os.path.join(scrapy_config.Project_Path, "assets", name + ".json")
+#
+#         if not os.path.isfile(self.file_path):
+#             with open(self.file_path, "w") as f:
+#                 json.dump([], f)
+#
+#         origin = []
+#         with open(self.file_path) as f:
+#             origin = json.load(f)
+#
+#         # TODO mapper 方法
+#         for item in origin:
+#             m = ProxyModel()
+#             m.ip = item.split(':')[0]
+#             m.port = item.split(':')[1]
+#             self.data.put(m)
+#
+#     def pop(self) -> Any:
+#         self.count = self.count + 1
+#
+#         if self.count > self.max_count:
+#             self.dump_file()
+#             self.count = 0
+#         return super().pop()
+#
+#     def dump_file(self):
+#         data = []
+#         q = queue.Queue()
+#         for i in range(self.data.qsize()):
+#             item = self.data.get()
+#             data.append(item.ip + ":" + item.port)
+#         with open(self.file_path, "w") as f:
+#             json.dump(data, f)
+#         for i in range(q.qsize()):
+#             self.data.put(q.get())
+#
+#     def dump(self):
+#         data = []
+#         for i in range(self.data.qsize()):
+#             data.append(self.data.get())
+#         with open(self.file_path, "w") as f:
+#             json.dump(data, f)
 
 
 # class ModelContainer(BaseContainer):
@@ -153,43 +217,43 @@ class JsonContainer(Container):
 #                 self.conserve.model(self.data.get())
 
 
-class SupplyContainer(BaseContainer):
-
-    def __init__(self, supply_func: type, supply: int = 5):
-        self.supply_limit = supply
-        self.supply_func = supply_func
-
-        super().__init__()
-
-    def pop(self) -> Model:
-        if self.data.qsize() < self.supply_limit / 2:
-            self.supply()
-        return super().pop()
-
-    def supply(self):
-        supply_data = self.supply_func(self.supply_limit)
-        for item in supply_data:
-            self.data.put(item)
-
-
-class JsonSuContainer(SupplyContainer):
-
-    def __init__(self, supply_func, name, supply: int = 5):
-        super().__init__(supply_func, supply)
-
-        file_path = os.path.join(scrapy_config.Project_Path, "assets", name + ".json")
-
-        if not os.path.isfile(file_path):
-            with open(file_path, "w") as f:
-                json.dump([], f)
-
-        origin = []
-        with open(file_path) as f:
-            origin = json.load(f)
-
-        for item in origin:
-            self.data.put(origin)
-
+# class SupplyContainer(BaseContainer):
+#
+#     def __init__(self, supply_func: type, supply: int = 5):
+#         self.supply_limit = supply
+#         self.supply_func = supply_func
+#
+#         super().__init__()
+#
+#     def pop(self) -> Model:
+#         if self.data.qsize() < self.supply_limit / 2:
+#             self.supply()
+#         return super().pop()
+#
+#     def supply(self):
+#         supply_data = self.supply_func(self.supply_limit)
+#         for item in supply_data:
+#             self.data.put(item)
+#
+#
+# class JsonSuContainer(SupplyContainer):
+#
+#     def __init__(self, supply_func, name, supply: int = 5):
+#         super().__init__(supply_func, supply)
+#
+#         file_path = os.path.join(scrapy_config.Project_Path, "assets", name + ".json")
+#
+#         if not os.path.isfile(file_path):
+#             with open(file_path, "w") as f:
+#                 json.dump([], f)
+#
+#         origin = []
+#         with open(file_path) as f:
+#             origin = json.load(f)
+#
+#         for item in origin:
+#             self.data.put(origin)
+#
 
 # class Container(object):
 #     """

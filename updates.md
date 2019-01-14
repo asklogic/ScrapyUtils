@@ -74,3 +74,16 @@ conserve 进程冲突
 
 其他:
 conserve 与 container 比较 冲突?
+
+#### 19.1.15
+Done
+> 舍弃conserver 用pipeline替代  
+> container不做任何功能 仅收集数据
+
+todo
+> 日志类 参照Scrapy  
+> check函数 
+> 重构engine 删除conserve  
+> 检查线程池的问题  
+> Model类的问题  
+

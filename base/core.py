@@ -8,9 +8,10 @@ from base.Scraper import Scraper
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, ModelManager
 from base.Conserve import Conserve
-from base.Container import Container, JsonContainer, BaseContainer
+from base.Container import Container, BaseContainer
 from base.lib import Task, Config
 from base.tool import get_proxy_model
+from base.gate import Process, Pipeline
 
 import scrapy_config
 import threading
@@ -92,7 +93,7 @@ def load_default_models() -> List[Model]:
     return models_list
 
 
-def register_containers(allow_models: List[str], job: str, conserve: Conserve = None) -> Dict[str, Container]:
+def _register_containers(allow_models: List[str], job: str, conserve: Conserve = None) -> Dict[str, Container]:
     models = load_models(allow_models, job)
 
     containers: Dict[str, Container] = {}
@@ -111,6 +112,19 @@ def register_containers(allow_models: List[str], job: str, conserve: Conserve = 
 
         else:
             containers[model.__name__] = Container(conserve=conserve)
+    return containers
+
+
+def register_containers(allow_models: List[str], job: str, pipeline: Pipeline) -> Dict[str, Container]:
+    models = load_models(allow_models, job)
+
+    containers: Dict[str, Container] = {}
+    for model in models:
+        if hasattr(model, "container"):
+            if model.container == "proxy":
+                containers[model.__name__] = Container(supply_func=get_proxy_model, supply=scrapy_config.Thread * 2)
+        else:
+            containers[model.__name__] = Container(pipeline=pipeline)
     return containers
 
 
@@ -195,6 +209,7 @@ def do_parse(parse: Parse, content: str, manager: ModelManager):
         manager.get(name).append(model)
 
 
+# abort
 def load_conserve(conserve_name: str = "default", job: str = "") -> type(Conserve):
     conserves = List[type(Conserve)]
     try:
@@ -208,6 +223,26 @@ def load_conserve(conserve_name: str = "default", job: str = "") -> type(Conserv
         if conserve.__name__ == conserve_name or (hasattr(conserve, "name") and conserve.name == conserve_name):
             return conserve
     raise ModuleNotFoundError("not found conserve named: {0}".format(conserve_name))
+
+
+def load_process(process_names: List[str], job: str = "") -> List[type(Process)]:
+    processes = load(job, "process", Process)
+
+    registered_processes: List[type(Process)] = []
+    for process_name in process_names:
+        for process in processes:
+            if process.__name__ == process_name or (hasattr(process, "name") and process.name == process_name):
+                registered_processes.append(process)
+    return registered_processes
+
+
+def build_process(processes: List[type(Process)]) -> Pipeline:
+    pipeline = Pipeline()
+    for process_class in processes:
+        process = process_class()
+        pipeline.add_process(process)
+    pipeline.start_task()
+    return pipeline
 
 
 def build_conserve(conserve: type(Conserve)):

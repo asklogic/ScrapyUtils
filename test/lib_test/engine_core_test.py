@@ -59,7 +59,7 @@ class Engine_Core_Test(TestCase):
 
         # container
 
-        containers = core.register_containers(models, config.job)
+        containers = core._register_containers(models, config.job)
 
         for container in containers:
             # self.assertIsInstance(container, Container.Container)

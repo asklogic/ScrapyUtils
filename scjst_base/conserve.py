@@ -96,8 +96,8 @@ class QueryConserve(Conserve):
         print(self.count)
         print(self.insert)
 
-        with open(scrapy_config.Assets_Path + r"/id0-10000.json", "w") as f:
-            json.dump(self.ids, f)
+        # with open(scrapy_config.Assets_Path + r"/id0-10000.json", "w") as f:
+        #     json.dump(self.ids, f)
         pass
 
     @allow(ProjectIDModel)

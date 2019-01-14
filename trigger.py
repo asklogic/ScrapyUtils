@@ -13,8 +13,8 @@ if __name__ == '__main__':
     # thread_run(scrapy_config.test_conf)
 
     # single_run(scrapy_config.re_scjst_base)
-    # thread_run(scrapy_config.re_scjst_base)
+    thread_run(scrapy_config.re_scjst_base)
 
     # single_run(scrapy_config.query_scjst_xmgk)
-    thread_run(scrapy_config.query_scjst_xmgk)
+    # thread_run(scrapy_config.query_scjst_xmgk)
 

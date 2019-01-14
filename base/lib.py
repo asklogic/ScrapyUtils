@@ -25,6 +25,7 @@ class Config(object):
         models = conf.get("models")
         prepare = conf.get("prepare")
         conserve = conf.get("conserve")
+        process = conf.get("process")
 
         if not (job and schemes):
             raise KeyError("set your job and schemes")
@@ -45,6 +46,7 @@ class Config(object):
         self.models = models
         self.prepare = prepare
         self.conserve = conserve
+        self.process = process
 
     job: str
     schemes: List[str]

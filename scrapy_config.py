@@ -24,8 +24,8 @@ Project_Path = path.dirname(path.realpath(__file__))
 Assets_Path = os.path.join(Project_Path, "assets")
 
 
-Thread: int = 30
-Block: int = 0.05
+Thread: int = 25
+Block: int = 0.1
 # Block: int = 2
 
 Proxy_Able = True
@@ -101,6 +101,11 @@ re_scjst_base = {
     ],
     'prepare': "ProjectBasePrepare",
     'conserve': "re_save_project_base",
+    'process' : [
+        "DuplicateProcess",
+        # "TestProcess",
+        "MysqlProcess",
+    ]
 }
 
 query_scjst_xmgk = {

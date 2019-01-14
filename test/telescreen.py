@@ -25,7 +25,8 @@ class baseEvnetHandler(RegexMatchingEventHandler):
             print("file modified: {0}".format(event.src_path))
 
             # os.system("python ./single_test.py")
-            os.system("python ./lib_test/engine_core_test.py")
+            # os.system("python ./lib_test/engine_core_test.py")
+            os.system("python ./pipeline/pipeline_test.py")
             # os.system("python ./lib_test/Scraper/_test.py")
 
         self.check_count = self.check_count + 1

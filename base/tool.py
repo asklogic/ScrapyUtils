@@ -2,6 +2,7 @@ from lxml import etree
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 import requests
 from base.Model import ProxyModel
+import time
 
 headers = {
     'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
@@ -37,10 +38,17 @@ def xpathParse(htmlContent: str, xpathContent: str) -> List[str]:
 
 def jinglin(number):
     print("get proxy! ", number)
-    r = requests.get(
-        r"http://ip.11jsq.com/index.php/api/entry?method=proxyServer.generate_api_url&packid=0&fa=0&fetch_key=&qty=" + str(
-            number) + "&time=100&pro=&city=&port=1&format=txt&ss=1&css=&dt=1&specialTxt=3&specialJson=", timeout=15,
-        headers=headers)
+    status_code = 1000
+    r = None
+    while status_code >300:
+        time.sleep(1)
+        print("wait for proxy!")
+
+        r = requests.get(
+            r"http://ip.11jsq.com/index.php/api/entry?method=proxyServer.generate_api_url&packid=0&fa=0&fetch_key=&qty=" + str(
+                number) + "&time=100&pro=&city=&port=1&format=txt&ss=1&css=&dt=1&specialTxt=3&specialJson=", timeout=15,
+            headers=headers)
+        status_code = r.status_code
 
     proxyList = r.content.decode("utf-8").split("\r\n")
 

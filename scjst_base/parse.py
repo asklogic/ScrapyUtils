@@ -19,7 +19,7 @@ class ProjectBaseParse(Parse):
 
         data = []
         for i in range(len(urls)):
-            p = manager.model("ProjectIDModel")
+            p = manager.model("ProjectBaseModel")
             p.url = urls[i]
             p.title = titles[i]
             p.location = locations[i]

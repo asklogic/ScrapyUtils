@@ -24,11 +24,9 @@ def add_requests(pool: threadpool.ThreadPool, target, args):
 
 
 def req_callback(req: threadpool.WorkRequest, obj):
-    pass
+    if req.exception:
+        print("threadpool some error!")
 
-
-def dump_models(container):
-    pass
 
 
 class BaseContainer(object):
@@ -67,8 +65,8 @@ class Container(BaseContainer):
 
     def add(self, model: Any):
         lock.acquire()
-        if self.pipeline and self.data.qsize() > self.gather_limit:
-            self.gather()
+        if self.pipeline and self.data.qsize() >= self.gather_limit:
+            self.gather(self.gather_limit)
         lock.release()
         super().add(model)
 
@@ -80,10 +78,10 @@ class Container(BaseContainer):
 
         return super().pop()
 
-    def gather(self):
+    def gather(self, number: int):
         if self.pipeline:
             data = []
-            for i in range(self.gather_limit):
+            for i in range(number):
                 data.append(self.data.get())
             add_requests(pool, self.pipeline.process_all, args=(data, self.__class__.__name__))
 
@@ -94,10 +92,7 @@ class Container(BaseContainer):
 
     def dump(self):
         if self.pipeline:
-            data = []
-            for i in range(self.data.qsize()):
-                data.append(self.data.get())
-            add_requests(pool, self.pipeline.process_all, args=(data, self.__class__.__name__))
+            self.gather(self.data.qsize())
 
 
 # class Container(BaseContainer):
@@ -370,5 +365,5 @@ if __name__ == '__main__':
     # for i in range(20):
     #     c.add(m)
 
-    js = JsonContainer('test')
+    # js = JsonContainer('test')
     pass

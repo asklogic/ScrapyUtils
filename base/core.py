@@ -238,9 +238,7 @@ def load_process(config: Config) -> List[type(Process)]:
     return registered_processes
 
 
-def load_default_process() -> List[type(Process)]:
-    process_list: List[type(Process)] = load("base", "Process", Process)
-    return process_list
+
 
 
 def build_process(processes: List[type(Process)], config: Config) -> Pipeline:
@@ -248,13 +246,17 @@ def build_process(processes: List[type(Process)], config: Config) -> Pipeline:
     for process_class in processes:
         process = process_class()
         pipeline.add_process(process)
-    pipeline.start_task(config.job)
+    pipeline.start_task(config)
     return pipeline
 
 
 def finish(containers: Dict[str, Container], pipeline: Pipeline):
     for container in containers:
         containers[container].dump()
+
+    from base.Container import pool
+    pool.wait()
+
     pipeline.end_task()
 
 

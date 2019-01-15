@@ -6,7 +6,7 @@ from base.Conserve import Conserve
 from base.scrapy_thread import threadTask
 import queue
 import scrapy_config
-
+import time
 from base.log import getLog
 
 log = getLog()
@@ -79,6 +79,7 @@ def thread_run(conf: Dict[str, str or List[str]]):
     # TODO 一个对象 -> 一行
 
     thread_List = []
+
 
     for i in range(scrapy_config.Thread):
         t = threadTask(c, config, containers)

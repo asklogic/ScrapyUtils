@@ -24,35 +24,45 @@ class Config(object):
         schemes = conf.get("allow")
         models = conf.get("models")
         prepare = conf.get("prepare")
-        conserve = conf.get("conserve")
         process = conf.get("process")
 
-        if not (job and schemes):
-            raise KeyError("set your job and schemes")
+        current_model: List[str] = []
+        current_process: List[str] = []
+        current_model: List[str] = []
+        current_model: List[str] = []
 
-        if not type(schemes) == list:
-            raise TypeError('allow must be a list')
-        if not type(models) == list:
-            raise TypeError('models must be a list')
-        if not models:
-            models = []
+        if not job:
+            raise KeyError("please set your target job")
+
+        if not schemes:
+            # TODO ? 添加名称还是?
+            schemes = "default"
+
         if not prepare:
             prepare = "default"
-        if not conserve:
-            conserve = "default"
+
+        # 如果只有一个就单独添加
+        if not type(models) == list:
+            current_model.append(models)
+        else:
+            current_model.extend(models)
+
+        if not type(process) == list:
+            current_process.append(process)
+        else:
+            current_process.extend(process)
 
         self.job = job
         self.schemes = schemes
         self.models = models
         self.prepare = prepare
-        self.conserve = conserve
         self.process = process
 
     job: str
     schemes: List[str]
     models: List[str]
+    process: List[str]
     prepare: str
-    conserve: str
 
 ### model
 #

@@ -88,6 +88,8 @@ class Pipeline_Test(TestCase):
         pass
 
     def test_josnPipeline(self):
+        return
+
         self.container.pipeline = self.pipeline
 
         for i in range(20000):
@@ -95,7 +97,6 @@ class Pipeline_Test(TestCase):
             m.name = f.name()
             m.age = f.random_digit()
             self.container.add(m)
-
 
         m = self.model()
         m.name = f.name()
@@ -116,11 +117,45 @@ class Pipeline_Test(TestCase):
 
         self.assertEqual(1, 1)
 
+    def test_pipeline_and_model(self):
 
-    def test_register_pipeline(self):
-        registered =1
-        # config = co
-        pass
+        import base
+
+        test_config = {
+            "job": "test",
+            "process": "CustomProcess",
+        }
+
+        config = base.lib.Config(test_config)
+
+        models = core.load_models(config)
+        self.assertEqual(len(models), 1)
+
+        default_model = core.load_default_models()
+        self.assertEqual(len(default_model), 2)
+
+        current_models = list(set(models + default_model))
+        # TODO log model
+
+        process = core.load_process(config)
+        import test.process
+        self.assertEqual(process, [test.process.CustomProcess])
+
+        default_process = core.load_default_process()
+        self.assertEqual(len(default_process), 2)
+
+        current_process = default_process + process
+        # TODO log process
+
+        # task start
+        pipeline = core.build_process(current_models)
+
+        containers = core.register_containers(current_models, pipeline)
+
+        core.destory_pipeline(pipeline)
+
+        self.assertTrue(1, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

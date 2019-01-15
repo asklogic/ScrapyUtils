@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator, Any
 from base.Model import Model
-
+import json
 import redis
 
 
@@ -100,7 +100,7 @@ class Process(object):
         self.next: Process = None
 
     @abstractmethod
-    def start_task(self):
+    def start_task(self, args=None):
         pass
 
     @abstractmethod
@@ -127,8 +127,8 @@ class Pipeline(object):
     def __init__(self):
         self.head: Process = None
 
-    def start_task(self):
-        list(map(lambda x: x.start_task(), self.process_list))
+    def start_task(self, args):
+        list(map(lambda x: x.start_task(args), self.process_list))
 
     def end_task(self):
         list(map(lambda x: x.end_task(), self.process_list))
@@ -144,7 +144,7 @@ class Pipeline(object):
                 current = current.next
             current.next = process
 
-    def process_all(self, data: List[Model], container_name = ""):
+    def process_all(self, data: List[Model], container_name=""):
         print("process all ", container_name)
         list(map(lambda x: x.start_process(), self.process_list))
 
@@ -164,33 +164,79 @@ class Pipeline(object):
             if isinstance(result, object):
                 # print("return model")
                 current = current.next
-                result = current.process_item(model)
+                result = current.process_item(result)
 
             elif bool(result):
-                # print("return true")
-                break
+                current = current.next
+                result = current.process_item(model)
             else:
-                # print("return false")
                 break
 
 
-class FirstProcess(Process):
+class JsonFileProcess(Process):
 
-    def process_item(self, model: Model):
-        print(model.ip)
-        return model
+    def start_task(self, args=None):
+        self.part = 0
+        self.name = ""
+        self.file_path = ""
+        self.limit = 10000
+        self.data = []
+
+    def dump_to_file(self):
+        file = self.file_path + "\\" + self.name + "-part" + str(self.part) + ".json"
+        print(file)
+        with open(file, "w") as f:
+            json.dump(self.data[:self.limit], f)
+            print("success dump file")
+        self.part += 1
+        self.data = self.data[self.limit:]
+
+    def end_process(self):
+        print("end process! len:", len(self.data))
+        while len(self.data) >= self.limit:
+            self.dump_to_file()
+
+    def end_task(self):
+        print("end task! len:", len(self.data))
+        if self.data:
+            self.dump_to_file()
 
 
-class SecondProcess(Process):
-    def process_item(self, model: Model):
-        print(model.port)
-        return model
+class DuplicateProcess(Process):
+
+    def start_task(self, args: str):
+        self.db = redis.Redis(decode_responses=True)
+
+    def check_identification(self, key):
+        """
+        存在key 返回True
+        不存在key 返回False
+        :param key:
+        :return:
+        """
+        return bool(self.db.keys(self.name + key))
+
+    def save_identification(self, key):
+        self.db.set(self.name + key, 1)
 
 
-class OriginProcess(Process):
-    def process_item(self, model: Model):
-        if random.random() > 0.5:
-            return model
+# class FirstProcess(Process):
+#
+#     def process_item(self, model: Model):
+#         print(model.ip)
+#         return model
+#
+#
+# class SecondProcess(Process):
+#     def process_item(self, model: Model):
+#         print(model.port)
+#         return model
+#
+#
+# class OriginProcess(Process):
+#     def process_item(self, model: Model):
+#         if random.random() > 0.5:
+#             return model
 
 
 if __name__ == '__main__':
@@ -198,9 +244,9 @@ if __name__ == '__main__':
 
     pipeline = Pipeline()
 
-    pipeline.add_process(OriginProcess())
-    pipeline.add_process(FirstProcess())
-    pipeline.add_process(SecondProcess())
+    # pipeline.add_process(OriginProcess())
+    # pipeline.add_process(FirstProcess())
+    # pipeline.add_process(SecondProcess())
 
     modelList = []
     for i in range(2000):

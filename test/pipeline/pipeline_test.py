@@ -6,12 +6,11 @@ import sys
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Container import Container, BaseContainer
-from base.gate import Process, Pipeline
+from base.Container import Container
+from base.Process import Process
 from base.Model import Model, Field
 from base import core
 from faker import Faker
-import time
 import os
 import json
 
@@ -122,8 +121,9 @@ class Pipeline_Test(TestCase):
         import base
 
         test_config = {
-            "job": "test",
+            "job": "test_job",
             "process": "CustomProcess",
+            "models": "CustomTestModel"
         }
 
         config = base.lib.Config(test_config)
@@ -134,25 +134,35 @@ class Pipeline_Test(TestCase):
         default_model = core.load_default_models()
         self.assertEqual(len(default_model), 2)
 
-        current_models = list(set(models + default_model))
+        current_models = list(set(default_model + models))
+        self.assertEqual(len(current_models), 3)
+
+        print([x.__name__ for x in current_models])
         # TODO log model
 
         process = core.load_process(config)
-        import test.process
-        self.assertEqual(process, [test.process.CustomProcess])
+
+        import test_job.process
+        self.assertEqual(process, [test_job.process.CustomProcess])
 
         default_process = core.load_default_process()
         self.assertEqual(len(default_process), 2)
 
-        current_process = default_process + process
+        current_process = process + default_process
+        self.assertEqual(len(current_process), 3)
+
+        print([x.__name__ for x in current_process])
+
         # TODO log process
 
         # task start
-        pipeline = core.build_process(current_models)
+        pipeline = core.build_process(current_process, config)
 
         containers = core.register_containers(current_models, pipeline)
 
-        core.destory_pipeline(pipeline)
+        core.finish(containers, pipeline)
+        from base.Container import pool
+        pool.wait()
 
         self.assertTrue(1, 1)
 

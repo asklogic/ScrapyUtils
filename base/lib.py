@@ -54,9 +54,9 @@ class Config(object):
 
         self.job = job
         self.schemes = schemes
-        self.models = models
+        self.models = current_model
         self.prepare = prepare
-        self.process = process
+        self.process = current_process
 
     job: str
     schemes: List[str]

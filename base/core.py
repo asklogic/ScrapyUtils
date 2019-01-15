@@ -11,7 +11,7 @@ from base.Conserve import Conserve
 from base.Container import Container, BaseContainer
 from base.lib import Task, Config
 from base.tool import get_proxy_model
-from base.gate import Process, Pipeline
+from base.Process import Process, Pipeline
 
 import scrapy_config
 import threading
@@ -23,6 +23,7 @@ from base.log import getLog
 log = getLog()
 
 
+# FIXME
 def load(job: str, module: str, current_type: type) -> List[type]:
     """
     从job中的module加载所有符合current_type的type 返回为type列表
@@ -72,24 +73,24 @@ def do_prepare(name: str = "defulat", job: str = "") -> Tuple[Scraper, List[Task
     return scraper, task
 
 
-def load_models(allow_model: List[str], job: str) -> List[Model]:
-    models_list: List[Model] = load(job, "model", Model)
+def load_models(config: Config) -> List[Model]:
+    models_list: List[type(Model)] = load(config.job, "model", Model)
 
-    if allow_model:
+    if config.models:
         allow_model_list: List[Model] = []
-        for allow in allow_model:
+        for allow in config.models:
             for model in models_list:
-                # FIXME
                 if model.__name__ == allow:
                     allow_model_list.append(model)
                     break
-        return allow_model_list + load_default_models()
 
-    return models_list + load_default_models()
+        return allow_model_list
+
+    return models_list
 
 
-def load_default_models() -> List[Model]:
-    models_list: List[Model] = load("base", "Model", Model)
+def load_default_models() -> List[type(Model)]:
+    models_list: List[type(Model)] = load("base", "Model", Model)
     return models_list
 
 
@@ -225,26 +226,39 @@ def load_conserve(conserve_name: str = "default", job: str = "") -> type(Conserv
     raise ModuleNotFoundError("not found conserve named: {0}".format(conserve_name))
 
 
-def load_process(process_names: List[str], job: str = "") -> List[type(Process)]:
-    processes = load(job, "process", Process)
+def load_process(config: Config) -> List[type(Process)]:
+    processes = load(config.job, "process", Process)
 
     registered_processes: List[type(Process)] = []
-    for process_name in process_names:
+    for process_name in config.process:
         for process in processes:
+            # FIXME
             if process.__name__ == process_name or (hasattr(process, "name") and process.name == process_name):
                 registered_processes.append(process)
     return registered_processes
 
 
-def build_process(processes: List[type(Process)]) -> Pipeline:
+def load_default_process() -> List[type(Process)]:
+    process_list: List[type(Process)] = load("base", "Process", Process)
+    return process_list
+
+
+def build_process(processes: List[type(Process)], config: Config) -> Pipeline:
     pipeline = Pipeline()
     for process_class in processes:
         process = process_class()
         pipeline.add_process(process)
-    pipeline.start_task()
+    pipeline.start_task(config.job)
     return pipeline
 
 
+def finish(containers: Dict[str, Container], pipeline: Pipeline):
+    for container in containers:
+        containers[container].dump()
+    pipeline.end_task()
+
+
+# abort
 def build_conserve(conserve: type(Conserve)):
     # TODO temp: 使用类方法代替
     current_conserve = conserve()
@@ -252,6 +266,7 @@ def build_conserve(conserve: type(Conserve)):
     return current_conserve
 
 
+# abort
 def do_conserve(manager: ModelManager, conserve: Conserve) -> bool:
     for models in manager.models.values():
         for m in models:

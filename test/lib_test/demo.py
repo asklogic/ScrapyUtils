@@ -6,7 +6,7 @@ import json
 import scrapy_config
 from base.Model import Model
 from scjst_base.peewee_connect import ProjectBase
-from base.gate import Process, Pipeline
+from base.Process import Process, Pipeline
 from faker import Faker
 import threadpool
 

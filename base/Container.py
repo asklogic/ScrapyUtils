@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any
 from base.Conserve import Conserve, allow
 from base.Model import Model, ProxyModel
-from base.gate import Pipeline, Process
+from base.Process import Pipeline, Process
 import scrapy_config
 import os
 import time
@@ -85,9 +85,7 @@ class Container(BaseContainer):
             data = []
             for i in range(self.gather_limit):
                 data.append(self.data.get())
-            # print("add pool data len:", len(data))
             add_requests(pool, self.pipeline.process_all, args=(data, self.__class__.__name__))
-            # self.pipeline.process_all(data)
 
     def supply(self):
         supply_data = self.supply_func(self.supply_limit)

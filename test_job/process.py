@@ -1,7 +1,7 @@
 from typing import Any
 
 from base.Model import Model
-from base.gate import Process
+from base.Process import Process
 
 
 class CustomProcess(Process):

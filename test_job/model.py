@@ -1,6 +1,5 @@
 from base.Model import Model, Field
 
-
-class TestModel(Model):
+class CustomTestModel(Model):
     name = Field()
     age = Field()

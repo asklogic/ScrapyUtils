@@ -7,7 +7,7 @@ import sys
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 from base.Container import Container
-from base.Process import Process
+from base.Process import Process, Pipeline
 from base.Model import Model, Field
 from base import core
 from faker import Faker
@@ -123,35 +123,34 @@ class Pipeline_Test(TestCase):
         test_config = {
             "job": "test_job",
             "process": [
-                "CustomProcess",
+                # "CustomProcess",
                 "Duplication",
-                "TestJson",
+                # "TestJson",
             ],
             "models": "CustomTestModel"
         }
         config = base.lib.Config(test_config)
 
-        process = core.load_process(config)
-        pipeline = core.build_process(process, config)
+        processes = core.load_process(config)
+        pipeline = Pipeline(processes, config)
         self.container.pipeline = pipeline
+
 
         t1 = time.time()
 
         from test_job.model import CustomTestModel
         for i in range(4000):
-
             m = self.model()
             m.name = f.name()
             m.age = f.random_digit()
             self.container.add(m)
+
 
         self.container.add(m)
 
         core.finish({"t": self.container}, pipeline)
 
         print(time.time() - t1)
-
-
 
     def test_pipeline_and_model(self):
         return

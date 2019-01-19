@@ -87,3 +87,32 @@ todo
 > 检查线程池的问题  
 > Model类的问题  
 
+#### 19.1.18
+Done
+> 完成process 和 pipeline重构  
+> 添加JsonFIle Duplication 这2个process  
+> 删除engine中conserve逻辑 添加process支持  
+
+
+
+todo 
+> 日志类 参照Scrapy  
+> check函数   
+> Model类的问题    
+> 项目中的自带pipeline 负责处理FailedTask 和 Proxy  
+> setting 设置  
+
+#### 19.1.19-20
+Done 
+> 日志类重构  
+> 添加Pipeline中的process_all的各个process处理情况
+> 修复了threadpool中的参数传递问题
+> 初步添加generator (修改版
+
+TODO
+> check函数
+> 解耦逻辑
+> 自带pipeline
+> 设置不全面
+> 补完generator功能
+

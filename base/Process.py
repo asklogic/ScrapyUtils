@@ -7,8 +7,10 @@ from base.lib import Config
 import random
 import os.path as path
 import time
+import os
 
 from scrapy_config import Project_Path
+from base.log import act, status
 
 
 class BaseProcess(object):
@@ -106,8 +108,11 @@ def target(model: type):
 
 
 class Process(object):
-    def __init__(self):
+    def __init__(self, config: Config = None):
         self.next: Process = None
+
+    def config(self):
+        pass
 
     @abstractmethod
     def start_task(self, config: Config = None):
@@ -117,11 +122,11 @@ class Process(object):
     def end_task(self):
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def start_process(self):
         pass
 
-    @abstractmethod
+    # @abstractmethod
     def end_process(self):
         pass
 
@@ -133,18 +138,37 @@ class Process(object):
 class Pipeline(object):
     head: Process = None
     process_list: List[Process] = []
+    process_count: List[int] = []
 
-    def __init__(self):
+    def __init__(self, process_list: List[type(Process)], config: Config = None):
+        """
+        构建process
+        :param process_list:
+        :param config:
+        """
         self.head: Process = None
 
-    def start_task(self, config: Config = None):
-        list(map(lambda x: x.start_task(config), self.process_list))
+        for process in process_list:
+            current_process: Process = process(config)
+            current_process.config()
+            current_process.start_task()
+            self.add_process(current_process)
 
     def end_task(self):
+        """
+        关闭process
+        :return:
+        """
         list(map(lambda x: x.end_task(), self.process_list))
 
     def add_process(self, process: Process):
+        """
+        添加process
+        :param process:
+        :return:
+        """
         self.process_list.append(process)
+        self.process_count.append(0)
 
         current = self.head
         if self.head is None:
@@ -154,16 +178,34 @@ class Pipeline(object):
                 current = current.next
             current.next = process
 
-    def process_all(self, data: List[Model], container_name=""):
-        print("process all ", container_name)
+    def process_all(self, data: List[Model], container_name: str = ""):
+        """
+        处理多个process
+        :param data:
+        :param container_name:
+        :return:
+        """
         list(map(lambda x: x.start_process(), self.process_list))
 
+        act.info("process models. Length: " + str(len(data)) + " Container: " + container_name)
+        process_status = [0 for x in self.process_list]
         for model in data:
-            self.process(model)
+            index = self.process(model)
+            process_status[index] = process_status[index] + 1
 
         list(map(lambda x: x.end_process(), self.process_list))
+        act.info("process finish")
+
+        for i in range(len(self.process_list)):
+            act.info(" ".join([str(process_status[i]), "in", self.process_list[i].__class__.__name__]))
 
     def process(self, model: Model):
+        """
+        处理一个process
+        :param model:
+        :return:
+        """
+        index = 0
 
         current_process = self.head
 
@@ -174,41 +216,60 @@ class Pipeline(object):
 
             if isinstance(result, Model):
                 current_process = current_process.next
+                index += 1
                 last = result
                 result = current_process.process_item(result)
-            # TODO
+            # TODO 判定逻辑
             elif bool(result) or result is None:
                 current_process = current_process.next
+                index += 1
                 result = current_process.process_item(last)
             elif result is False:
                 break
             else:
                 break
+        return index
 
 
 class JsonFileProcess(Process):
-    part: int
-    name: str
-    data: List[Model]
-    limit: int
-    file_path: int
-    time: str
+    def __init__(self, config: Config = None):
+        super().__init__(config)
 
-    def start_task(self, config: Config = None):
-        self.part = 0
-        if not hasattr(self, "name"):
-            self.name = self.__class__.__name__
-        self.file_path = path.join(Project_Path, config.job, "data", self.name)
-        self.limit = 10000
+        # 文件分卷
+        self.part: int = 0
+        # 单个文件元素限制
+        self.limit: int = 5000
+        # 文件名字
+        self.name: str = self.__class__.__name__ + str(int(time.time()))[-4:]
+        # 文件路径
+        # FIXME config为空
+        self.file_path: str = path.join(Project_Path, config.job, "data", self.name)
+        # data
         self.data: List[Model] = []
 
-        self.time = str(int(time.time()))[-4:]
-        print("start json process!")
-        print("file path: ", self.file_path)
+    @abstractmethod
+    def config(self):
+        pass
+
+    def start_task(self, config: Config = None):
+        temp_file = self.file_path + "JsonFileTest.json"
+        print(temp_file)
+        try:
+            with open(temp_file, "w") as f:
+                json.dump([], f)
+
+            os.remove(temp_file)
+        except Exception as e:
+            print(e.args)
+            raise TypeError('cannot dump json file!')
+        pass
+
+    def save_model(self, model: Model):
+        self.data.append(model.pure_data())
+        return True
 
     def dump_to_file(self):
-        file = self.file_path + self.time + "-part" + str(self.part) + ".json"
-        print(file)
+        file = self.file_path + "-part" + str(self.part) + ".json"
         with open(file, "w") as f:
             json.dump(self.data[:self.limit], f)
             print("success dump file")
@@ -231,14 +292,35 @@ class JsonFileProcess(Process):
 
 class DuplicateProcess(Process):
 
+    def __init__(self, config: Config = None):
+        super().__init__(config)
+
+        # 地址
+        self.host: str = "127.0.0.1"
+        self.port: int = 6379
+        # 数据库索引
+        self.db_index: int = 0
+
+        # redis数据库
+        self.db: redis.Redis = None
+
+        # 键值名称
+        name = self.__class__.__name__
+        self.base = ":".join([config.job, name]) + ":"
+
+    # @abstractmethod
+    def config(self):
+        pass
+
     def start_task(self, config: Config = None):
-        self.db = redis.Redis(decode_responses=True)
-        if not hasattr(self, "name"):
-            self.name = self.__class__.__name__
+        if not self.db:
+            self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, decode_responses=True)
 
-        self.base = ":".join([config.job, self.name]) + ":"
-
-        print("Duplication! ", self.base)
+        try:
+            self.db.keys("1")
+        except redis.ConnectionError as e:
+            print(e.args)
+            raise TypeError('redis connect failed')
 
     def exist_identification(self, key):
         """

@@ -18,29 +18,33 @@ headers = {
 
 def xpathParse(htmlContent: str, xpathContent: str) -> List[str]:
     html = etree.HTML(htmlContent)
-
     result = html.xpath(xpathContent)
 
-    if not xpathContent.split("/")[-1].find("@") < 0:
-        item = []
-        for resultItem in result:
-            item.append(str(resultItem))
-        return item
+    pure_data = []
+    for el in result:
+        if isinstance(el, etree._ElementUnicodeResult):
+            el = str(el)
+            pure_data.append(el)
+        elif isinstance(el, etree._Element):
+            el = str(el.text)
+            pure_data.append(el)
+        else:
+            pure_data.append(el)
 
-    if not xpathContent.endswith("()"):
-        item = []
-        for resultItem in result:
-            item.append(resultItem.text)
-        return item
+    return pure_data
 
-    return result
+
+def xpathParseList(htmlContent: str, xpathContent: str, separator: str = "") -> str:
+    data = xpathParse(htmlContent, xpathContent)
+
+    return separator.join(data)
 
 
 def jinglin(number):
     print("get proxy! ", number)
     status_code = 1000
     r = None
-    while status_code >300:
+    while status_code > 300:
         time.sleep(1)
         print("wait for proxy!")
 

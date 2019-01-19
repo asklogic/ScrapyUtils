@@ -11,9 +11,8 @@ from base.Conserve import Conserve
 lock = threading.Lock()
 barrier = threading.Barrier(scrapy_config.Thread)
 
-from base.log import getLog, getbriefLog
+from base.log import status, act
 
-log = getLog()
 
 
 class threadTask(threading.Thread):
@@ -39,7 +38,7 @@ class threadTask(threading.Thread):
         scraper = current_prepare.get_scraper()
 
         # models = core.load_models(self.conf.models, self.conf.job)
-        manager = core.register_manager(allow_model=self.conf.models, job=self.conf.job)
+        manager = core.register_manager(config=self.conf)
 
         # no context
         schemes = core.load_scheme(self.conf.schemes, self.conf.job)

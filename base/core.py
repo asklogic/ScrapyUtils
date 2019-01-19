@@ -18,9 +18,7 @@ import threading
 
 lock = threading.Lock()
 
-from base.log import getLog
-
-log = getLog()
+from base.log import status, act
 
 
 # FIXME
@@ -64,12 +62,18 @@ def load_prepare(prepare_name: str, job: str = "") -> Prepare:
     raise ModuleNotFoundError("not found prepare named: {0}".format(prepare_name))
 
 
-def do_prepare(name: str = "defulat", job: str = "") -> Tuple[Scraper, List[Task]]:
-    prepare = load_prepare(name, job)
+def do_prepare(config: Config) -> Tuple[Scraper, List[Task]]:
+    prepare = load_prepare(config.prepare, config.job)
     scraper, task = prepare.do()
 
     if not scraper:
+        act.debug("prepare " + config.prepare + "didn't return a Scraper Instance. Use RequestScraper")
         scraper = DefaultRequestPrepare.get_scraper()
+    if not task or type(task) == []:
+        raise TypeError(config.prepare + " must yield a task list")
+    act.info("prepare info")
+    act.info("task length: " + str(len(task)))
+    act.info("> scraper: " + str(scraper.__class__.__name__))
     return scraper, task
 
 
@@ -84,9 +88,9 @@ def load_models(config: Config) -> List[Model]:
                     allow_model_list.append(model)
                     break
 
-        return allow_model_list
+        return allow_model_list + load_default_models()
 
-    return models_list
+    return models_list + load_default_models()
 
 
 def load_default_models() -> List[type(Model)]:
@@ -95,7 +99,7 @@ def load_default_models() -> List[type(Model)]:
 
 
 def _register_containers(allow_models: List[str], job: str, conserve: Conserve = None) -> Dict[str, Container]:
-    models = load_models(allow_models, job)
+    models = load_models(allow_model)
 
     containers: Dict[str, Container] = {}
     for model in models:
@@ -116,9 +120,10 @@ def _register_containers(allow_models: List[str], job: str, conserve: Conserve =
     return containers
 
 
-def register_containers(allow_models: List[str], job: str, pipeline: Pipeline) -> Dict[str, Container]:
-    models = load_models(allow_models, job)
+def register_containers(config: Config, pipeline: Pipeline) -> Dict[str, Container]:
+    models = load_models(config)
 
+    # TODO 修改container
     containers: Dict[str, Container] = {}
     for model in models:
         if hasattr(model, "container"):
@@ -126,11 +131,14 @@ def register_containers(allow_models: List[str], job: str, pipeline: Pipeline) -
                 containers[model.__name__] = Container(supply_func=get_proxy_model, supply=scrapy_config.Thread * 2)
         else:
             containers[model.__name__] = Container(pipeline=pipeline)
+        containers[model.__name__].name = model.__name__
+
+    act.info("> models :" + ", ".join(list(map(lambda x: x, containers.keys()))))
     return containers
 
 
-def register_manager(allow_model: List[str], job) -> ModelManager:
-    models = load_models(allow_model, job)
+def register_manager(config: Config) -> ModelManager:
+    models = load_models(config)
     return ModelManager(models)
 
 
@@ -149,10 +157,10 @@ def load_scheme(allow_scheme: List[str], job: str) -> List[Action or Parse]:
 
     register_list = load_default_scheme(register_list, allow_scheme)
 
+    act.info("> schemes: " + ", ".join(list(map(lambda x: x.__name__, register_list))))
+
     if len(register_list) >= len(allow_scheme):
         return register_list
-
-    return register_list
     raise ModuleNotFoundError("some scheme cannot found! check scheme and allow_list")
 
 
@@ -235,19 +243,19 @@ def load_process(config: Config) -> List[type(Process)]:
             # FIXME
             if process.__name__ == process_name or (hasattr(process, "name") and process.name == process_name):
                 registered_processes.append(process)
+
+    act.info("> processes: " + ", ".join(list(map(lambda x: x.__name__, registered_processes))))
     return registered_processes
 
 
-
-
-
-def build_process(processes: List[type(Process)], config: Config) -> Pipeline:
-    pipeline = Pipeline()
-    for process_class in processes:
-        process = process_class()
-        pipeline.add_process(process)
-    pipeline.start_task(config)
-    return pipeline
+# abort
+# def build_process(processes: List[type(Process)], config: Config) -> Pipeline:
+#     pipeline = Pipeline()
+#     for process_class in processes:
+#         process = process_class()
+#         pipeline.add_process(process)
+#     pipeline.start_task(config)
+#     return pipeline
 
 
 def finish(containers: Dict[str, Container], pipeline: Pipeline):

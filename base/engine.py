@@ -7,40 +7,32 @@ from base.scrapy_thread import threadTask
 import queue
 import scrapy_config
 import time
-from base.log import getLog
-
-log = getLog()
+from base.log import status, act
+from base.Process import Pipeline
 
 
 def single_run(conf: Dict[str, str or List[str]]):
     config: Config = Config(conf)
+    act.info("single task run. Target: " + config.job)
 
-    scraper, task = core.do_prepare(config.prepare, config.job)
-    conserve = core.load_conserve(config.conserve, config.job)
+    scraper, task = core.do_prepare(config)
 
-    allow_processes = core.load_process(config.process, config.job)
-    pipeline = core.build_process(allow_processes)
+    processes = core.load_process(config)
+    pipeline = Pipeline(processes, config)
 
-    # models = core.load_models(config.models, config.job)
-
-    manager = core.register_manager(allow_model=config.models, job=config.job)
+    manager = core.register_manager(config)
     schemes = core.load_scheme(config.schemes, config.job)
 
-    current_conserve = core.build_conserve(conserve)
-    # containers = core._register_containers(config.models, config.job, current_conserve)
-    containers = core.register_containers(config.models, config.job, pipeline)
+    containers = core.register_containers(config, pipeline)
+
+    act.info("start scraping!")
 
     core.scrapy(scheme_list=schemes, manager=manager, task=task[0], scraper=scraper)
 
     core.thread_conserve(manager=manager, containers=containers)
 
-    # core.do_conserve(manager=manager, conserve=current_conserve)
-
     # end functions
-    for container in containers:
-        containers[container].dump()
-    pipeline.end_task()
-    # current_conserve.end_conserve()
+    core.finish(containers, pipeline)
 
 
 def thread_run(conf: Dict[str, str or List[str]]):
@@ -54,32 +46,30 @@ def thread_run(conf: Dict[str, str or List[str]]):
     current_prepare = core.load_prepare(config.prepare, config.job)
     tasks = current_prepare.get_tasks()
 
-    # task init
-    # q = queue.Queue()
     c = Container(timeout=10)
     for task in tasks:
         # FIXME task 对象转换
         c.add(task)
     log.info("task init! number: {0}".format(len(tasks)))
 
-    log.info("init conserve")
+    # log.info("init conserve")
     # conserve init
-    conserve = core.load_conserve(config.conserve, config.job)
-    current_conserve = core.build_conserve(conserve)
-    log.info("conserve ready")
+    # conserve = core.load_conserve(config.conserve, config.job)
+    # current_conserve = core.build_conserve(conserve)
+    # log.info("conserve ready")
 
-    allow_processes = core.load_process(config.process, config.job)
-    pipeline = core.build_process(allow_processes)
+    processes = core.load_process(config)
+    pipeline = Pipeline(processes, config=config)
+
     log.info("pipeline ready")
 
     # container init
     # containers = core._register_containers(config.models, config.job, current_conserve)
-    containers = core.register_containers(config.models, config.job, pipeline)
+    containers = core.register_containers(config, pipeline)
 
     # TODO 一个对象 -> 一行
 
     thread_List = []
-
 
     for i in range(scrapy_config.Thread):
         t = threadTask(c, config, containers)
@@ -91,13 +81,10 @@ def thread_run(conf: Dict[str, str or List[str]]):
         i.join()
 
     # TODO log
-    log.info("thread end!")
-    for container in containers:
-        containers[container].dump()
-    pipeline.end_task()
 
-    from base.Container import pool
-    pool.wait()
+    core.finish(containers, pipeline)
+    log.info("thread end!")
+
     # current_conserve.end_conserve()
 
 

@@ -15,7 +15,7 @@ class ProjectBasePrepare(Prepare):
 
     @classmethod
     def task_prepared(cls) -> List[Task]:
-        for i in range(1980, 4900):
+        for i in range(1, 4970):
             t = Task()
             t.url = "http://xmgk.scjst.gov.cn/QueryInfo/Project/ProjectList.aspx"
             t.param = i
@@ -31,12 +31,13 @@ class QueryProjectPrepare(Prepare):
     @classmethod
     def task_prepared(cls) -> List[Task]:
         data = []
+
         with open(scrapy_config.Assets_Path + "/code_name.json") as f:
             data.extend(json.load(f))
         print(len(data))
 
 
-        for i in data[0:10000]:
+        for i in data[0:200]:
             t = Task()
             t.url = "http://xxgx.scjst.gov.cn/api/getdata/GetPerjectList"
             t.param = i

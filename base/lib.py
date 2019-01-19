@@ -1,9 +1,7 @@
 from abc import abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union
 
-
-# temp
-
+from base.log import act
 
 class Task(object):
     url: str
@@ -57,6 +55,7 @@ class Config(object):
         self.models = current_model
         self.prepare = prepare
         self.process = current_process
+
 
     job: str
     schemes: List[str]

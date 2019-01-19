@@ -20,13 +20,13 @@ pool = threadpool.ThreadPool(1)
 
 
 def add_requests(pool: threadpool.ThreadPool, target, args):
-    pool.putRequest(threadpool.makeRequests(target, args, callback=req_callback, exc_callback=req_callback)[0])
+    pool.putRequest(
+        threadpool.makeRequests(target, [(args, None)], req_callback, exc_callback=req_callback)[0])
 
 
 def req_callback(req: threadpool.WorkRequest, obj):
     if req.exception:
         print("threadpool some error!")
-
 
 
 class BaseContainer(object):
@@ -53,6 +53,7 @@ class BaseContainer(object):
 
 class Container(BaseContainer):
 
+
     def __init__(self, timeout=0, supply_func=None, pipeline: Pipeline = None, supply: int = 20, gather: int = 5000):
         super().__init__(timeout)
         # max 超出会执行gather方法
@@ -62,6 +63,8 @@ class Container(BaseContainer):
 
         self.pipeline = pipeline
         self.supply_func = supply_func
+
+        self.name = "default"
 
     def add(self, model: Any):
         lock.acquire()
@@ -83,7 +86,7 @@ class Container(BaseContainer):
             data = []
             for i in range(number):
                 data.append(self.data.get())
-            add_requests(pool, self.pipeline.process_all, args=(data, self.__class__.__name__))
+            add_requests(pool, self.pipeline.process_all, args=(data, self.name,))
 
     def supply(self):
         supply_data = self.supply_func(self.supply_limit)

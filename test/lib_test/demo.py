@@ -145,13 +145,22 @@ def finish(obj1, obj2):
     print(obj2)
     print("finish!")
 
-def exception_callback(obj1:threadpool.WorkRequest, obj2):
+
+def exception_callback(obj1: threadpool.WorkRequest, obj2):
     print(obj1.args[0])
     print(obj2)
     print("get !")
 
+
 def add_threadpool(pool: threadpool.ThreadPool, target, args):
-    pool.putRequest(threadpool.makeRequests(target, args, finish,exception_callback)[0])
+    """
+    压入单个req
+    :param pool:
+    :param target:
+    :param args:
+    :return:
+    """
+    pool.putRequest(threadpool.makeRequests(target, [(args, None)], finish, exception_callback)[0])
 
 
 import time
@@ -176,12 +185,16 @@ def threadpool_test():
             print(self)
             return "sel_return"
 
+        def args_test(self, data: [] = (), msg: str = "mock"):
+            print(data)
+            print(msg)
 
-    add_threadpool(pool, testThread, ("theseq"))
-    add_threadpool(pool, testThread, ("theseq"))
-    add_threadpool(pool, testThread, ("theseq"))
-    add_threadpool(pool, testThread, ("theseq"))
-    add_threadpool(pool, testThread, ("theseq"))
+    tt = testThread()
+    # add_threadpool(pool, tt.args_test, [(([1, 3, 4], "theseq"), None)])
+    add_threadpool(pool, tt.args_test, ([1, 3, 4], "theseq"))
+    add_threadpool(pool, tt.args_test, ([1, 3, 4], "theseq"))
+    add_threadpool(pool, tt.args_test, ([1, 3, 4], "theseq"))
+
     pool.wait()
     print("end")
 
@@ -193,3 +206,135 @@ def threadpool_test():
 # insert_test()
 
 threadpool_test()
+
+# head = {
+#     "0": ["ZSLXNAME", "ZCZY"],
+#     "1": "ZCZY",
+#     "5": "ZSLXNAME",
+#     "9": ['ZW', "ZCZY"],
+# }
+# label = {
+#     "0": {
+#         "证书级别": "ZSJSNAME",
+#         "证书号": "ZCZSH",
+#         "发证时间": "FZSJ",
+#         "有效期": ["ZSYXQ", "ZSYXQ"],
+#     },
+#     "1": {
+#         "等级": "ZSJSNAME",
+#         "证书编号": "ZCZSH",
+#         "注册证书号": "ZGZSH",
+#         "执业印章号": "YZH",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#         "所在单位": ["QYMC", "QYBM"],
+#     },
+#     "2": {
+#         "证书号": "ZCZSH",
+#         "执业印章号": "YZH",
+#         "资格印章号": "ZGZSH",
+#         "注册证书号": "ZCZSBH",
+#         "发证时间": "FZSJ",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#         "所在单位": ["QYMC", "QYBM"],
+#
+#     },
+#     "3": {
+#         "职务": "ZSJSNAME",
+#         "证书号": "ZCZSH",
+#         "发证时间": "FZSJ",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#         "所在单位": ["QYMC", "QYBM"],
+#
+#     },
+#     "4": {
+#         "证书级别": "ZSJSNAME",
+#         "证书号": "ZCZSH",
+#         "职称": "JSZC",
+#         "发证时间": "FZSJ",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#         "所在单位": ["QYMC", "QYBM"],
+#     },
+#     "5": {
+#         "专业": "Level",
+#         "岗位": "ZCZY",
+#         "证书号": "ZCZSH",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#         "发证时间": "FZSJ",
+#     },
+#     "6": {
+#         "证书级别": "ZSJSNAME",
+#         "证书号": "ZCZSH",
+#         "注册专业": "ZCZY",
+#         "执业印章号": "YZH",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#
+#     },
+#     "6.1": {
+#         "证书级别": "ZSJSNAME",
+#         "证书号": "ZCZSH",
+#         "所在单位": ["QYMC", "QYBM"],
+#     },
+#     "7": {
+#         "等级": "Level",
+#         "注册证书号": "ZCZSH",
+#         "证书编号": "ZCZSBH",
+#         "初始注册": "FZSJ",
+#         "证书有效期": ["ZSYXQ", "ZSYXQ"],
+#         "所在单位": ["QYMC", "QYBM"],
+#     },
+#     "8": {
+#         "证书级别": "ZSJSNAME",
+#         "证书号": "ZCZSH",
+#         "发证时间": "FZSJ",
+#         "有效期": ["ZSYXQ", "ZSYXQ"],
+#     },
+# }
+
+# head = {
+#     "head": "ZSLXMC",
+#     "subCount": "LXGS",
+#     "得分": "Score",
+#
+# }
+#
+# sub = {
+#     "0": {
+#         "证书号": "ZSBH",
+#         "有效期": ["YXJSRQ", "YXJSRQ"],
+#         "发证机关": "BFBM",
+#     },
+#
+#     "1": {
+#         "证书号": "ZSBH",
+#         "有效期": ["YXJSRQ", "YXJSRQ"],
+#         "发证机关": "BFBM",
+#         "企业名称": "QYMC",
+#     },
+#     "2": {
+#         "证书号": "ZSBH",
+#         "登记类别": "ZSDJMC",
+#         "有效期": ["YXJSRQ", "YXJSRQ"],
+#         "发证机关": "BFBM",
+#         "企业名称": "QYMC",
+#     },
+#     "3": {
+#         "证书号": "ZSBH",
+#         "有效期": ["YXJSRQ", "YXJSRQ"],
+#         "发证机关": "BFBM",
+#     },
+#     "3.1": {
+#         "证书号": "ZSBH",
+#         "有效期": ["YXJSRQ", "YXJSRQ"],
+#         "发证机关": "BFBM",
+#         "资质项": "ZZX",
+#         "企业名称": "QYMC",
+#     },
+#     "4": {
+#         "等级编号": "ZSBH",
+#         "登记日期": "BFRQ",
+#         "企业名称": "QYMC",
+#     },
+# }
+#
+# with open(r'C:\Users\logic\Desktop\EnterMapper.json', "w") as f:
+#     json.dump({'head': head, "sub": sub}, f)

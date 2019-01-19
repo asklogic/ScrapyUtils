@@ -1,5 +1,6 @@
 import os
 import os.path as path
+
 #
 #
 #
@@ -23,15 +24,12 @@ import os.path as path
 Project_Path = path.dirname(path.realpath(__file__))
 Assets_Path = os.path.join(Project_Path, "assets")
 
-
 Thread: int = 25
 Block: int = 0.1
 # Block: int = 2
 
 Proxy_Able = True
 # Proxy_Able = False
-
-
 
 
 ProxyInfo = {
@@ -86,7 +84,6 @@ test_conf = {
     "conserve": "test_conserve",
 }
 
-
 re_scjst_base = {
     'job': 'scjst_base',
     'allow': [
@@ -100,11 +97,10 @@ re_scjst_base = {
         "ProjectBaseModel",
     ],
     'prepare': "ProjectBasePrepare",
-    'conserve': "re_save_project_base",
-    'process' : [
-        "DuplicateProcess",
-        # "TestProcess",
-        "MysqlProcess",
+    'process': [
+        "Duplication",
+        "PrintProcess",
+        "BaseInfo",
     ]
 }
 
@@ -115,13 +111,28 @@ query_scjst_xmgk = {
         'QueryParse',
         'query_code',
         'QueryParse',
-
     ],
     "models": [
         "ProjectIDModel",
         # "ProjectBaseModel",
     ],
     'prepare': "QueryProjectPrepare",
-    'conserve': "QueryConserve",
+    'process': [
+        "PrintProcess",
+    ],
 }
 
+upwork_1 = {
+    'job': 'upwork',
+    'prepare': 'UpworkPrepare',
+    'allow': [
+        'DetailAction',
+        'DetailParse',
+    ],
+    'models': [
+        'Detail'
+    ],
+    'process': [
+        'PrintProcess',
+    ]
+}

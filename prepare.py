@@ -19,12 +19,6 @@ class DefaultPrepare(Prepare):
     @classmethod
     def task_prepared(cls):
         t = Task()
-        # t.url = "https://ip.cn/"
-        # # t.url = "http://www.ip138.com/"
-        # t.url = "https://www.kuaidaili.com/free/"
-        # t.url = "http://xmgk.scjst.gov.cn/QueryInfo/Project/ProjectList.aspx"
-        # t.param = 4
-        # yield t
 
         for i in range(1, 300):
             t = Task()
@@ -32,20 +26,7 @@ class DefaultPrepare(Prepare):
             t.param = i
             yield t
 
-
-class ProxyTestPrepare(Prepare):
-    name = "test_prepare"
-
-    @classmethod
-    def task_prepared(cls) -> List[Task]:
-        t = Task()
-        t.url = "https://www.kuaidaili.com/free/"
-        yield t
-        pass
-
-
-class ProxyTestThreadPrepare(Prepare):
-    name = "test_thread_prepare"
+class UpworkPrepare(Prepare):
 
     @classmethod
     def scraper_prepared(cls) -> Scraper:
@@ -55,7 +36,9 @@ class ProxyTestThreadPrepare(Prepare):
 
     @classmethod
     def task_prepared(cls) -> List[Task]:
-        for i in range(1, 20):
+        t = Task()
+
+        for i in range(1, 300):
             t = Task()
-            t.url = "http://www.kuaidaili.com/free/inha/{0}/".format(i)
+            t.url = "https://www.otodom.pl/oferta/loft-na-pradze-ID3RkjG.html#1382fb9d9d"
             yield t

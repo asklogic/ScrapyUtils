@@ -2,24 +2,27 @@ import os
 from os import path
 
 from base import templates
+from string import Template
 
 PROJECT_PATH = os.path.dirname(os.getcwd())
 
 generator_list = [
     "action.py",
     "parse.py",
-    "conserve.py",
+    "process.py",
     "model.py",
     "prepare.py",
 ]
 
-mapper = {
+generator_mapper = {
     "action.py": "action_template",
     "parse.py": "parse_template",
-    "conserve.py": "conserve_template",
+    "process.py": "process_template",
     "model.py": "model_template",
     "prepare.py": "prepare_template",
 }
+
+
 
 
 def job_generation(job):
@@ -33,16 +36,27 @@ def job_generation(job):
 
 
 def file_generation(file_path, file):
+    """
+    生成文件
+    :param file_path:
+    :param file:
+    :return:
+    """
     if not os.path.isfile(os.path.join(file_path, file)):
-        # os.mknod(os.path.join(file_path, "action.py"))
         with open(os.path.join(file_path, file), "w") as f:
             pass
-    pass
 
 
 def code_generation(file, job):
-    template = getattr(templates, mapper[file])
-    code = template.format(job.capitalize())
+    """
+    生成并且写入模板
+    :param file:
+    :param job:
+    :return:
+    """
+    template = Template(getattr(templates, generator_mapper[file]))
+
+    code = template.substitute(class_name=job.capitalize())
 
     with open(os.path.join(PROJECT_PATH, job, file), "a") as f:
         f.writelines(code)
@@ -56,6 +70,5 @@ def config_generation(job):
 
 
 if __name__ == '__main__':
-    pass
-    job_generation("ProxyInfo")
-    config_generation("ProxyInfo")
+    job_generation("generator_test")
+    # config_generation("ProxyInfo")

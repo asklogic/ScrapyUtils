@@ -116,3 +116,19 @@ TODO
 > 设置不全面
 > 补完generator功能
 
+#### 19.1.20-21
+修改爬虫逻辑
+> 使用2个pipeline  
+> 1.处理系统Model(待爬序列, 失败Task, Proxy等)系统消耗的   
+> 2.处理parsed Model 解析得到的  
+
+添加一个Hub类来管理Container 和 Pipeline 
+
+TODO
+> check函数  
+> 解耦逻辑 添加hub   
+> 自带pipeline  
+> 设置不全面 分离方案和全局设置  
+> 补完generator功能  
+> 考虑使用multiprocessing替换  
+

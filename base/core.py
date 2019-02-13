@@ -1,372 +1,275 @@
-from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
+from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator, Any
+import threading
+import scrapy_config
+import queue
 import time
 
-from base.Action import Action, DefaultAction
-from base.Parse import Parse, DefaultXpathParse
-from base.Scraper import Scraper
+from base.log import act, status
+
+from base.lib import Config, Task, ComponentMeta
 from base.Prepare import Prepare, DefaultRequestPrepare
-from base.Model import Model, ModelManager
-from base.Conserve import Conserve
-from base.Container import Container, BaseContainer
-from base.lib import Task, Config
-from base.tool import get_proxy_model
-from base.Process import Process, Pipeline
-
-import scrapy_config
-import threading
-
-lock = threading.Lock()
-
-from base.log import status, act
+from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
+from base.Action import Action
+from base.Parse import Parse
+from base.Process import Processor, Pipeline, Proxy_Processor
+from base.hub import Hub
+from base.Scraper import Scraper
 
 
-# FIXME
-def load(job: str, module: str, current_type: type) -> List[type]:
+def _load_module(target_root: str or None, file_name: str):
     """
-    从job中的module加载所有符合current_type的type 返回为type列表
-    :param job: python package
-    :param module: component name
-    :param current_type: component type
-    :return type_list: list of types(class)
+    加载组件文件
+    :param target_root:
+    :param file_name:
+    :return:
     """
-    if job:
-        # 没有job则从默认根目录
-        base_target = __import__(job + "." + module)
-        target = getattr(base_target, module)
+    if target_root:
+        file = ".".join([target_root, file_name])
     else:
-        base_target = __import__(module)
-        target = base_target
-    fields = dir(target)
-
-    type_list = []
-    for field in fields:
-        t = getattr(target, field)
-        if type(t) == type and issubclass(t, current_type) and not t == current_type:
-            type_list.append(t)
-    return type_list
+        file = file_name
+    target_file = __import__(file, fromlist=[target_root])
+    return target_file
 
 
-def load_prepare(prepare_name: str, job: str = "") -> Prepare:
-    prepares: List[type(Prepare)]
+def _load_component(module, component: type) -> List[type]:
+    """
+    加载组件类
+    :param module:
+    :param component:
+    :return:
+    """
+    # FIXME
+    base = [Parse, Action, Processor, Prepare, Model]
+    res = []
+    flied = [getattr(module, x) for x in dir(module) if not x.startswith("_")]
+    for f in flied:
+        if (issubclass(type(f), ComponentMeta) or issubclass(type(f), ModelMeta)) and issubclass(f,
+                                                                                                 component) and f not in base:
+            # print(f)
+            res.append(f)
+    return res
+    # return [i for i in [getattr(module, x) for x in dir(module) if not x.startswith("_")] if
+    #         (i is not Any) and type(i) is type and
+    #         issubclass(i, component) and i is not component]
+
+
+def _load_target_component(components: List[type], target_list) -> List[type]:
+    """
+    选择具体的某几个组件 返回类对象
+    :param components:
+    :param target_list:
+    :return:
+    """
+    res = []
+    if type(target_list) is not list:
+        target_list = [target_list]
+
+    for target in target_list:
+        for component in components:
+            if component.__name__ is target:
+                res.append(component)
+                break
+
+    # return [r[0] for r in [[c for c in components if t is c.__name__] for t in target_list ]]
+    return res
+
+
+def load_prepare(config: Config) -> Prepare:
     try:
-        prepares = load(job, "prepare", Prepare) + load("", "prepare", Prepare)
-    except ModuleNotFoundError as mnfe:
-        prepares = load("", "prepare", Prepare)
+        module = _load_module(config.job, "prepare")
+    except ModuleNotFoundError as e:
+        module = _load_module(None, "prepare")
 
-    prepares: List[Prepare]
-    for prepare in prepares:
-        # and 短路
-        if prepare.__name__ == prepare_name or (hasattr(prepare, "name") and prepare.name == prepare_name):
-            return prepare
-    raise ModuleNotFoundError("not found prepare named: {0}".format(prepare_name))
-
-
-def do_prepare(config: Config) -> Tuple[Scraper, List[Task]]:
-    prepare = load_prepare(config.prepare, config.job)
-    scraper, task = prepare.do()
-
-    if not scraper:
-        act.debug("prepare " + config.prepare + "didn't return a Scraper Instance. Use RequestScraper")
-        scraper = DefaultRequestPrepare.get_scraper()
-    if not task or type(task) == []:
-        raise TypeError(config.prepare + " must yield a task list")
-    act.info("prepare info")
-    act.info("task length: " + str(len(task)))
-    act.info("> scraper: " + str(scraper.__class__.__name__))
-    return scraper, task
+    components = _load_component(module, Prepare)
+    try:
+        prepare = _load_target_component(components, config.prepare)
+    except Exception as e:
+        act.error("[Config] Job {} didn't have prepaer named: {}".format(config.job, config.prepare))
+        raise Exception("config error")
+    return prepare[0]
 
 
-def load_models(config: Config) -> List[Model]:
-    models_list: List[type(Model)] = load(config.job, "model", Model)
+def load_processor(config: Config) -> List[type(Processor)]:
+    module = _load_module(config.job, "process")
 
+    components = _load_component(module, Processor)
+
+    return _load_target_component(components, config.process)
+
+
+def load_model(config: Config) -> List[type(Model)]:
+    module = _load_module(config.job, "model")
+    components: List[type(Model)] = _load_component(module, Model)
     if config.models:
-        allow_model_list: List[Model] = []
-        for allow in config.models:
-            for model in models_list:
-                if model.__name__ == allow:
-                    allow_model_list.append(model)
-                    break
-
-        return allow_model_list + load_default_models()
-
-    return models_list + load_default_models()
+        return components
+    else:
+        return _load_target_component(components, config.models)
 
 
-def load_default_models() -> List[type(Model)]:
-    models_list: List[type(Model)] = load("base", "Model", Model)
-    return models_list
+def load_scheme(config: Config) -> List[Action or Parse]:
+    module_action = _load_module(config.job, "action")
+    module_parse = _load_module(config.job, "parse")
+
+    action_components = _load_component(module_action, Action)
+    parse_components = _load_component(module_parse, Parse)
+
+    schemes = _load_target_component(action_components + parse_components, config.schemes)
+    return [x() for x in schemes]
 
 
-def _register_containers(allow_models: List[str], job: str, conserve: Conserve = None) -> Dict[str, Container]:
-    models = load_models(allow_model)
+def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
+    scraper, task = prepare.do()
+    if not task:
+        act.warning("[Config] prepare must yield tasks")
+        raise TypeError("[Config] build_prepare error")
+    if not scraper:
+        scraper = DefaultRequestPrepare.get_scraper()
+    return (scraper, task)
 
-    containers: Dict[str, Container] = {}
+
+def generate_task(prepare: Prepare) -> List[Task]:
+    task = prepare.get_tasks()
+
+    if not task:
+        act.warning("[Config] prepare must yield tasks")
+        raise TypeError("[Config] build_prepare error")
+    return task
+
+
+def generator_scraper(prepare: Prepare) -> Scraper:
+    try:
+        scraper = prepare.get_scraper()
+    except Exception as e:
+        scraper = DefaultRequestPrepare.get_scraper()
+    return scraper
+
+
+def build_Hub(models: List[type(Model)], processor: List[type(Processor)]):
+    ModelManager.add_model(ProxyModel)
+    ModelManager.add_model(TaskModel)
+
     for model in models:
-        # TODO temp
-        if hasattr(model, "container"):
-            if model.container == "json":
-                # TODO 默认container设置
-                containers[model.__name__] = JsonContainer(model.__name__)
+        ModelManager.add_model(model)
 
-            if model.container == "proxy":
-                containers[model.__name__] = Container(supply_func=get_proxy_model, supply=scrapy_config.Thread * 2)
+    sys_hub = Hub([ProxyModel, TaskModel], Pipeline([]), feed=True, timeout=10)
+    sys_hub.remove_pipeline("ProxyModel")
+    sys_hub.remove_pipeline("TaskModel")
 
-            if model.container == "base":
-                containers[model.__name__] = BaseContainer()
+    dump_hub = Hub(models, Pipeline(processor), feed=False, timeout=10, limit=3000)
 
-        else:
-            containers[model.__name__] = Container(conserve=conserve)
-    return containers
+    temp_appendProxy(sys_hub)
 
 
-def register_containers(config: Config, pipeline: Pipeline) -> Dict[str, Container]:
-    models = load_models(config)
-
-    # TODO 修改container
-    containers: Dict[str, Container] = {}
-    for model in models:
-        if hasattr(model, "container"):
-            if model.container == "proxy":
-                containers[model.__name__] = Container(supply_func=get_proxy_model, supply=scrapy_config.Thread * 2)
-        else:
-            containers[model.__name__] = Container(pipeline=pipeline)
-        containers[model.__name__].name = model.__name__
-
-    act.info("> models :" + ", ".join(list(map(lambda x: x, containers.keys()))))
-    return containers
+    sys_hub.activate()
+    dump_hub.activate()
 
 
-def register_manager(config: Config) -> ModelManager:
-    models = load_models(config)
-    return ModelManager(models)
+    return sys_hub, dump_hub
 
 
-def load_scheme(allow_scheme: List[str], job: str) -> List[Action or Parse]:
-    actions = load(job, "action", Action)
-    parses = load(job, "parse", Parse)
-    defaults = load_default()
-    schemes = actions + parses + defaults
-
-    register_list = []
-
-    for allow in allow_scheme:
-        for scheme in schemes:
-            if scheme.__name__ == allow or (hasattr(scheme, "name") and scheme.name == allow):
-                register_list.append(scheme)
-
-    register_list = load_default_scheme(register_list, allow_scheme)
-
-    act.info("> schemes: " + ", ".join(list(map(lambda x: x.__name__, register_list))))
-
-    if len(register_list) >= len(allow_scheme):
-        return register_list
-    raise ModuleNotFoundError("some scheme cannot found! check scheme and allow_list")
+def temp_appendProxy(sys_hub: Hub):
+    # TODO
+    sys_hub.replace_pipeline("ProxyModel", Pipeline([Proxy_Processor]), scrapy_config.Thread * 2)
 
 
-def load_default():
-    actions = load("base", "Action", Action)
-    parses = load("base", "Parse", Parse)
-    return actions + parses
-
-
-def load_default_scheme(schemes: List[Action or Parse], allow_scheme: List[str]) -> List[Action or Parse]:
-    scheme_type = list(map(lambda x: Action if issubclass(x, Action) else Parse, schemes))
-    # 短路 如果没有
-    if not scheme_type or scheme_type[0] is not Action:
-        schemes.insert(0, DefaultAction)
-
-    return schemes
-
-
-def scrapy(scheme_list: List[Action or Parse], manager: ModelManager, task: Task, scraper: Scraper) -> bool:
+def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub: Hub):
     content = ""
-    scheme_type = list(map(lambda x: Action if issubclass(x, Action) else Parse, scheme_list))
-
+    gather_models: List[Model] = []
     try:
         for scheme in scheme_list:
-            if issubclass(scheme, Action):
-                content = do_action(scheme, task, scraper, manager)
-            elif issubclass(scheme, Parse):
-                do_parse(scheme, content, manager)
-    except Exception as e:
-        print(e.args)
-        print("scheme {0} except error".format(str(scheme)))
-        return False
+            if isinstance(scheme, Action):
+                content = do_action(scheme, task, scraper)
+            elif isinstance(scheme, Parse):
+                gather_models.extend(do_parse(scheme, content))
 
+        for model in gather_models:
+            hub.save(model)
+    except Exception as e:
+        status.error("".join(["[Scrapy] scrapy error ", str(e)]))
+        # status.exception(e)
+        return False
     return True
 
 
-def do_action(action: type(Action), task: Task, scraper: Scraper, manager: ModelManager) -> str:
-    current_action: Action = action()
-    current_action.delay()
-    content = current_action.scraping(task=task, scraper=scraper, manager=manager)
+def do_action(scheme: Action, task, scraper):
+    scheme.delay()
+    content = scheme.scraping(task=task, scraper=scraper)
     return content
 
 
-def do_parse(parse: Parse, content: str, manager: ModelManager):
-    current_parse = parse()
-    # current_models = current_parse.parsing(content=content, manager=manager)
-
-    current_models = current_parse.parsing(content=content, manager=manager)
-    # TODO
+def do_parse(scheme: Parse, content):
+    current_models = scheme.parsing(content=content)
     if not current_models:
-        # log.debug("parse didn't yield a Model")
-        return
-    for model in current_models:
-        name = model.name if hasattr(model, "name") else model.__class__.__name__
-        manager.get(name).append(model)
-
-
-# abort
-def load_conserve(conserve_name: str = "default", job: str = "") -> type(Conserve):
-    conserves = List[type(Conserve)]
-    try:
-        conserves = load(job, "conserve", Conserve) + load("", "conserve", Conserve)
-    except ModuleNotFoundError as mnfe:
-        conserves = load("", "conserve", Conserve)
-
-    conserves: List[Conserve]
-
-    for conserve in conserves:
-        if conserve.__name__ == conserve_name or (hasattr(conserve, "name") and conserve.name == conserve_name):
-            return conserve
-    raise ModuleNotFoundError("not found conserve named: {0}".format(conserve_name))
-
-
-def load_process(config: Config) -> List[type(Process)]:
-    processes = load(config.job, "process", Process)
-
-    registered_processes: List[type(Process)] = []
-    for process_name in config.process:
-        for process in processes:
-            # FIXME
-            if process.__name__ == process_name or (hasattr(process, "name") and process.name == process_name):
-                registered_processes.append(process)
-
-    act.info("> processes: " + ", ".join(list(map(lambda x: x.__name__, registered_processes))))
-    return registered_processes
-
-
-# abort
-# def build_process(processes: List[type(Process)], config: Config) -> Pipeline:
-#     pipeline = Pipeline()
-#     for process_class in processes:
-#         process = process_class()
-#         pipeline.add_process(process)
-#     pipeline.start_task(config)
-#     return pipeline
-
-
-def finish(containers: Dict[str, Container], pipeline: Pipeline):
-    for container in containers:
-        containers[container].dump()
-
-    from base.Container import pool
-    pool.wait()
-
-    pipeline.end_task()
-
-
-# abort
-def build_conserve(conserve: type(Conserve)):
-    # TODO temp: 使用类方法代替
-    current_conserve = conserve()
-    current_conserve.start_conserve()
-    return current_conserve
-
-
-# abort
-def do_conserve(manager: ModelManager, conserve: Conserve) -> bool:
-    for models in manager.models.values():
-        for m in models:
-            try:
-                conserve.model(m)
-            except Exception() as e:
-                print(e.args)
-                print("error")
-                return False
-    return True
-
-
-# abort
-# def load_conf(conf: Dict) -> Config:
-#     config = Config()
-#
-#     job = conf.get("job")
-#     schemes = conf.get("allow")
-#     models = conf.get("models")
-#     prepare = conf.get("prepare")
-#     conserve = conf.get("conserve")
-#
-#     if not (job and schemes):
-#         raise KeyError("set your job and schemes")
-#     if not models:
-#         models = []
-#     if not prepare:
-#         prepare = "default"
-#     if not conserve:
-#         conserve = "default"
-#
-#     config.job = job
-#     config.schemes = schemes
-#     config.models = models
-#     config.prepare = prepare
-#     config.conserve = conserve
-#     return config
-
-
-def thread_check(task: Task, scheme_state=True, conserve_state=True) -> Task or None:
-    if task.count >= 5:
-        # print("failed! task end! task: url:{0} param:{1}".format(task.url, task.param))
-        log.info("failed! task end! task: url:{0} param:{1}".format(task.url, task.param))
-        return
-
-    if not scheme_state:
-        task.count = task.count + 1
-        # print("scheme error retry: {0}".format(task.count))
-        log.info("scheme error retry: {0}".format(task.count))
-        return task
-    elif not conserve_state:
-        task.count = task.count + 1
-        # print("conserve error retry: {0}".format(task.count))
-        log.info("conserve error retry: {0}".format(task.count))
-        return task
+        return []
     else:
-        # print("success! task: url:{0} param:{1}".format(task.url, task.param))
-        log.info("success! task: url:{0} param:{1}".format(task.url, task.param))
+        return list(current_models)
 
 
-def thread_reset(scraper: Scraper, manager: ModelManager):
-    scraper.clear_session()
-    manager.clear_data()
-    scraper.switch_proxy()
+barrier = threading.Barrier(scrapy_config.Thread)
+lock = threading.Lock()
 
 
-def thread_conserve(manager: ModelManager, containers: Dict[str, Container]):
-    # FIXME manager register不符合
-    # lock.acquire()
-    # try:
-    #     for model in manager.models.keys():
-    #         container = containers.get(model)
-    #         model_data = manager.get(model)
-    #         for model_data_item in model_data:
-    #             container.add(model_data_item)
-    # except Exception as e:
-    #     return False
-    # finally:
-    #     lock.acquire()
+class ScrapyThread(threading.Thread):
+    def __init__(self, sys_hub: Hub, dump_hub: Hub, config: Config):
+        threading.Thread.__init__(self)
 
-    for model in manager.models.keys():
-        container = containers.get(model)
-        model_data = manager.get(model)
-        for model_data_item in model_data:
-            container.add(model_data_item)
-    return True
+        self.sys: Hub = sys_hub
+        self.dump: Hub = dump_hub
+        self.config: Config = config
+
+        self.proxy: bool = False
+
+        self.proxy = scrapy_config.Proxy_Able
+
+    def run(self):
+        # load and init scraper
+        scraper, task = build_prepare(load_prepare(self.config))
+        # FIXME 同一个类问题
+        # print(id(scraper))
+        # return
 
 
-if __name__ == '__main__':
-    from base.Prepare import Prepare
-    from base.Action import Action
+        # load  scheme
+        schemes = load_scheme(self.config)
 
-    # load_scheme(["newAction"], 'hope')
+        # reset
+        self.reset(scraper)
+
+        # wait
+        barrier.wait()
+
+        # loop
+        try:
+            while True:
+                self.sync(scrapy_config.Block)
+                task = self.sys.pop("TaskModel")
+
+                res = scrapy(schemes, scraper, task, self.dump)
+                if res:
+                    status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, None))
+                else:
+                    # reset
+                    self.reset(scraper)
+
+                    # back to sys
+                    task.count = task.count + 1
+                    self.sys.save(task)
+
+
+        except queue.Empty as qe:
+            status.info("finish")
+
+    def sync(self, delay: int = 0):
+        lock.acquire()
+        if delay:
+            time.sleep(delay)
+        else:
+            time.sleep(0.5)
+        lock.release()
+
+    def reset(self, scraper: Scraper):
+        scraper.clear_session()
+        if self.proxy:
+            proxyInfo: ProxyModel = self.sys.pop("ProxyModel")
+
+            scraper.set_proxy((proxyInfo.ip, proxyInfo.port))

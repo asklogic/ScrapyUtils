@@ -24,12 +24,12 @@ import os.path as path
 Project_Path = path.dirname(path.realpath(__file__))
 Assets_Path = os.path.join(Project_Path, "assets")
 
-Thread: int = 25
-Block: int = 0.1
+Thread: int = 5
+Block: int = 0.2
 # Block: int = 2
 
-Proxy_Able = True
-# Proxy_Able = False
+# Proxy_Able = True
+Proxy_Able = False
 
 
 ProxyInfo = {

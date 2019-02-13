@@ -40,18 +40,20 @@ def xpathParseList(htmlContent: str, xpathContent: str, separator: str = "") -> 
     return separator.join(data)
 
 
+# TODO
 def jinglin(number):
-    print("get proxy! ", number)
     status_code = 1000
     r = None
     while status_code > 300:
         time.sleep(1)
-        print("wait for proxy!")
+        print("wait for get proxy. number: ", number)
 
         r = requests.get(
             r"http://ip.11jsq.com/index.php/api/entry?method=proxyServer.generate_api_url&packid=0&fa=0&fetch_key=&qty=" + str(
                 number) + "&time=100&pro=&city=&port=1&format=txt&ss=1&css=&dt=1&specialTxt=3&specialJson=", timeout=15,
             headers=headers)
+
+        print("finish. status: {}".format(r.status_code))
         status_code = r.status_code
 
     proxyList = r.content.decode("utf-8").split("\r\n")
@@ -59,7 +61,7 @@ def jinglin(number):
     return proxyList
 
 
-def get_proxy_model(number):
+def get_proxy_model(number: int) -> List[ProxyModel]:
     proxy_list = jinglin(number)
     for p in proxy_list:
         m = ProxyModel()

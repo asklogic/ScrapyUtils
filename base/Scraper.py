@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any
-from base.Container import Container
 import typing
 
 import requests
@@ -14,8 +13,7 @@ class BaseScraper(object):
 
 class Scraper(BaseScraper, metaclass=ABCMeta):
     timeout: int = 10
-    current_proxy: str = {}
-    proxies: Container = None
+    current_proxy: Tuple[str, str] = ("", "")
 
     @abstractmethod
     def __init__(self):
@@ -33,7 +31,7 @@ class Scraper(BaseScraper, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get(self, url=str) -> str:
+    def get(self, url: str) -> str:
         """
         访问url 返回网页内容
         :return: 网页内容
@@ -41,7 +39,7 @@ class Scraper(BaseScraper, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def set_proxy(self, proxy: str):
+    def set_proxy(self, proxy: Tuple[str, str]):
         """
         设置当前代理信息
         :param proxy: 代理信息
@@ -73,18 +71,6 @@ class Scraper(BaseScraper, metaclass=ABCMeta):
 
         # FIXME
 
-    def set_ProxyContainer(self, container: Container):
-        self.proxies = container
-
-    def switch_proxy(self):
-        """
-        切换代理 从container拿proxy 然后set_proxy
-        :return:
-        """
-        if self.proxies:
-            proxy = self.proxies.pop()
-            self.set_proxy(str(proxy.ip) + ":" + str(proxy.port))
-
 
 headers = {
     'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
@@ -93,7 +79,7 @@ headers = {
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
     "Content-Type": "application/x-www-form-urlencoded",
 
-    'Connection': 'close',
+    # 'Connection': 'close',
     'Cache-Control': 'max-age=0',
 }
 
@@ -133,11 +119,10 @@ class RequestScraper(Scraper):
     def origin_get(self) -> requests.Response:
         return self.last
 
-    def set_proxy(self, proxy: str):
-        p = proxy.strip()
+    def set_proxy(self, proxy: Tuple[str, str]):
         self.current_proxy = {
-            "http": r"http://{0}".format(p),
-            "https": r"http://{0}".format(p),
+            "http": r"http://{0}".format(":".join(proxy)),
+            "https": r"http://{0}".format(":".join(proxy)),
         }
 
     def set_timeout(self, time: int):

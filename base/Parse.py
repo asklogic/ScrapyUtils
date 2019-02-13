@@ -2,11 +2,12 @@ from abc import abstractmethod, ABCMeta
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 from base.Model import Model, ModelManager
 from base.tool import xpathParse
+from base.lib import ComponentMeta
 
 
-class Parse(object):
+class Parse(object, metaclass=ComponentMeta):
     @abstractmethod
-    def parsing(cls, content: str, manager: ModelManager) -> Model or Generator[Model]:
+    def parsing(cls, content: str) -> Model or Generator[Model]:
         pass
 
 
@@ -41,5 +42,5 @@ class DefaultXpathParse(Parse):
 class HiddenParse(Parse):
 
     @classmethod
-    def parsing(cls, content: str, manager: ModelManager) -> Model or Generator[Model]:
+    def parsing(cls, content: str) -> Model or Generator[Model]:
         pass

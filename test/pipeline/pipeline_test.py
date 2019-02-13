@@ -7,9 +7,9 @@ import sys
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 from base.Container import Container
-from base.Process import Process, Pipeline
+from base.Process import Processor, Pipeline
 from base.Model import Model, Field
-from base import core
+from base import _core
 from faker import Faker
 import os
 import json
@@ -22,12 +22,12 @@ class Pipeline_Test(TestCase):
 
     def setUp(self) -> None:
         class TestModel(Model):
-            name = Field()
+            _name = Field()
             age = Field()
 
         self.model = TestModel
 
-        class TestProcess(Process):
+        class TestProcessor(Processor):
 
             def end_process(self):
                 pass
@@ -39,7 +39,7 @@ class Pipeline_Test(TestCase):
                 # print(model.name)
                 return model
 
-        class JsonTestProcess(Process):
+        class JsonTestProcessor(Processor):
 
             def __init__(self):
                 super().__init__()
@@ -103,10 +103,10 @@ class Pipeline_Test(TestCase):
         m.age = f.random_digit()
         self.container.add(m)
 
-        from base.Container import pool
+        from base.Container import default_pool
         self.container.dump()
 
-        pool.wait()
+        default_pool.wait()
         self.pipeline.end_task()
         # 20001个model 10000/json
         # 最后生成3个json
@@ -131,7 +131,7 @@ class Pipeline_Test(TestCase):
         }
         config = base.lib.Config(test_config)
 
-        processes = core.load_process(config)
+        processes = _core.load_process(config)
         pipeline = Pipeline(processes, config)
         self.container.pipeline = pipeline
 
@@ -148,7 +148,7 @@ class Pipeline_Test(TestCase):
 
         self.container.add(m)
 
-        core.finish({"t": self.container}, pipeline)
+        _core.finish({"t": self.container}, pipeline)
 
         print(time.time() - t1)
 
@@ -167,10 +167,10 @@ class Pipeline_Test(TestCase):
 
         config = base.lib.Config(test_config)
 
-        models = core.load_models(config)
+        models = _core.load_models(config)
         self.assertEqual(len(models), 1)
 
-        default_model = core.load_default_models()
+        default_model = _core.load_default_models()
         self.assertEqual(len(default_model), 2)
 
         current_models = list(set(default_model + models))
@@ -179,7 +179,7 @@ class Pipeline_Test(TestCase):
         print([x.__name__ for x in current_models])
         # TODO log model
 
-        process = core.load_process(config)
+        process = _core.load_process(config)
 
         import test_job.process
         # self.assertEqual(process, [test_job.process.CustomProcess])
@@ -190,13 +190,13 @@ class Pipeline_Test(TestCase):
         return
 
         # task start
-        pipeline = core.build_process(current_process, config)
+        pipeline = _core.build_process(current_process, config)
 
-        containers = core.register_containers(current_models, pipeline)
+        containers = _core.register_containers(current_models, pipeline)
 
-        core.finish(containers, pipeline)
-        from base.Container import pool
-        pool.wait()
+        _core.finish(containers, pipeline)
+        from base.Container import default_pool
+        default_pool.wait()
 
         self.assertTrue(1, 1)
 

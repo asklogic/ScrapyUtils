@@ -5,8 +5,8 @@ import os
 import json
 import scrapy_config
 from base.Model import Model
-from scjst_base.peewee_connect import ProjectBase
-from base.Process import Process, Pipeline
+# from scjst_base.peewee_connect import ProjectBase
+from base.Process import Processor, Pipeline
 from faker import Faker
 import threadpool
 
@@ -116,13 +116,13 @@ def insert_test():
     print("prepared!")
     p = Pipeline()
 
-    class PrintProcess(Process):
+    class PrintProcessor(Processor):
 
         def process_item(self, model: Model):
             # print(model.get('location'))
             return model
 
-    class InsertProcess(Process):
+    class InsertProcessor(Processor):
         def start_process(self):
             self.data = []
             pass
@@ -134,8 +134,8 @@ def insert_test():
         def end_process(self):
             ProjectTest.insert_many(self.data).execute()
 
-    p.add_process(PrintProcess())
-    p.add_process(InsertProcess())
+    p.add_process(PrintProcessor())
+    p.add_process(InsertProcessor())
 
     p.process_all(data[:])
 
@@ -205,7 +205,81 @@ def threadpool_test():
 
 # insert_test()
 
-threadpool_test()
+# threadpool_test()
+
+import multiprocessing
+from multiprocessing import dummy
+
+
+def multiprocess_test():
+    def sel(seq, **kwargs):
+        # raise Exception("if raise")
+
+        time.sleep(1)
+        print(seq)
+        # print(args)
+        print(kwargs)
+        return "sel_return"
+
+    def callback(obj1):
+        print(type(obj1))
+        print(obj1)
+        pass
+
+    # pool: multiprocessing.Pool = multiprocessing.Pool(processes=1)
+    pool: dummy.Pool = dummy.Pool(processes=1)
+
+    pool.apply_async(sel, args=("test",), kwds={"some": [1, 2, 3]}, callback=callback, error_callback=callback)
+    pool.apply_async(sel, args=("test",), kwds={"some": [1, 2, 3]}, callback=callback, error_callback=callback)
+    pool.apply_async(sel, args=("test",), kwds={"some": [1, 2, 3]}, callback=callback, error_callback=callback)
+    pool.apply_async(sel, args=("test",), kwds={"some": [1, 2, 3]}, callback=callback, error_callback=callback)
+    pool.apply_async(sel, args=("test",), kwds={"some": [1, 2, 3]}, callback=callback, error_callback=callback)
+
+    pool.close()
+    pool.join()
+    # pool.join()
+
+    pass
+
+
+# multiprocess_test()
+
+import concurrent.futures
+
+
+def concurrent_test():
+    def sel(seq, **kwargs):
+
+        time.sleep(1)
+        raise Exception("if raise")
+
+        print(seq)
+        # print(args)
+        # print(kwargs)
+        return "sel_return"
+
+    def callback(future: concurrent.futures.Future):
+        try:
+            print(future.result())
+        except Exception as e:
+            pass
+        future.result()
+
+    print("conccurrent!")
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+
+    t1 = pool.submit(sel, ("ToT"))
+    t1 = pool.submit(sel, ("ToT"))
+    t1 = pool.submit(sel, ("ToT"))
+    # t1 = pool.submit(sel, ("ToT")).add_done_callback(callback)
+    # t1 = pool.submit(sel, ("ToT")).add_done_callback(callback)
+    # t1 = pool.submit(sel, ("ToT")).add_done_callback(callback)
+
+    pool.shutdown(wait=True)
+    # concurrent.futures.wait()
+
+
+concurrent_test()
 
 # head = {
 #     "0": ["ZSLXNAME", "ZCZY"],

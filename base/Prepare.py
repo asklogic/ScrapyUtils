@@ -3,10 +3,10 @@ from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 
 from base.Scraper import Scraper, RequestScraper
 # temp
-from base.lib import Task
+from base.lib import Task, ComponentMeta
 
 
-class BasePrepare(object):
+class BasePrepare(object, metaclass=ComponentMeta):
     pass
 
 
@@ -73,6 +73,8 @@ class DefaultRequestPrepare(Prepare):
     def scraper_prepared(cls) -> Scraper:
         r = RequestScraper()
         return r
+
+
 # or ?
 # FIXME
 def get_default_scraper():

@@ -2,13 +2,15 @@ from watchdog.observers import Observer
 from watchdog.events import *
 import time
 import os
+import sys
 
 
 class baseEvnetHandler(RegexMatchingEventHandler):
     # 修改次数
     check_count = 1
 
-    def __init__(self):
+    def __init__(self, target: str):
+        self.target = target
         re_list = [
             r".*\.py$",
         ]
@@ -24,20 +26,34 @@ class baseEvnetHandler(RegexMatchingEventHandler):
         else:
             print("file modified: {0}".format(event.src_path))
 
-            # os.system("python ./single_test.py")
-            # os.system("python ./lib_test/engine_core_test.py")
-            os.system("python ./pipeline/pipeline_test.py")
-            # os.system("python ./lib_test/Scraper/_test.py")
+            os.system("python -m unittest -v {}".format(self.target))
 
         self.check_count = self.check_count + 1
 
 
 ### test
 if __name__ == "__main__":
-    observer = Observer()
-    event_handler = baseEvnetHandler()
-    observer.schedule(event_handler, os.path.dirname(os.getcwd()), recursive=True)
+    target_name = sys.argv[1]
 
+    target = None
+
+    for walk in os.walk(os.getcwd()):
+
+        if target_name in walk[2] or target_name in [x.split(".")[0] for x in walk[2]]:
+            # 过滤掉 pycache
+            if "__pycache__" in walk[0]:
+                continue
+            print(walk)
+
+            print(os.path.join(walk[0], walk[2][[x.split(".")[0] for x in walk[2]].index(target_name)]))
+            target = os.path.join(walk[0], walk[2][[x.split(".")[0] for x in walk[2]].index(target_name)])
+
+    if not target:
+        raise FileExistsError("here isn't have file name:" + target_name)
+
+    observer = Observer()
+    event_handler = baseEvnetHandler(target)
+    observer.schedule(event_handler, os.path.dirname(os.getcwd()), recursive=True)
     print("telescreen start")
 
     observer.start()

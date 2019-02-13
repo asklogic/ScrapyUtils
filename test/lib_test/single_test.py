@@ -19,7 +19,7 @@ class do_core_Test(TestCase):
     # self.assertEqual(1, 2)
 
     def test_core(self):
-        import base.core as core
+        import base._core as core
         from base.lib import Task
         import base.Scraper as s
         import base.Model as m

@@ -5,17 +5,17 @@ from base.Scraper import Scraper
 from base.Model import ModelManager
 
 # temp
-from base.lib import Task
+from base.lib import Task,ComponentMeta
 
 
-class Action(object):
+class Action(object, metaclass=ComponentMeta):
 
     def delay(self):
         pass
 
     @classmethod
     @abstractmethod
-    def scraping(cls, task: Task, scraper: Scraper, manager: ModelManager) -> str:
+    def scraping(cls, task: Task, scraper: Scraper) -> str:
         """
         进行http请求 获得网页内容
         :param task:
@@ -28,5 +28,5 @@ class Action(object):
 
 class DefaultAction(Action):
     @classmethod
-    def scraping(cls, task: Task, scraper: Scraper, manager: type) -> str:
+    def scraping(cls, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)

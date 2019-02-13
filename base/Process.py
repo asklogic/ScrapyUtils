@@ -1,13 +1,14 @@
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator, Any
-from base.Model import Model
+from base.Model import Model, ModelManager, ProxyModel
 import json
 import redis
-from base.lib import Config
+from base.lib import Config, ComponentMeta
 import random
 import os.path as path
 import time
 import os
+from base.tool import jinglin
 
 from scrapy_config import Project_Path
 from base.log import act, status
@@ -17,11 +18,11 @@ class BaseProcess(object):
     pass
 
 
-def target(model: type):
+def target(model: type(Model)):
     def wrapper(func):
         def innerwrapper(*args, **kwargs):
-            if not type(model) == type:
-                raise TypeError("allow must be class")
+            if not issubclass(model, Model):
+                raise TypeError("target must be class")
             if isinstance(args[1], model):
                 return func(*args, **kwargs)
             else:
@@ -32,102 +33,35 @@ def target(model: type):
     return wrapper
 
 
-# class _Process(BaseProcess):
-#
-#     def task_start(self):
-#         pass
-#
-#     def task_end(self):
-#         pass
-#
-#     @abstractmethod
-#     def process_model(self, model: Model):
-#         pass
-# class RedisDuplicateGate(_Process):
-#     db: redis.Redis
-#
-#     def __init__(self, origin_key: str):
-#         r = redis.Redis()
-#         self.r = r
-#         self.origin_key = origin_key
-#
-#     def load_identification(self):
-#         pass
-#
-#     def check_identification(self, filed):
-#         key = ":".join([self.origin_key, filed])
-#
-#         res = self.db.get(key)
-#         if res:
-#             return True
-#         else:
-#             return False
-#
-#     def save_identification(self, filed: str):
-#         key = ":".join([self.origin_key, filed])
-#
-#         self.db.set(key, 1)
-#
-#     def process_model(self, model: Model):
-#         pass
-# class TestProcess(_Process):
-#
-#     def process_model(self, model: Model) -> Model:
-#         print(model.ip)
-#         return model
-# class OtherProcess(_Process):
-#
-#     def process_model(self, model: Model):
-#         if random.random() > 0.5:
-#
-#             return model
-#         else:
-#             return None
-# class _Pipeline(object):
-#
-#     def __init__(self):
-#         self.process_list: List[_Process] = []
-#
-#     def add_process(self, process: _Process):
-#         self.process_list.append(process)
-#
-#     def process_models(self, item: Model):
-#         current_model = item
-#         for current in self.process_list:
-#             if isinstance(current_model, Model):
-#                 print("is model instance")
-#             elif bool(current_model):
-#                 print("return true")
-#             else:
-#                 print("abort")
-#
-#             if current_model:
-#                 current_model = current.process_model(current_model)
-#
-#     pass
+class ProcessorMeta(ComponentMeta):
+
+    def __new__(cls, name, bases, attrs: dict):
+        if not attrs.get("target"):
+            attrs["target"] = Model
+        return super().__new__(cls, name, bases, attrs)
 
 
-class Process(object):
-    def __init__(self, config: Config = None):
-        self.next: Process = None
+class Processor(object, metaclass=ProcessorMeta):
+    target: type(Model)
 
-    def config(self):
+    def __init__(self, settings: dict):
+        self.count: int = 0
+        self.next: Processor = None
+
+    @abstractmethod
+    def start_task(self, settings: dict):
         pass
 
     @abstractmethod
-    def start_task(self, config: Config = None):
+    def start_process(self, number: int, model: str = "Model"):
+        pass
+
+    @abstractmethod
+    def end_process(self):
         pass
 
     @abstractmethod
     def end_task(self):
-        pass
-
-    # @abstractmethod
-    def start_process(self):
-        pass
-
-    # @abstractmethod
-    def end_process(self):
         pass
 
     @abstractmethod
@@ -136,70 +70,41 @@ class Process(object):
 
 
 class Pipeline(object):
-    head: Process = None
-    process_list: List[Process] = []
-    process_count: List[int] = []
+    head: Processor = None
+    processor_list: List[Processor] = []
 
-    def __init__(self, process_list: List[type(Process)], config: Config = None):
+    def __init__(self, processor_list: List[type(Processor)] = (), settings: Dict[str, str] = {}):
         """
         构建process
-        :param process_list:
-        :param config:
+        :param processor_list: processor对象列表
+        :param settings: config对象中的pipeline键值 默认为空
         """
-        self.head: Process = None
+        self.head: Processor = None
+        self.processor_list: List[Processor] = []
+        process_count: List[int] = []
 
-        for process in process_list:
-            current_process: Process = process(config)
-            current_process.config()
-            current_process.start_task()
+        for process in processor_list:
+            current_process: Processor = process(settings)
+            current_process.start_task(settings)
             self.add_process(current_process)
 
-    def end_task(self):
+    def add_process(self, processor: Processor):
         """
-        关闭process
+        添加processor
+        :param processor:
         :return:
         """
-        list(map(lambda x: x.end_task(), self.process_list))
-
-    def add_process(self, process: Process):
-        """
-        添加process
-        :param process:
-        :return:
-        """
-        self.process_list.append(process)
-        self.process_count.append(0)
+        self.processor_list.append(processor)
 
         current = self.head
         if self.head is None:
-            self.head = process
+            self.head = processor
         else:
             while current.next is not None:
                 current = current.next
-            current.next = process
+            current.next = processor
 
-    def process_all(self, data: List[Model], container_name: str = ""):
-        """
-        处理多个process
-        :param data:
-        :param container_name:
-        :return:
-        """
-        list(map(lambda x: x.start_process(), self.process_list))
-
-        act.info("process models. Length: " + str(len(data)) + " Container: " + container_name)
-        process_status = [0 for x in self.process_list]
-        for model in data:
-            index = self.process(model)
-            process_status[index] = process_status[index] + 1
-
-        list(map(lambda x: x.end_process(), self.process_list))
-        act.info("process finish")
-
-        for i in range(len(self.process_list)):
-            act.info(" ".join([str(process_status[i]), "in", self.process_list[i].__class__.__name__]))
-
-    def process(self, model: Model):
+    def process(self, model: Model) -> Tuple[Model, str]:
         """
         处理一个process
         :param model:
@@ -210,69 +115,189 @@ class Pipeline(object):
         current_process = self.head
 
         last = model
-        result = current_process.process_item(model)
 
-        while current_process.next is not None:
+        # result = current_process.process_item(model)
+        #
+        # # TODO 判定逻辑
+        # while current_process.next is not None:
+        #     if isinstance(result, Model) :
+        #         # 保存此processor返回的model 传至下一个
+        #         current_process = current_process.next
+        #         index += 1
+        #         last = result
+        #         result = current_process.process_item(result)
+        #     elif bool(result) or result is None:
+        #         # 跳过
+        #         current_process = current_process.next
+        #         index += 1
+        #         result = current_process.process_item(last)
+        #     elif result is False:
+        #         break
+        #     else:
+        #         break
 
-            if isinstance(result, Model):
-                current_process = current_process.next
-                index += 1
-                last = result
-                result = current_process.process_item(result)
-            # TODO 判定逻辑
-            elif bool(result) or result is None:
-                current_process = current_process.next
-                index += 1
+        result = last
+        # fixme 遗留问题
+        while current_process is not None:
+            if isinstance(result, current_process.target):
+                # 保存此processor返回的model 传至下一个
+
                 result = current_process.process_item(last)
-            elif result is False:
+                if isinstance(result, Model):
+                    last = result
+                index += 1
+                current_process = current_process.next
+            elif not bool(result):
+                # 返回False 直接退出
+
                 break
             else:
-                break
-        return index
+                # 跳过
+
+                index += 1
+                current_process = current_process.next
+
+        return (last, index)
+
+    def feed_model(self, model_name: str, number: int) -> List[Model]:
+        """
+        feed Model 生成Model
+        由ModelManager生成Model 再由processor进行处理(添加各属性
+        :param number: 需要生成的model数量
+        :param model_name: model 名称
+        :return: 返回进过full过滤过的Model 保证Model值都被填满
+        """
+        list(map(lambda x: x.start_process(number, ModelManager.model_class(model_name)), self.processor_list))
+
+        # TODO
+        # FIXME ? wtf ?
+        # model_list = []
+        # for i in range(number):
+        #     m = ModelManager.model(model_name)
+        #     print("True id ", id(m.data))
+        #
+        #     model_list.append(m)
+        # [print("List True id ", id(x.data)) for x in model_list]
+        # model_list = [ModelManager.model(model_name) for i in range(number)]
+
+        act.debug("[Pipeline] feed model start. Model: {0}  number: {1}".format(model_name, number))
+        result_list: List[Model] = []
+
+        for index in range(number):
+            # 构建Model
+            pure_model = ModelManager.model(model_name)
+
+            # 处理Model
+            result: Model = self.process(pure_model)[0]
+            # 短路 None
+            if result and result.full():
+                result_list.append(result)
+
+        list(map(lambda x: x.end_process(), self.processor_list))
+        act.info("[Pipeline] feed model finish. Model: {0}  remained number: {1}".format(model_name, len(result_list)))
+        return result_list
+
+    def dump_model(self, data: List[Model]):
+        """
+        dump model 将得到的model交由processor处理保存
+        :param data: model 列表
+        :return:
+        """
+        number = len(data)
+
+        list(map(lambda x: x.start_process(number), self.processor_list))
+        # act.debug("[Pipeline] dump Model. Model: {0}  number: {1}".format(data[0]._name, len(data)))
+
+        process_status = [0 for x in self.processor_list]
+        for model in data:
+            index: int = self.process(model)[1]
+            process_status[index - 1] = process_status[index - 1] + 1
+
+        for i in range(len(self.processor_list)):
+            act.debug(
+                "[Pipeline] " + " ".join([str(process_status[i]), "in", self.processor_list[i].__class__.__name__]))
+        # act.info("[Pipeline] dump Model finish.")
+
+        list(map(lambda x: x.end_process(), self.processor_list))
+
+    def end_task(self):
+        """
+        关闭process
+        :return:
+        """
+        list(map(lambda x: x.end_task(), self.processor_list))
 
 
-class JsonFileProcess(Process):
-    def __init__(self, config: Config = None):
-        super().__init__(config)
 
+class JsonFileProcessor(Processor):
+
+    def __init__(self, settings: dict):
+        super().__init__(settings)
+
+        # TODO
         # 文件分卷
         self.part: int = 0
         # 单个文件元素限制
         self.limit: int = 5000
         # 文件名字
-        self.name: str = self.__class__.__name__ + str(int(time.time()))[-4:]
+        self.name: str = self.__class__.__name__
         # 文件路径
-        # FIXME config为空
-        self.file_path: str = path.join(Project_Path, config.job, "data", self.name)
+
         # data
         self.data: List[Model] = []
+        self.mark = str(int(time.time()))[-4:]
 
-    @abstractmethod
-    def config(self):
-        pass
+        if settings.get("JsonFile"):
+            json_setting = settings.get("JsonFile")
+            if json_setting.get("mark"):
+                self.mark = str(json_setting.get("mark"))
 
-    def start_task(self, config: Config = None):
-        temp_file = self.file_path + "JsonFileTest.json"
-        print(temp_file)
+        if settings.get("job"):
+            self.dir_path = path.join(Project_Path, settings.get("job"), "data")
+        else:
+            self.dir_path = path.join(Project_Path, "assets")
+
+        self.detect_save()
+        self.detect_exist_file()
+
+    def detect_exist_file(self):
+
+        while os.path.exists(path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(0), ".json"]))) \
+                and \
+                os.path.exists(
+                    path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part + 1), ".json"]))):
+            self.part = self.part + 1
+
+        file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
+        if os.path.exists(file_path):
+            with open(file_path) as f:
+                data = json.load(f)
+            self.data.extend(data)
+            act.info("<<JsonFile>> load exist data. exist file: " + file_path)
+
+    def detect_save(self):
+        temp_file = path.join(self.dir_path, self.name + "JsonFileTest.json")
+        act.info("<<JsonFile>> Json File path: " + path.join(self.dir_path))
         try:
+            if not os.path.exists(self.dir_path):
+                os.mkdir(self.dir_path)
+
             with open(temp_file, "w") as f:
                 json.dump([], f)
-
             os.remove(temp_file)
         except Exception as e:
             print(e.args)
-            raise TypeError('cannot dump json file!')
-        pass
+            raise TypeError('<<JsonFile>> cannot dump json file!')
 
     def save_model(self, model: Model):
         self.data.append(model.pure_data())
         return True
 
     def dump_to_file(self):
-        file = self.file_path + "-part" + str(self.part) + ".json"
-        with open(file, "w") as f:
+        file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
+        with open(file_path, "w") as f:
             json.dump(self.data[:self.limit], f)
-            print("success dump file")
+            act.info("<<JsonFile>> success dump file. " + file_path)
         self.part += 1
         self.data = self.data[self.limit:]
 
@@ -281,7 +306,7 @@ class JsonFileProcess(Process):
             self.dump_to_file()
 
     def end_task(self):
-        print("end task! last len:", len(self.data))
+        act.info("<<JsonFile>> end task! last len:" + str(len(self.data)))
         if self.data:
             self.dump_to_file()
 
@@ -290,29 +315,33 @@ class JsonFileProcess(Process):
         return model
 
 
-class DuplicateProcess(Process):
+class DuplicateProcessor(Processor):
 
-    def __init__(self, config: Config = None):
-        super().__init__(config)
+    def __init__(self, settings: dict):
+        super().__init__(settings)
 
-        # 地址
-        self.host: str = "127.0.0.1"
-        self.port: int = 6379
-        # 数据库索引
-        self.db_index: int = 0
+        if not settings.get("duplication"):
+            # TODO
+            # 地址
+            self.host: str = "127.0.0.1"
+            self.port: int = 6379
+            # 数据库索引
+            self.db_index: int = 0
+
+        name = self.__class__.__name__
+        if settings.get("job"):
+            job = settings.get("job")
+            self.set_base(job, self.target._name, name)
+        else:
+            self.set_base(self.target._name, name)
 
         # redis数据库
         self.db: redis.Redis = None
 
-        # 键值名称
-        name = self.__class__.__name__
-        self.base = ":".join([config.job, name]) + ":"
+        # 链接
+        self.connect()
 
-    # @abstractmethod
-    def config(self):
-        pass
-
-    def start_task(self, config: Config = None):
+    def connect(self):
         if not self.db:
             self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, decode_responses=True)
 
@@ -322,17 +351,28 @@ class DuplicateProcess(Process):
             print(e.args)
             raise TypeError('redis connect failed')
 
-    def exist_identification(self, key):
+    def set_base(self, *args):
+        self.base = ":".join(args)
+
+    def key(self, key: str) -> str:
+        return ":".join([self.base, key])
+
+    def exist_identification(self, key_name) -> bool:
         """
         存在key 返回True
         不存在key 返回False
-        :param key:
+        :param key_name:
         :return:
         """
-        return self.db.exists(self.base + key)
+        return self.db.exists(self.key(key_name))
 
-    def save_identification(self, key):
-        self.db.set(self.base + key, 1)
+    def save_identification(self, key_name):
+        """
+        保存
+        :param key_name:
+        :return:
+        """
+        self.db.set(self.key(key_name), 1)
 
     def check_identification(self, key):
         """
@@ -349,38 +389,17 @@ class DuplicateProcess(Process):
             return True
 
 
-# class FirstProcess(Process):
-#
-#     def process_item(self, model: Model):
-#         print(model.ip)
-#         return model
-#
-#
-# class SecondProcess(Process):
-#     def process_item(self, model: Model):
-#         print(model.port)
-#         return model
-#
-#
-# class OriginProcess(Process):
-#     def process_item(self, model: Model):
-#         if random.random() > 0.5:
-#             return model
+class Proxy_Processor(Processor):
+    target = ProxyModel
+
+    def start_process(self, number: int, model: str = "Model"):
+        self.proxy_data: [] = jinglin(number)
+
+    def process_item(self, model: ProxyModel) -> Any:
+        proxy = self.proxy_data.pop().split(":")
+        model.ip = proxy[0]
+        model.port = proxy[1]
+        return model
 
 
-if __name__ == '__main__':
-    from base.Model import ProxyModel
 
-    pipeline = Pipeline()
-
-    # pipeline.add_process(OriginProcess())
-    # pipeline.add_process(FirstProcess())
-    # pipeline.add_process(SecondProcess())
-
-    modelList = []
-    for i in range(2000):
-        m = ProxyModel()
-        m.ip = "1.2.2.3"
-        m.port = "1234"
-        modelList.append(m)
-        pipeline.process(m)

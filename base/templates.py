@@ -56,9 +56,10 @@ class ${class_name}Process(Process):
 
 # prepare
 
-prepare_template = """from base.tools import baseScraper, requestScraper
+prepare_template = """from base.Scraper import BaseScraper, RequestScraper
+from base.Prepare import Prepare
 
-from base.lib import Prepare, Task
+from base.lib import Task
 
 
 class ${class_name}Prepare(Prepare):

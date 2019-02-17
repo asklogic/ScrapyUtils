@@ -6,8 +6,12 @@ from base.lib import ComponentMeta
 
 
 class Parse(object, metaclass=ComponentMeta):
+    def __init__(self):
+        self.context: Dict = {}
+        pass
+
     @abstractmethod
-    def parsing(cls, content: str) -> Model or Generator[Model]:
+    def parsing(self, content: str) -> Model or Generator[Model]:
         pass
 
 

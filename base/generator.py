@@ -78,6 +78,45 @@ def config_generation(job):
         f.writelines(code)
 
 
+def dir_generator(job_name: str):
+    target_path = os.path.join(PROJECT_PATH, job_name)
+
+    if not os.path.isdir(target_path):
+        os.makedirs(target_path)
+        with open(os.path.join(target_path, "__init__.py"), "w") as f:
+            pass
+
+    target_data_path = os.path.join(target_path, 'data')
+    if not os.path.isdir(target_data_path):
+        os.makedirs(target_data_path)
+
+
+def component_generate(job_name: str):
+    target_path = os.path.join(PROJECT_PATH, job_name)
+
+    for component in generator_mapper:
+        component_path = os.path.join(target_path, component)
+        if not os.path.isfile(component_path):
+            with open(os.path.join(target_path, component), "w") as f:
+                template = Template(getattr(templates, generator_mapper[component]))
+                code = template.substitute(class_name=job_name.capitalize())
+                f.writelines(code)
+
+
+def overwrite(job_name):
+    target_path = os.path.join(PROJECT_PATH, job_name)
+
+    for component in generator_mapper:
+        component_path = os.path.join(target_path, component)
+        if os.path.isfile(component_path):
+            with open(os.path.join(target_path, component), "w") as f:
+                template = Template(getattr(templates, generator_mapper[component]))
+                code = template.substitute(class_name=job_name.capitalize())
+                f.writelines(code)
+
 if __name__ == '__main__':
-    job_generation("other_test")
+    dir_generator("scjst")
+    component_generate("scjst")
+    # overwrite("other_test")
+    # job_generation("other_test")
     # config_generation("ProxyInfo")

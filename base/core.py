@@ -5,7 +5,6 @@ import queue
 import time
 
 from base.log import act, status
-
 from base.lib import Config, Task, ComponentMeta
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
@@ -100,7 +99,14 @@ def load_processor(config: Config) -> List[type(Processor)]:
 def load_model(config: Config) -> List[type(Model)]:
     module = _load_module(config.job, "model")
     components: List[type(Model)] = _load_component(module, Model)
-    if config.models:
+
+    ModelManager.add_model(ProxyModel)
+    ModelManager.add_model(TaskModel)
+
+    for model in components:
+        ModelManager.add_model(model)
+
+    if not config.models:
         return components
     else:
         return _load_target_component(components, config.models)
@@ -113,8 +119,15 @@ def load_scheme(config: Config) -> List[Action or Parse]:
     action_components = _load_component(module_action, Action)
     parse_components = _load_component(module_parse, Parse)
 
-    schemes = _load_target_component(action_components + parse_components, config.schemes)
-    return [x() for x in schemes]
+    schemes_class = _load_target_component(action_components + parse_components, config.schemes)
+
+    schemes = [x() for x in schemes_class]
+
+    context = {}
+    for scheme in schemes:
+        scheme.context = context
+
+    return schemes
 
 
 def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
@@ -145,26 +158,16 @@ def generator_scraper(prepare: Prepare) -> Scraper:
 
 
 def build_Hub(models: List[type(Model)], processor: List[type(Processor)]):
-    ModelManager.add_model(ProxyModel)
-    ModelManager.add_model(TaskModel)
-
-    for model in models:
-        ModelManager.add_model(model)
-
     sys_hub = Hub([ProxyModel, TaskModel], Pipeline([]), feed=True, timeout=10)
     sys_hub.remove_pipeline("ProxyModel")
     sys_hub.remove_pipeline("TaskModel")
 
     dump_hub = Hub(models, Pipeline(processor), feed=False, timeout=10, limit=3000)
 
-    temp_appendProxy(sys_hub)
-
-
-    sys_hub.activate()
-    dump_hub.activate()
-
 
     return sys_hub, dump_hub
+
+
 
 
 def temp_appendProxy(sys_hub: Hub):
@@ -178,7 +181,9 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub
     try:
         for scheme in scheme_list:
             if isinstance(scheme, Action):
-                content = do_action(scheme, task, scraper)
+                res = do_action(scheme, task, scraper)
+                if res:
+                    content = res
             elif isinstance(scheme, Parse):
                 gather_models.extend(do_parse(scheme, content))
 
@@ -228,12 +233,13 @@ class ScrapyThread(threading.Thread):
         # print(id(scraper))
         # return
 
-
         # load  scheme
-        schemes = load_scheme(self.config)
+        schemes: List[Action or Parse] = load_scheme(self.config)
 
         # reset
         self.reset(scraper)
+        for scheme in schemes:
+            scheme.context.clear()
 
         # wait
         barrier.wait()
@@ -246,15 +252,20 @@ class ScrapyThread(threading.Thread):
 
                 res = scrapy(schemes, scraper, task, self.dump)
                 if res:
-                    status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, None))
-                else:
+                    status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
+                elif task.count < 5:
                     # reset
                     self.reset(scraper)
+                    for scheme in schemes:
+                        scheme.context.clear()
+
+                    status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
 
                     # back to sys
                     task.count = task.count + 1
                     self.sys.save(task)
-
+                else:
+                    status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
 
         except queue.Empty as qe:
             status.info("finish")

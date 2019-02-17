@@ -4,14 +4,13 @@
 # action
 
 action_template = """from base.Action import Action
-from base.Model import ModelManager
 from base.Scraper import Scraper
 from base.lib import Task
 
 
 class ${class_name}Action(Action):
-    @classmethod
-    def scraping(cls, task: Task, scraper: Scraper, manager: ModelManager) -> str:
+
+    def scraping(self, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
 """
 
@@ -27,7 +26,8 @@ from base.tool import xpathParse, xpathParseList
 
 
 class ${class_name}Parse(Parse):
-    def parsing(cls, content: str, manager: ModelManager) -> Model or Generator[Model]:
+
+    def parsing(self, content: str) -> Model or Generator[Model]:
         pass
 """
 
@@ -46,12 +46,15 @@ class ${class_name}Model(Model):
 process_template = """from typing import Any
 
 from base.Model import Model
-from base.Process import Process
+from base.Process import Processor, JsonFileProcessor, DuplicateProcessor
+from .model import *
 
 
-class ${class_name}Process(Process):
+class ${class_name}Process(Processor):
+
     def process_item(self, model: Model) -> Any:
         print(model.pure_data())
+        return model        
 """
 
 # prepare

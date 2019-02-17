@@ -15,23 +15,32 @@ from base.Parse import Parse
 import base.core as core
 
 
+
 class TestCore(TestCase):
     def setUp(self):
         mock_config = {
             "job": "core_test",
             "allow": [
-                "CoreTestAction",
+                # "CoreTestAction",
                 # "CoreTestNextAction",
+
+                "CoreTestHomePageAction",
+                "CoreTestViewStatusParse",
+                "CoreTestPostAction",
+                "CoreTestBaseInfoParse",
+
+
                 # "CoreTestParse",
-                "CoreProxyTestParse",
+                # "CoreProxyTestParse",
             ],
             "process": [
                 "CoreTestProcessor",
                 "CoreOtherTestProcessor",
             ],
             "model": [
-                "CoreTestModel",
-                "IpModel",
+                # "CoreTestModel",
+                # "IpModel",
+                "BaseModel",
             ],
             "prepare": "CoreTestPrepare",
         }
@@ -62,13 +71,16 @@ class TestCore(TestCase):
         # print(scraper)
 
         # sys_hub, dump_hub = core.build_Hub(model, processor)
+        # sys_hub.activate()
+        # dump_hub.activate()
 
         # core.scrapy(scheme, scraper, task[0], dump_hub)
 
         # dump_hub.stop()
+        # sys_hub.stop()
 
     def test_thread(self):
-        return
+        # return
 
         con = self.config
 
@@ -81,6 +93,8 @@ class TestCore(TestCase):
         # scheme = core.load_scheme(con)
 
         sys_hub, dump_hub = core.build_Hub(model, processor)
+        sys_hub.activate()
+        dump_hub.activate()
 
         # init prepare
         for t in core.generate_task(prepare):

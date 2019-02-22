@@ -2,9 +2,11 @@ from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any
 import typing
 
+from selenium.webdriver import Firefox, FirefoxOptions
+
 import requests
 
-requests.adapters.DEFAULT_RETRIES
+requests.adapters.DEFAULT_RETRIES = 5
 
 
 class BaseScraper(object):
@@ -138,6 +140,81 @@ class RequestScraper(Scraper):
         self.clear_session()
 
 
-class FireFxoScraper(Scraper):
-    def __init__(self, headless=True, activated=True):
+class FireFoxScraper(Scraper):
+    def __init__(self, headless=True, image=False, activated=True):
+        self.firefox: Firefox = None
+
+        self.timeout = 7
+
+        self.options: FirefoxOptions = FirefoxOptions()
+        self.options.headless = headless
+
+        self.options.set_preference('browser.sessionhistory.max_total_viewers', 1)
+        if not image:
+            self.options.set_preference('permissions.default.image', 2)
+
+        if activated:
+            self.activate()
+
+    def activate(self):
+        """
+        启动Firefox Scraper
+        :return:
+        """
+        self.firefox = Firefox(options=self.options)
+        self.firefox.set_script_timeout(self.timeout)
+        self.firefox.set_page_load_timeout(self.timeout)
+
+        self.firefox.get("about:config")
+        self.firefox.find_element_by_id("showWarningNextTime").click()
+        self.firefox.find_element_by_id("warningButton").click()
+        self.firefox.get("about:blank")
+
+    def getDriver(self) -> Firefox:
+        """
+        拿到driver 对象
+        :return:
+        """
+        return self.firefox
         pass
+
+    def get(self, url: str) -> str:
+        self.firefox.get(url=url)
+        return self.firefox.page_source
+
+    def set_proxy(self, proxy: Tuple[str, str]):
+        """
+        设置代理
+        通过修改config内容 植入js修改浏览器代理
+        :param proxy:
+        :return:
+        """
+        self.firefox.get("about:config")
+        js_content = """
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+        prefs.setIntPref("network.proxy.type", 1);
+        prefs.setCharPref("network.proxy.http", "{0}");
+        prefs.setIntPref("network.proxy.http_port", "{1}");
+        prefs.setCharPref("network.proxy.ssl", "{0}");
+        prefs.setIntPref("network.proxy.ssl_port", "{1}");
+        """.format(proxy[0], proxy[1])
+
+        js_content = js_content.strip().replace("\n", "")
+        self.firefox.execute_script(js_content)
+
+    def set_timeout(self, time: int):
+        if self.firefox:
+            self.firefox.set_page_load_timeout(time)
+            self.firefox.set_script_timeout(time)
+
+    def clear_session(self):
+        """
+        回到空白页 删除cookies
+        :return:
+        """
+        self.firefox.get("about:blank")
+        self.firefox.delete_all_cookies()
+
+    def quit(self):
+        if self.firefox:
+            self.firefox.quit()

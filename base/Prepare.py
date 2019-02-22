@@ -2,12 +2,24 @@ from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 
 from base.Scraper import Scraper, RequestScraper
-# temp
-from base.lib import Task, ComponentMeta
+
+from base.lib import ComponentMeta
+from base.scheme import Scheme
+from base.task import Task
 
 
 class BasePrepare(object, metaclass=ComponentMeta):
-    pass
+    # component property
+    _name: str
+    _active: bool
+
+    # prepare property
+    schemeList: List[Scheme]
+
+    # config
+    ProxyAble: bool = False
+    Thread: int = 5
+    Block: int = 0.2
 
 
 class Prepare(BasePrepare):
@@ -55,7 +67,12 @@ class Prepare(BasePrepare):
         if isinstance(scraper, Scraper):
             # TODO
             return scraper
-        raise Exception("scraper_prepared must return a Scraper Instance")
+        else:
+            r = RequestScraper()
+            r.set_timeout(5)
+            return r
+        # fixme
+        # raise Exception("scraper_prepared must return a Scraper Instance")
 
     @classmethod
     def get_tasks(cls) -> List[Task]:

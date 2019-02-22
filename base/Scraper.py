@@ -136,3 +136,8 @@ class RequestScraper(Scraper):
 
     def quit(self):
         self.clear_session()
+
+
+class FireFxoScraper(Scraper):
+    def __init__(self, headless=True, activated=True):
+        pass

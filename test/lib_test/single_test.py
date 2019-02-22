@@ -20,7 +20,7 @@ class do_core_Test(TestCase):
 
     def test_core(self):
         import base._core as core
-        from base.lib import Task
+        from base.task import Task
         import base.Scraper as s
         import base.Model as m
 
@@ -45,7 +45,7 @@ class do_core_Test(TestCase):
         # load scheme
         from hope.action import newAction
         from hope.parse import NewParse
-        from base.Parse import DefaultXpathParse
+        from base.common import DefaultXpathParse
         # Done
         schemes = core.load_scheme(["xpath"], 'hope')
         self.assertEqual(schemes[0], DefaultXpathParse)

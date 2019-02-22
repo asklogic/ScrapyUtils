@@ -99,7 +99,7 @@ def component_generate(job_name: str):
         if not os.path.isfile(component_path):
             with open(os.path.join(target_path, component), "w") as f:
                 template = Template(getattr(templates, generator_mapper[component]))
-                code = template.substitute(class_name=job_name.capitalize())
+                code = template.substitute(class_name="".join([job_name[0:1].upper(), job_name[1:]]))
                 f.writelines(code)
 
 
@@ -111,12 +111,14 @@ def overwrite(job_name):
         if os.path.isfile(component_path):
             with open(os.path.join(target_path, component), "w") as f:
                 template = Template(getattr(templates, generator_mapper[component]))
-                code = template.substitute(class_name=job_name.capitalize())
+
+                code = template.substitute(class_name="".join([job_name[0:1].upper(), job_name[1:]]))
                 f.writelines(code)
 
+
 if __name__ == '__main__':
-    dir_generator("scjst")
-    component_generate("scjst")
+    dir_generator("ScjstBase")
+    component_generate("ScjstBase")
     # overwrite("other_test")
     # job_generation("other_test")
     # config_generation("ProxyInfo")

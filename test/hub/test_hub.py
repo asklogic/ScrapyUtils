@@ -11,7 +11,8 @@ from base.Model import Model
 from base.lib import Config
 
 from base._core import load_default_models
-from base.Process import Pipeline, Processor, target, JsonFileProcessor, DuplicateProcessor
+from base.Process import Pipeline, Processor, target
+from base.common import JsonFileProcessor, DuplicateProcessor
 from base.Model import ProxyModel, ModelManager, FailedTaskModel, TaskModel, Field
 
 from base.hub import Hub

@@ -9,8 +9,7 @@ from base.lib import Config
 import scrapy_config
 from base.Prepare import Prepare
 from base.Model import Model
-from base.Action import Action
-from base.Parse import Parse
+from base.scheme import Action, Parse
 
 import base.core as core
 
@@ -107,7 +106,6 @@ class TestCore(TestCase):
             thread_List.append(t)
             t.setDaemon(True)
             t.start()
-
 
         [t.join() for t in thread_List]
         sys_hub.stop()

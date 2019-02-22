@@ -1,22 +1,6 @@
-from abc import abstractmethod
-from typing import TypeVar, Generic, Tuple, List, Dict, Union
-
-from base.log import act
-from base.Model import ModelManager, TaskModel
-
-ModelManager.add_model(TaskModel)
+from typing import List, Dict
 
 
-class Task(object):
-    url: str
-    param: str
-
-    count: int
-
-    def __new__(cls, *args, **kwargs) -> TaskModel:
-        task = ModelManager.model("TaskModel")
-        task.count = 0
-        return task
 
 
 class Config(object):
@@ -86,5 +70,8 @@ class Config(object):
 class ComponentMeta(type):
     def __new__(cls, name, bases, attrs: dict):
         attrs["_name"] = name
+
+        if not attrs.get("_active"):
+            attrs["_active"] = False
 
         return type.__new__(cls, name, bases, attrs)

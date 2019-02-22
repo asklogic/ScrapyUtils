@@ -3,6 +3,9 @@ from unittest import TestCase
 
 import sys
 
+import base.common
+import base.task
+
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 from base import lib as Lib
@@ -43,7 +46,7 @@ class Engine_Core_Test(TestCase):
         scraper, task = _core.do_prepare(config.prepare, config.job)
 
         self.assertIsInstance(scraper, Scraper.Scraper)
-        self.assertIsInstance(task[0], Lib.Task)
+        self.assertIsInstance(task[0], base.task.Task)
 
         # conserve
         conserve = _core.load_conserve(config.conserve, config.job)

@@ -7,7 +7,8 @@ import sys
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 from base.Process import Pipeline
-from base.Process import Pipeline, Processor, target, JsonFileProcessor
+from base.Process import Pipeline, Processor, target
+from base.common import JsonFileProcessor
 from base.Model import ProxyModel, Model, ModelManager, Field
 
 from base.tool import get_proxy_model, jinglin

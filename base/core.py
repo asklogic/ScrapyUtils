@@ -5,14 +5,16 @@ import queue
 import time
 
 from base.log import act, status
-from base.lib import Config, Task, ComponentMeta
+from base.lib import Config, ComponentMeta
+from base.task import Task
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
-from base.Action import Action
-from base.Parse import Parse
-from base.Process import Processor, Pipeline, Proxy_Processor
+from base.scheme import Action, Parse
+from base.Process import Processor, Pipeline
+from base.common import Proxy_Processor
 from base.hub import Hub
 from base.Scraper import Scraper
+from base.scheme import Scheme
 
 
 def _load_module(target_root: str or None, file_name: str):
@@ -47,11 +49,9 @@ def _load_component(module, component: type) -> List[type]:
             # print(f)
             res.append(f)
     return res
-    # return [i for i in [getattr(module, x) for x in dir(module) if not x.startswith("_")] if
-    #         (i is not Any) and type(i) is type and
-    #         issubclass(i, component) and i is not component]
 
 
+# abort
 def _load_target_component(components: List[type], target_list) -> List[type]:
     """
     选择具体的某几个组件 返回类对象
@@ -157,6 +157,42 @@ def generator_scraper(prepare: Prepare) -> Scraper:
     return scraper
 
 
+def initPrepare(target: str) -> type(Prepare):
+    pm = _load_module(target, "prepare")
+    prepare: List[Prepare] = _load_component(pm, Prepare)
+
+    actives = [x for x in prepare if x._active]
+
+    # 返回第一个
+    currnet_prepare: Prepare = actives[0]
+    return currnet_prepare
+
+
+def initModel(target: str) -> List[type(Model)]:
+    mm = _load_module(target, "model")
+    model: List[Model] = _load_component(mm, Model)
+
+    actives: List[Model] = [x for x in model if x._active]
+
+    # 注册
+    [ModelManager.add_model(x) for x in actives]
+
+    # 注册默认Model
+    ModelManager.add_model(ProxyModel)
+    ModelManager.add_model(TaskModel)
+
+    return actives
+
+
+def initProcessor(target: str) -> List[type(Processor)]:
+    pm = _load_module(target, "process")
+    processor = _load_component(pm, Processor)
+
+    actives: List[Processor] = [x for x in processor if x._active]
+
+    return actives
+
+
 def build_Hub(models: List[type(Model)], processor: List[type(Processor)]):
     sys_hub = Hub([ProxyModel, TaskModel], Pipeline([]), feed=True, timeout=10)
     sys_hub.remove_pipeline("ProxyModel")
@@ -164,15 +200,12 @@ def build_Hub(models: List[type(Model)], processor: List[type(Processor)]):
 
     dump_hub = Hub(models, Pipeline(processor), feed=False, timeout=10, limit=3000)
 
-
     return sys_hub, dump_hub
 
 
-
-
-def temp_appendProxy(sys_hub: Hub):
+def temp_appendProxy(sys_hub: Hub, number):
     # TODO
-    sys_hub.replace_pipeline("ProxyModel", Pipeline([Proxy_Processor]), scrapy_config.Thread * 2)
+    sys_hub.replace_pipeline("ProxyModel", Pipeline([Proxy_Processor]), number * 2)
 
 
 def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub: Hub):
@@ -210,31 +243,35 @@ def do_parse(scheme: Parse, content):
         return list(current_models)
 
 
-barrier = threading.Barrier(scrapy_config.Thread)
+barrier = None
 lock = threading.Lock()
 
 
 class ScrapyThread(threading.Thread):
-    def __init__(self, sys_hub: Hub, dump_hub: Hub, config: Config):
+    def __init__(self, sys_hub: Hub, dump_hub: Hub, prepare: Prepare):
         threading.Thread.__init__(self)
 
         self.sys: Hub = sys_hub
         self.dump: Hub = dump_hub
-        self.config: Config = config
+        self.prepare: Prepare = prepare
+        self.schemes: List[type(Scheme)] = prepare.schemeList
 
         self.proxy: bool = False
 
-        self.proxy = scrapy_config.Proxy_Able
+        self.proxy = self.prepare.ProxyAble
 
     def run(self):
         # load and init scraper
-        scraper, task = build_prepare(load_prepare(self.config))
+        # scraper, task = build_prepare(load_prepare(self.config))
+        scraper = self.prepare.get_scraper()
+        task = self.prepare.get_tasks()
         # FIXME 同一个类问题
         # print(id(scraper))
         # return
 
         # load  scheme
-        schemes: List[Action or Parse] = load_scheme(self.config)
+        # schemes: List[Action or Parse] = load_scheme(self.config)
+        schemes = [x() for x in self.schemes]
 
         # reset
         self.reset(scraper)
@@ -244,10 +281,12 @@ class ScrapyThread(threading.Thread):
         # wait
         barrier.wait()
 
+        # python trigger.py thread ScjstBase
+
         # loop
         try:
             while True:
-                self.sync(scrapy_config.Block)
+                self.sync(self.prepare.Block)
                 task = self.sys.pop("TaskModel")
 
                 res = scrapy(schemes, scraper, task, self.dump)

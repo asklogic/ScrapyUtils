@@ -8,8 +8,7 @@ class Field(object):
     def __init__(self, xpath: str = None):
         self.xpath = xpath
 
-
-
+# fixme
 class ModelMeta(type):
     def __new__(cls, name, bases, attrs: dict):
         mapper = {}
@@ -27,6 +26,9 @@ class ModelMeta(type):
         attrs["_data"] = data
         attrs["_name"] = name
 
+        if not attrs.get("_active"):
+            attrs["_active"] = False
+
         return type.__new__(cls, name, bases, attrs)
 
     def __init__(self, name, bases, attrs: dict) -> None:
@@ -34,6 +36,7 @@ class ModelMeta(type):
 
 
 class Model(object, metaclass=ModelMeta):
+    _active: bool
     _data: Dict[str, object] = {}
     _mapper: Dict[str, str]
     _name: str
@@ -115,9 +118,3 @@ class TaskModel(Model):
     url = Field()
     param = Field()
     count = Field()
-
-
-
-
-
-

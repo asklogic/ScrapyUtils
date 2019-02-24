@@ -39,6 +39,7 @@ def single_run(target: str):
 
     core.scrapy(scheme, scraper, task[0], dump_hub)
 
+    scraper.quit()
     dump_hub.stop()
     sys_hub.stop()
 

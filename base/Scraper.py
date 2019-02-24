@@ -156,6 +156,9 @@ class FireFoxScraper(Scraper):
         if activated:
             self.activate()
 
+    def start_tab(self):
+        pass
+
     def activate(self):
         """
         启动Firefox Scraper

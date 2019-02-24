@@ -10,15 +10,19 @@ from base.Scraper import FireFoxScraper
 class TestFireFoxScraper(TestCase):
 
     def test_init(self):
-        return
-        f: FireFoxScraper = FireFoxScraper(headless=False)
-
-        f.quit()
+        # return
+        # f: FireFoxScraper = FireFoxScraper(headless=False)
+        #
+        # f.quit()
+        pass
 
     def test_get(self):
-        return
+        # return
 
         f: FireFoxScraper = FireFoxScraper(headless=True)
+
+        f.start_tab()
+
 
         # driver = f.getDriver()
         #

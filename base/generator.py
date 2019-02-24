@@ -117,8 +117,9 @@ def overwrite(job_name):
 
 
 if __name__ == '__main__':
-    dir_generator("ScjstBase")
-    component_generate("ScjstBase")
+    target = "ItraPage"
+    dir_generator(target)
+    component_generate(target)
     # overwrite("other_test")
     # job_generation("other_test")
     # config_generation("ProxyInfo")

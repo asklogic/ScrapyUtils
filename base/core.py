@@ -232,6 +232,7 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub
 def do_action(scheme: Action, task, scraper):
     scheme.delay()
     content = scheme.scraping(task=task, scraper=scraper)
+    # print("content: ", content)
     return content
 
 
@@ -309,6 +310,8 @@ class ScrapyThread(threading.Thread):
         except queue.Empty as qe:
             status.info("finish")
 
+        scraper.quit()
+
     def sync(self, delay: int = 0):
         lock.acquire()
         if delay:
@@ -323,3 +326,4 @@ class ScrapyThread(threading.Thread):
             proxyInfo: ProxyModel = self.sys.pop("ProxyModel")
 
             scraper.set_proxy((proxyInfo.ip, proxyInfo.port))
+

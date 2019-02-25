@@ -50,7 +50,7 @@ def jinglin(number):
 
         r = requests.get(
             r"http://ip.11jsq.com/index.php/api/entry?method=proxyServer.generate_api_url&packid=0&fa=0&fetch_key=&qty=" + str(
-                number) + "&time=100&pro=&city=&port=1&format=txt&ss=1&css=&dt=1&specialTxt=3&specialJson=", timeout=15,
+                number) + "&time=1&pro=&city=&port=1&format=txt&ss=1&css=&dt=1&specialTxt=3&specialJson=", timeout=15,
             headers=headers)
 
         print("finish. status: {}".format(r.status_code))

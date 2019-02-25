@@ -22,12 +22,18 @@ def single_run(target: str):
     model = core.initModel(target)
     act.info("Target Models: " + str([x._name for x in model]))
 
-    processors = core.initProcessor(target)
+    if not prepare.processorList:
+        processors = core.initProcessor(target)
+    else:
+        processors = prepare.processorList
     act.info("Target Process: " + str([x._name for x in processors]))
 
     time.sleep(1)
 
-    scheme = [x() for x in prepare.schemeList]
+    schemes = [x() for x in prepare.schemeList]
+    context = {}
+    for scheme in schemes:
+        scheme.context = context
 
     scraper = prepare.get_scraper()
     task = prepare.get_tasks()
@@ -37,7 +43,7 @@ def single_run(target: str):
     sys_hub.activate()
     dump_hub.activate()
 
-    core.scrapy(scheme, scraper, task[0], dump_hub)
+    core.scrapy(schemes, scraper, task[0], dump_hub)
 
     scraper.quit()
     dump_hub.stop()
@@ -56,7 +62,10 @@ def thread_run(target: str):
     model = core.initModel(target)
     act.info("Target Models: " + str([x._name for x in model]))
 
-    processors = core.initProcessor(target)
+    if not prepare.processorList:
+        processors = core.initProcessor(target)
+    else:
+        processors = prepare.processorList
     act.info("Target Process: " + str([x._name for x in processors]))
 
     # set threading

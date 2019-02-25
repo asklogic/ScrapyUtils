@@ -265,7 +265,7 @@ class ScrapyThread(threading.Thread):
         # load and init scraper
         # scraper, task = build_prepare(load_prepare(self.config))
         scraper = self.prepare.get_scraper()
-        task = self.prepare.get_tasks()
+        # task = self.prepare.get_tasks()
         # FIXME 同一个类问题
         # print(id(scraper))
         # return
@@ -273,6 +273,9 @@ class ScrapyThread(threading.Thread):
         # load  scheme
         # schemes: List[Action or Parse] = load_scheme(self.config)
         schemes = [x() for x in self.schemes]
+        context = {}
+        for scheme in schemes:
+            scheme.context = context
 
         # reset
         self.reset(scraper)

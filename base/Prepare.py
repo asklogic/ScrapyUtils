@@ -5,6 +5,7 @@ from base.Scraper import Scraper, RequestScraper
 
 from base.lib import ComponentMeta
 from base.scheme import Scheme
+from base.Process import Processor
 from base.task import Task
 
 
@@ -14,7 +15,8 @@ class BasePrepare(object, metaclass=ComponentMeta):
     _active: bool
 
     # prepare property
-    schemeList: List[Scheme]
+    schemeList: List[Scheme] = []
+    processorList: List[Processor] = []
 
     # config
     ProxyAble: bool = False

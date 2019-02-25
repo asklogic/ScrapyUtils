@@ -164,9 +164,12 @@ class DuplicateProcessor(Processor):
         self.connect()
 
     def connect(self):
-        if not self.db:
-            self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, decode_responses=True)
-
+        """
+        重新连接
+        :return:
+        """
+        # if not self.db:
+        self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, decode_responses=True)
         try:
             self.db.keys("1")
         except redis.ConnectionError as e:

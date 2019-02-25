@@ -82,6 +82,7 @@ headers = {
     "Content-Type": "application/x-www-form-urlencoded",
 
     # 'Connection': 'close',
+    # 'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
 }
 
@@ -94,7 +95,7 @@ class RequestScraper(Scraper):
         self.proxies: Any = None
 
         # requests
-        self._req: requests.Session = requests.session()
+        self._req: requests.Session = None
         self.last: requests.Response = None
         self._headers = headers
 
@@ -102,19 +103,22 @@ class RequestScraper(Scraper):
             self.activate()
 
     def activate(self):
-        self._req.headers = self._headers
+        self._req: requests.Session = requests.session()
         self._req.keep_alive = False
+        self._headers = headers
+        self._req.headers = self._headers
+
 
     def get(self, url: str, params: Dict = None) -> str:
         res = self._req.get(url=url, timeout=self.timeout, headers=self._headers, proxies=self.current_proxy,
-                            params=params)
+                            params=params, stream=False, verify=False)
         self.last = res
         return res.content.decode("utf-8")
 
     def post(self, url: str, data: Dict, params: Dict = None) -> str:
         res = self._req.post(url=url, data=data, timeout=self.timeout, headers=self._headers,
                              proxies=self.current_proxy,
-                             params=params)
+                             params=params, stream=False, verify=False)
         self.last = res
         return res.content.decode("utf-8")
 
@@ -132,9 +136,9 @@ class RequestScraper(Scraper):
 
     def clear_session(self):
         self.current_proxy = {}
-        self._headers = headers
-        # self.last = None
+
         self._req.close()
+        self.activate()
 
     def quit(self):
         self.clear_session()

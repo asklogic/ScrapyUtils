@@ -16,6 +16,8 @@ def single_run(target: str):
     act.info("Target Job: " + target)
 
     prepare = core.initPrepare(target)
+    prepare.setting['target'] = target
+
     act.info("Target Prepare: " + prepare._name + str(prepare))
     act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
 
@@ -44,7 +46,7 @@ def single_run(target: str):
             for key, item in task[0].param.items():
                 schemes[0].context[key] = item
 
-    sys_hub, dump_hub = core.build_Hub(model, processors)
+    sys_hub, dump_hub = core.build_Hub(model, processors, prepare.setting)
 
     sys_hub.activate()
     dump_hub.activate()
@@ -62,6 +64,7 @@ def thread_run(target: str):
     act.info("Target Job: " + target)
 
     prepare = core.initPrepare(target)
+    prepare.setting['target']  = target
     act.info("Target Prepare: " + prepare._name + str(prepare))
     act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
 
@@ -77,7 +80,7 @@ def thread_run(target: str):
     # set threading
     core.barrier = threading.Barrier(prepare.Thread)
 
-    sys_hub, dump_hub = core.build_Hub(model, processors)
+    sys_hub, dump_hub = core.build_Hub(model, processors, prepare.setting)
 
     # setting
     # proxy

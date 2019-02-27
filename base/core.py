@@ -193,12 +193,12 @@ def initProcessor(target: str) -> List[type(Processor)]:
     return actives
 
 
-def build_Hub(models: List[type(Model)], processor: List[type(Processor)]):
-    sys_hub = Hub([ProxyModel, TaskModel], Pipeline([]), feed=True, timeout=10)
+def build_Hub(models: List[type(Model)], processor: List[type(Processor)], setting: Dict):
+    sys_hub = Hub([ProxyModel, TaskModel], Pipeline([], setting), feed=True, timeout=10)
     sys_hub.remove_pipeline("ProxyModel")
     sys_hub.remove_pipeline("TaskModel")
 
-    dump_hub = Hub(models, Pipeline(processor), feed=False, timeout=10, limit=3000)
+    dump_hub = Hub(models, Pipeline(processor, setting), feed=False, timeout=10, limit=3000)
 
     return sys_hub, dump_hub
 
@@ -336,4 +336,3 @@ class ScrapyThread(threading.Thread):
             proxyInfo: ProxyModel = self.sys.pop("ProxyModel")
 
             scraper.set_proxy((proxyInfo.ip, proxyInfo.port))
-

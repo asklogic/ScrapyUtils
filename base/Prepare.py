@@ -18,6 +18,8 @@ class BasePrepare(object, metaclass=ComponentMeta):
     schemeList: List[Scheme] = []
     processorList: List[Processor] = []
 
+    setting : Dict = {}
+
     # config
     ProxyAble: bool = False
     Thread: int = 5

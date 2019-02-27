@@ -53,29 +53,6 @@ class DefaultXpathParse(Parse):
             parsed_result.append(model)
         self.context['mappers'] = parsed_result
 
-        # for registered in manager.model_list():
-        #     current_model = manager.model(registered)
-        #
-        #     if hasattr(current_model, '_mapper'):
-        #         mapper: Dict[str, str] = current_model._mapper
-        #         parsed_mapper: Dict[str, List[str]] = {}
-        #         length = 0
-        #         for filed in mapper.keys():
-        #             parsed = xpathParse(content, mapper.get(filed))
-        #             parsed_mapper[filed] = parsed
-        #
-        #             length = len(parsed)
-        #         if hasattr(current_model, "xpath_length"):
-        #             length = current_model.xpath_length
-        #         for index in range(length):
-        #             m = manager.model(registered)
-        #             for key in mapper.keys():
-        #                 try:
-        #                     setattr(m, key, parsed_mapper[key][index])
-        #                 except IndexError as ie:
-        #                     setattr(m, key, None)
-        #             yield m
-
 
 class JsonFileProcessor(Processor):
 
@@ -164,6 +141,14 @@ class JsonFileProcessor(Processor):
 
 
 class DuplicateProcessor(Processor):
+    # property
+    host: int
+    port: int
+    db_index: int
+
+    # Duplicate property
+    baseList: List[str]
+    modelKey: str
 
     def __init__(self, settings: dict):
         super().__init__(settings)
@@ -176,12 +161,20 @@ class DuplicateProcessor(Processor):
             # 数据库索引
             self.db_index: int = 0
 
-        name = self.__class__.__name__
-        if settings.get("job"):
-            job = settings.get("job")
-            self.set_base(job, self.target._name, name)
+        if not self.modelKey:
+            raise KeyError("Duplication must set model key")
+
+
+        if self.baseList:
+            self.set_base(self.baseList)
         else:
-            self.set_base(self.target._name, name)
+            if settings.get("target"):
+                self.set_base([settings.get("target"), self.modelKey])
+            else:
+                self.set_base(["default", self.modelKey])
+
+
+
 
         # redis数据库
         self.db: redis.Redis = None
@@ -202,11 +195,16 @@ class DuplicateProcessor(Processor):
             print(e.args)
             raise TypeError('redis connect failed')
 
-    def set_base(self, *args):
-        self.base = ":".join(args)
+    def set_base(self, baseList: List):
+        self.base = ":".join(baseList)
 
     def key(self, key: str) -> str:
         return ":".join([self.base, key])
+
+    def process_item(self, model: Model) -> Any:
+        key = getattr(model, self.modelKey)
+        if self.check_identification(key):
+            return model
 
     def exist_identification(self, key_name) -> bool:
         """

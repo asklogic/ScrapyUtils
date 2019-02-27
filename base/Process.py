@@ -36,6 +36,7 @@ class ProcessorMeta(ComponentMeta):
 class Processor(object, metaclass=ProcessorMeta):
     target: type(Model)
     _active: bool
+    _name: str
     data: []
 
     def __init__(self, settings: dict):

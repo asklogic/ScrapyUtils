@@ -30,6 +30,7 @@ def single_run(target: str):
 
     time.sleep(1)
 
+    # TODO init
     schemes = [x() for x in prepare.schemeList]
     context = {}
     for scheme in schemes:
@@ -37,6 +38,11 @@ def single_run(target: str):
 
     scraper = prepare.get_scraper()
     task = prepare.get_tasks()
+    # TODO load taks
+    if task[0].param:
+        if type(task[0].param) == dict:
+            for key, item in task[0].param.items():
+                schemes[0].context[key] = item
 
     sys_hub, dump_hub = core.build_Hub(model, processors)
 

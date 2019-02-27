@@ -82,7 +82,7 @@ headers = {
     "Content-Type": "application/x-www-form-urlencoded",
 
     # 'Connection': 'close',
-    # 'Connection': 'keep-alive',
+    'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
 }
 
@@ -97,16 +97,22 @@ class RequestScraper(Scraper):
         # requests
         self._req: requests.Session = None
         self.last: requests.Response = None
+
+        self.keep_alive = True
         self._headers = headers
 
         if activated:
             self.activate()
 
+        if self.keep_alive:
+            self._headers['Connection'] = 'keep-alive'
+
     def activate(self):
         self._req: requests.Session = requests.session()
-        self._req.keep_alive = False
-        self._headers = headers
+        self._req.keep_alive = self.keep_alive
         self._req.headers = self._headers
+
+
 
 
     def get(self, url: str, params: Dict = None) -> str:

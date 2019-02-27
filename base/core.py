@@ -293,6 +293,13 @@ class ScrapyThread(threading.Thread):
                 self.sync(self.prepare.Block)
                 task = self.sys.pop("TaskModel")
 
+                # TODO
+
+                if task.param:
+                    if type(task.param) == dict:
+                        for key, item in task.param.items():
+                            schemes[0].context[key] = item
+
                 res = scrapy(schemes, scraper, task, self.dump)
                 if res:
                     status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))

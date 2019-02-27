@@ -36,10 +36,12 @@ class ProcessorMeta(ComponentMeta):
 class Processor(object, metaclass=ProcessorMeta):
     target: type(Model)
     _active: bool
+    data: []
 
     def __init__(self, settings: dict):
         self.count: int = 0
         self.next: Processor = None
+        self.data = []
 
     @abstractmethod
     def start_task(self, settings: dict):
@@ -219,5 +221,3 @@ class Pipeline(object):
         :return:
         """
         list(map(lambda x: x.end_task(), self.processor_list))
-
-

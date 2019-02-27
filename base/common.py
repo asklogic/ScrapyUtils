@@ -12,7 +12,7 @@ from base.Scraper import Scraper
 from base.log import act
 from base.scheme import Action, Parse
 from base.task import Task
-from base.tool import xpathParse, jinglin
+from base.tool import xpathParse, jinglin, xpathParseList
 from scrapy_config import Project_Path
 
 ModelManager.add_model(TaskModel)
@@ -25,30 +25,56 @@ class DefaultAction(Action):
 
 class DefaultXpathParse(Parse):
     name = "xpath"
+    mapper_model: Model = None
 
-    def parsing(cls, content: str, manager: ModelManager) -> Model or Generator[Model]:
-        for registered in manager.model_list():
-            current_model = manager.model(registered)
+    def parsing(self, content: str) -> Model or Generator[Model]:
 
-            if hasattr(current_model, '_mapper'):
-                mapper: Dict[str, str] = current_model._mapper
-                parsed_mapper: Dict[str, List[str]] = {}
-                length = 0
-                for filed in mapper.keys():
-                    parsed = xpathParse(content, mapper.get(filed))
-                    parsed_mapper[filed] = parsed
+        # TODO mapper如何加载?
+        if not self.mapper_model:
+            return
+        model: Model = ModelManager.model(self.mapper_model._name)
+        mapper: Dict[str, str] = model._mapper
+        parsed_mapper: Dict[str, List[str]] = {}
+        parsed_result: List[Model] = []
+        length: int = 0
 
-                    length = len(parsed)
-                if hasattr(current_model, "xpath_length"):
-                    length = current_model.xpath_length
-                for index in range(length):
-                    m = manager.model(registered)
-                    for key in mapper.keys():
-                        try:
-                            setattr(m, key, parsed_mapper[key][index])
-                        except IndexError as ie:
-                            setattr(m, key, None)
-                    yield m
+        for key, value in mapper.items():
+            parsed = xpathParse(content, value)
+            parsed_mapper[key] = parsed
+            length = len(parsed)
+
+        for index in range(length):
+            model: Model = ModelManager.model(self.mapper_model._name)
+            for key in mapper:
+                try:
+                    setattr(model, key, parsed_mapper[key][index])
+                except:
+                    setattr(model, key, None)
+            parsed_result.append(model)
+        self.context['mappers'] = parsed_result
+
+        # for registered in manager.model_list():
+        #     current_model = manager.model(registered)
+        #
+        #     if hasattr(current_model, '_mapper'):
+        #         mapper: Dict[str, str] = current_model._mapper
+        #         parsed_mapper: Dict[str, List[str]] = {}
+        #         length = 0
+        #         for filed in mapper.keys():
+        #             parsed = xpathParse(content, mapper.get(filed))
+        #             parsed_mapper[filed] = parsed
+        #
+        #             length = len(parsed)
+        #         if hasattr(current_model, "xpath_length"):
+        #             length = current_model.xpath_length
+        #         for index in range(length):
+        #             m = manager.model(registered)
+        #             for key in mapper.keys():
+        #                 try:
+        #                     setattr(m, key, parsed_mapper[key][index])
+        #                 except IndexError as ie:
+        #                     setattr(m, key, None)
+        #             yield m
 
 
 class JsonFileProcessor(Processor):

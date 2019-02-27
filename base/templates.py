@@ -77,6 +77,7 @@ from base.task import Task
 
 from .action import *
 from .parse import *
+from .process import *
 
 
 class ${class_name}Prepare(Prepare):
@@ -85,6 +86,8 @@ class ${class_name}Prepare(Prepare):
         ${class_name}Action,
         ${class_name}Parse,
     ]
+    
+    # processorList = []
 
     @classmethod
     def task_prepared(cls):

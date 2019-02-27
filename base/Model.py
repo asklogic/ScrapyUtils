@@ -8,6 +8,7 @@ class Field(object):
     def __init__(self, xpath: str = None):
         self.xpath = xpath
 
+
 # fixme
 class ModelMeta(type):
     def __new__(cls, name, bases, attrs: dict):
@@ -16,6 +17,8 @@ class ModelMeta(type):
 
         for k, v in list(attrs.items()):
             if isinstance(v, Field):
+                if v.xpath:
+                    mapper[k] = v.xpath
                 data[k] = None
                 attrs.pop(k)
                 continue
@@ -25,6 +28,7 @@ class ModelMeta(type):
         # 使字段通过getattr来获取
         attrs["_data"] = data
         attrs["_name"] = name
+        attrs["_mapper"] = mapper
 
         if not attrs.get("_active"):
             attrs["_active"] = False

@@ -223,7 +223,7 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub
         for model in gather_models:
             hub.save(model)
     except Exception as e:
-        status.error("".join(["[Scrapy] scrapy error ", str(e)]))
+        status.error("".join(["[Scrapy] scrapy error ", str(e.args)]))
         # status.exception(e)
         return False
     return True

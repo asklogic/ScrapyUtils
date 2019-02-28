@@ -66,24 +66,26 @@ class HiddenInputParse(Parse):
     target_value: str = 'value'
 
     def parsing(self, content: str) -> Model or Generator[Model]:
-        values_xpath = '//{0}[@{1}="{2}"]/@{3}'.format(self.target_tag, self.target_property,
-                                                       self.target_property_value, self.target_value)
-        tags_xpath = '//{0}[@{1}="{2}"]/@name'.format(self.target_tag, self.target_property,
-                                                      self.target_property_value)
+        if content:
+            values_xpath = '//{0}[@{1}="{2}"]/@{3}'.format(self.target_tag, self.target_property,
+                                                           self.target_property_value, self.target_value)
+            tags_xpath = '//{0}[@{1}="{2}"]/@name'.format(self.target_tag, self.target_property,
+                                                          self.target_property_value)
 
-        tags = xpathParse(content, tags_xpath)
-        values = xpathParse(content, values_xpath)
 
-        hidden_mapper: dict = {}
+            tags = xpathParse(content, tags_xpath)
+            values = xpathParse(content, values_xpath)
 
-        # name 子集关系
-        for index in range(len(values)):
-            tag = tags[index]
-            value = values[index]
-            hidden_mapper[tag] = value
-            # hidden_mapper[tags[index]] = values[index]
+            hidden_mapper: dict = {}
 
-        self.context['hidden'] = hidden_mapper
+            # name 子集关系
+            for index in range(len(values)):
+                tag = tags[index]
+                value = values[index]
+                hidden_mapper[tag] = value
+                # hidden_mapper[tags[index]] = values[index]
+
+            self.context['hidden'] = hidden_mapper
 
 
 class JsonFileProcessor(Processor):

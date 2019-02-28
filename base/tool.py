@@ -17,6 +17,9 @@ headers = {
 
 
 def xpathParse(htmlContent: str, xpathContent: str) -> List[str]:
+    assert bool(htmlContent), "empty content"
+    assert bool(xpathContent), "empty xpath"
+
     html = etree.HTML(htmlContent)
     result = html.xpath(xpathContent)
 

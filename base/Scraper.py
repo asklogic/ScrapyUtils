@@ -76,11 +76,10 @@ class Scraper(BaseScraper, metaclass=ABCMeta):
 
 headers = {
     'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    'Accept': 'text/html,application/xhtml+xml,application/json,text/plain,*/*,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
     "Content-Type": "application/x-www-form-urlencoded",
-
     # 'Connection': 'close',
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
@@ -99,6 +98,7 @@ class RequestScraper(Scraper):
         self.last: requests.Response = None
 
         self.keep_alive = True
+        # self.keep_alive = False
         self._headers = headers
 
         if activated:

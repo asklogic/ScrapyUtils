@@ -164,7 +164,6 @@ class DuplicateProcessor(Processor):
         if not self.modelKey:
             raise KeyError("Duplication must set model key")
 
-
         if self.baseList:
             self.set_base(self.baseList)
         else:
@@ -172,9 +171,6 @@ class DuplicateProcessor(Processor):
                 self.set_base([settings.get("target"), self.modelKey])
             else:
                 self.set_base(["default", self.modelKey])
-
-
-
 
         # redis数据库
         self.db: redis.Redis = None
@@ -205,6 +201,8 @@ class DuplicateProcessor(Processor):
         key = getattr(model, self.modelKey)
         if self.check_identification(key):
             return model
+        else:
+            return False
 
     def exist_identification(self, key_name) -> bool:
         """
@@ -236,6 +234,21 @@ class DuplicateProcessor(Processor):
         else:
             self.save_identification(key)
             return True
+
+
+class DumpProcessor(Processor):
+
+    def start_task(self, settings: dict):
+        self.data = []
+
+    def start_process(self, number: int, model: str = "Model"):
+        self.data.clear()
+
+    def process_item(self, model: Model) -> Any:
+        self.data.append(model.pure_data())
+
+    def end_process(self):
+        print('data len', len(self.data))
 
 
 class Proxy_Processor(Processor):

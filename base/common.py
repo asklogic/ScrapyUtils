@@ -72,7 +72,6 @@ class HiddenInputParse(Parse):
             tags_xpath = '//{0}[@{1}="{2}"]/@name'.format(self.target_tag, self.target_property,
                                                           self.target_property_value)
 
-
             tags = xpathParse(content, tags_xpath)
             values = xpathParse(content, values_xpath)
 
@@ -85,7 +84,13 @@ class HiddenInputParse(Parse):
                 hidden_mapper[tag] = value
                 # hidden_mapper[tags[index]] = values[index]
 
-            self.context['hidden'] = hidden_mapper
+            # 存在
+            if self.context.get('hidden'):
+                for k, v in hidden_mapper.items():
+                    self.context['hidden'][k] = v
+            # 不存在
+            else:
+                self.context['hidden'] = hidden_mapper
 
 
 class JsonFileProcessor(Processor):

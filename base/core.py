@@ -304,8 +304,9 @@ class ScrapyThread(threading.Thread):
                 if res:
                     status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
                 elif task.count < 5:
+                    time.sleep(0.1)
                     # reset
-                    self.reset(scraper)
+                    time.sleep(self.prepare.Block*2)
                     for scheme in schemes:
                         scheme.context.clear()
 
@@ -315,6 +316,7 @@ class ScrapyThread(threading.Thread):
                     task.count = task.count + 1
                     self.sys.save(task)
                 else:
+                    time.sleep(self.prepare.Block*2)
                     status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
 
         except queue.Empty as qe:

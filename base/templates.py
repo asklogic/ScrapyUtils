@@ -24,7 +24,7 @@ from base.scheme import Parse
 from .model import *
 
 from base.tool import xpathParse, xpathParseList
-from base.common import DefaultXpathParse
+from base.common import DefaultXpathParse, HiddenInputParse 
 
 
 class ${class_name}Parse(Parse):

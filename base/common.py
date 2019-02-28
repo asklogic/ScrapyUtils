@@ -24,8 +24,8 @@ class DefaultAction(Action):
 
 
 class DefaultXpathParse(Parse):
-    name = "xpath"
     mapper_model: Model = None
+    auto_yield: bool = False
 
     def parsing(self, content: str) -> Model or Generator[Model]:
 
@@ -51,7 +51,39 @@ class DefaultXpathParse(Parse):
                 except:
                     setattr(model, key, None)
             parsed_result.append(model)
-        self.context['mappers'] = parsed_result
+
+        if self.auto_yield:
+            for model in parsed_result:
+                yield model
+        else:
+            self.context['mappers'] = parsed_result
+
+
+class HiddenInputParse(Parse):
+    target_tag: str = 'input'
+    target_property: str = 'type'
+    target_property_value: str = 'hidden'
+    target_value: str = 'value'
+
+    def parsing(self, content: str) -> Model or Generator[Model]:
+        values_xpath = '//{0}[@{1}="{2}"]/@{3}'.format(self.target_tag, self.target_property,
+                                                       self.target_property_value, self.target_value)
+        tags_xpath = '//{0}[@{1}="{2}"]/@name'.format(self.target_tag, self.target_property,
+                                                      self.target_property_value)
+
+        tags = xpathParse(content, tags_xpath)
+        values = xpathParse(content, values_xpath)
+
+        hidden_mapper: dict = {}
+
+        # name 子集关系
+        for index in range(len(values)):
+            tag = tags[index]
+            value = values[index]
+            hidden_mapper[tag] = value
+            # hidden_mapper[tags[index]] = values[index]
+
+        self.context['hidden'] = hidden_mapper
 
 
 class JsonFileProcessor(Processor):

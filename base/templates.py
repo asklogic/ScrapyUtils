@@ -24,6 +24,7 @@ from base.scheme import Parse
 from .model import *
 
 from base.tool import xpathParse, xpathParseList
+from base.common import DefaultXpathParse
 
 
 class ${class_name}Parse(Parse):
@@ -54,7 +55,7 @@ process_template = """from typing import Any
 
 from base.Model import Model
 from base.Process import Processor
-from base.common import JsonFileProcessor,DuplicateProcessor
+from base.common import JsonFileProcessor, DuplicateProcessor, DumpProcessor
 
 from .model import *
 

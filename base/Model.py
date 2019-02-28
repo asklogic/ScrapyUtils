@@ -12,9 +12,15 @@ class Field(object):
 # fixme
 class ModelMeta(type):
     def __new__(cls, name, bases, attrs: dict):
-        mapper = {}
+
+        # mapper
+        if attrs.get('_mapper') and type(attrs.get('_mapper')) == dict:
+            mapper = attrs.get('_mapper')
+        else:
+            mapper = {}
         data = {}
 
+        # TODO 属性保留
         for k, v in list(attrs.items()):
             if isinstance(v, Field):
                 if v.xpath:

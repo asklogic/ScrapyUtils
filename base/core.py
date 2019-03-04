@@ -208,7 +208,7 @@ def temp_appendProxy(sys_hub: Hub, number):
     sys_hub.replace_pipeline("ProxyModel", Pipeline([Proxy_Processor]), number * 2)
 
 
-def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub: Hub):
+def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub):
     content = ""
     gather_models: List[Model] = []
     try:
@@ -221,7 +221,10 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, hub
                 gather_models.extend(do_parse(scheme, content))
 
         for model in gather_models:
-            hub.save(model)
+            if isinstance(model, TaskModel):
+                sys_hub.save(model)
+            else:
+                dump_hub.save(model)
     except Exception as e:
         status.error("".join(["[Scrapy] scrapy error ", str(e.args)]))
         # status.exception(e)
@@ -300,13 +303,13 @@ class ScrapyThread(threading.Thread):
                         for key, item in task.param.items():
                             schemes[0].context[key] = item
 
-                res = scrapy(schemes, scraper, task, self.dump)
+                res = scrapy(schemes, scraper, task, self.dump, self.sys)
                 if res:
                     status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
                 elif task.count < 5:
                     time.sleep(0.1)
                     # reset
-                    time.sleep(self.prepare.Block*2)
+                    time.sleep(self.prepare.Block * 2)
                     for scheme in schemes:
                         scheme.context.clear()
 
@@ -316,7 +319,7 @@ class ScrapyThread(threading.Thread):
                     task.count = task.count + 1
                     self.sys.save(task)
                 else:
-                    time.sleep(self.prepare.Block*2)
+                    time.sleep(self.prepare.Block * 2)
                     status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
 
         except queue.Empty as qe:

@@ -51,7 +51,7 @@ def single_run(target: str):
     sys_hub.activate()
     dump_hub.activate()
 
-    core.scrapy(schemes, scraper, task[0], dump_hub)
+    core.scrapy(schemes, scraper, task[0], dump_hub, sys_hub)
 
     scraper.quit()
     dump_hub.stop()
@@ -64,7 +64,7 @@ def thread_run(target: str):
     act.info("Target Job: " + target)
 
     prepare = core.initPrepare(target)
-    prepare.setting['target']  = target
+    prepare.setting['target'] = target
     act.info("Target Prepare: " + prepare._name + str(prepare))
     act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
 

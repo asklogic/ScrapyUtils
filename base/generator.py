@@ -117,7 +117,7 @@ def overwrite(job_name):
 
 
 if __name__ == '__main__':
-    target = "ProjectDetail"
+    target = "OriginEnterpriseCert"
     dir_generator(target)
     component_generate(target)
     # overwrite("other_test")

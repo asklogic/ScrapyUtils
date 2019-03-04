@@ -58,6 +58,7 @@ from base.Process import Processor
 from base.common import JsonFileProcessor, DuplicateProcessor, DumpProcessor
 
 from .model import *
+from base.common import DumpProcessor
 
 
 class ${class_name}Process(Processor):

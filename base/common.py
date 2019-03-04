@@ -40,8 +40,11 @@ class DefaultXpathParse(Parse):
 
         for key, value in mapper.items():
             parsed = xpathParse(content, value)
+
             parsed_mapper[key] = parsed
-            length = len(parsed)
+            # if len(parsed) and parsed[0] is not 'None':
+            #     length = len(parsed)
+            length = length if len(parsed) <= length else len(parsed)
 
         for index in range(length):
             model: Model = ModelManager.model(self.mapper_model._name)

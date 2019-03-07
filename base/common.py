@@ -77,20 +77,32 @@ class HiddenInputParse(Parse):
 
             tags = xpathParse(content, tags_xpath)
             values = xpathParse(content, values_xpath)
-
+            # xpathParse(content, '//input[@type="hidden" and [@name"{0}"]/@value')
             hidden_mapper: dict = {}
 
+            # 对应
+
+            for tag in tags:
+                values_xpath = '//{0}[@{1}="{2}" and @name="{4}"]/@{3}'.format(self.target_tag, self.target_property,
+                                                                               self.target_property_value,
+                                                                               self.target_value, tag)
+                value = xpathParse(content, values_xpath)
+                if value:
+                    hidden_mapper[tag] = value[0]
             # name 子集关系
-            for index in range(len(values)):
-                tag = tags[index]
-                value = values[index]
-                hidden_mapper[tag] = value
-                # hidden_mapper[tags[index]] = values[index]
+            # for index in range(len(values)):
+            #     tag = tags[index]
+            #     value = values[index]
+            #     hidden_mapper[tag] = value
+            # hidden_mapper[tags[index]] = values[index]
 
             # 存在
             if self.context.get('hidden'):
-                for k, v in hidden_mapper.items():
-                    self.context['hidden'][k] = v
+                if False:
+                    pass
+                else:
+                    for k, v in hidden_mapper.items():
+                        self.context['hidden'][k] = v
             # 不存在
             else:
                 self.context['hidden'] = hidden_mapper

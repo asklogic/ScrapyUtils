@@ -24,6 +24,8 @@ class DefaultAction(Action):
 
 
 class DefaultXpathParse(Parse):
+    length: int = -1
+    full: bool = True
     mapper_model: Model = None
     auto_yield: bool = False
 
@@ -36,7 +38,9 @@ class DefaultXpathParse(Parse):
         mapper: Dict[str, str] = model._mapper
         parsed_mapper: Dict[str, List[str]] = {}
         parsed_result: List[Model] = []
-        length: int = 0
+
+        if self.length < 0:
+            self.length = 0
 
         for key, value in mapper.items():
             if value.startswith("const:"):
@@ -48,17 +52,23 @@ class DefaultXpathParse(Parse):
                 parsed_mapper[key] = parsed
                 # if len(parsed) and parsed[0] is not 'None':
                 #     length = len(parsed)
-                length = length if len(parsed) <= length else len(parsed)
+                self.length = self.length if len(parsed) <= self.length else len(parsed)
 
-        for index in range(length):
+        for index in range(self.length):
             model: Model = ModelManager.model(self.mapper_model._name)
             error_index = 0
             for key in mapper:
                 try:
                     if type(parsed_mapper[key]) == list:
-                        setattr(model, key, parsed_mapper[key][index])
+                        value = parsed_mapper[key][index]
+                        if self.full and not bool(value):
+                            value = "##"
+                        setattr(model, key, value)
                     else:
-                        setattr(model, key, parsed_mapper[key])
+                        if self.full and not parsed_mapper[key]:
+                            setattr(model, key, "##")
+                        else:
+                            setattr(model, key, parsed_mapper[key])
                 except:
                     error_index = error_index + 1
                     setattr(model, key, None)

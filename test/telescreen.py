@@ -4,6 +4,13 @@ import time
 import os
 import sys
 
+import subprocess
+
+path = r"E:\cloudWF\python\ScrapyUtils"
+
+environ = os.environ
+environ["PYTHONPATH"] = path
+
 
 class baseEvnetHandler(RegexMatchingEventHandler):
     # 修改次数
@@ -16,17 +23,21 @@ class baseEvnetHandler(RegexMatchingEventHandler):
         ]
         super(baseEvnetHandler, self).__init__(re_list)
 
+        # subprocess.Popen(["echo", "run"], shell=True)
+
     def on_modified(self, event):
         # 清屏
-        os.system("cls")
+        subprocess.Popen('cls', shell=True)
 
-        print("\nmodified! {0}th changes".format(self.check_count))
+
+        subprocess.Popen("\nmodified! {0}th changes".format(self.check_count), shell=True)
         if event.is_directory:
-            print("directory modified: {0}".format(event.src_path))
+            subprocess.Popen(['echo',"directory modified: {0}".format(event.src_path)], shell=True)
         else:
-            print("file modified: {0}".format(event.src_path))
+            subprocess.Popen(['echo', "file modified: {0}".format(event.src_path)], shell=True)
 
-            os.system("python -m unittest -v {}".format(self.target))
+            subprocess.Popen("python  -m unittest -v {0}".format(self.target), shell=True, env=environ)
+            # os.system("python  -m unittest -v {0}".format(self.target))
 
         self.check_count = self.check_count + 1
 

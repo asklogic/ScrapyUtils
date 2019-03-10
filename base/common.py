@@ -198,11 +198,13 @@ class DuplicateProcessor(Processor):
     # property
     host: int
     port: int
-    db_index: int
+    db_index: int = 0
 
     # Duplicate property
     baseList: List[str]
     modelKey: str
+
+
 
     def __init__(self, settings: dict):
         super().__init__(settings)
@@ -213,7 +215,10 @@ class DuplicateProcessor(Processor):
             self.host: str = "127.0.0.1"
             self.port: int = 6379
             # 数据库索引
-            self.db_index: int = 0
+            # self.db_index: int = 0
+
+
+
 
         if not self.modelKey:
             raise KeyError("Duplication must set model key")

@@ -40,13 +40,11 @@ class DefaultXpathParse(Parse):
 
         for key, value in mapper.items():
             if value.startswith("const:"):
-                parsed_mapper[key] = self.context[value[6:]]
+                parsed_mapper[key] = value[6:]
             elif value.startswith("context:"):
                 parsed_mapper[key] = self.context[value[8:]]
             else:
-
                 parsed = xpathParse(content, value)
-
                 parsed_mapper[key] = parsed
                 # if len(parsed) and parsed[0] is not 'None':
                 #     length = len(parsed)

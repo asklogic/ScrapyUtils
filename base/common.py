@@ -55,7 +55,10 @@ class DefaultXpathParse(Parse):
             error_index = 0
             for key in mapper:
                 try:
-                    setattr(model, key, parsed_mapper[key][index])
+                    if type(parsed_mapper[key]) is []:
+                        setattr(model, key, parsed_mapper[key][index])
+                    else:
+                        setattr(model, key, parsed_mapper[key])
                 except:
                     error_index = error_index + 1
                     setattr(model, key, None)

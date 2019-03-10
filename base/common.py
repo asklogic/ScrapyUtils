@@ -55,7 +55,7 @@ class DefaultXpathParse(Parse):
             error_index = 0
             for key in mapper:
                 try:
-                    if type(parsed_mapper[key]) is []:
+                    if type(parsed_mapper[key]) == list:
                         setattr(model, key, parsed_mapper[key][index])
                     else:
                         setattr(model, key, parsed_mapper[key])

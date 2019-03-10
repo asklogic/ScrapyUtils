@@ -39,12 +39,18 @@ class DefaultXpathParse(Parse):
         length: int = 0
 
         for key, value in mapper.items():
-            parsed = xpathParse(content, value)
+            if value.startswith("const:"):
+                parsed_mapper[key] = self.context[value[6:]]
+            elif value.startswith("context:"):
+                parsed_mapper[key] = self.context[value[8:]]
+            else:
 
-            parsed_mapper[key] = parsed
-            # if len(parsed) and parsed[0] is not 'None':
-            #     length = len(parsed)
-            length = length if len(parsed) <= length else len(parsed)
+                parsed = xpathParse(content, value)
+
+                parsed_mapper[key] = parsed
+                # if len(parsed) and parsed[0] is not 'None':
+                #     length = len(parsed)
+                length = length if len(parsed) <= length else len(parsed)
 
         for index in range(length):
             model: Model = ModelManager.model(self.mapper_model._name)
@@ -204,8 +210,6 @@ class DuplicateProcessor(Processor):
     baseList: List[str]
     modelKey: str
 
-
-
     def __init__(self, settings: dict):
         super().__init__(settings)
 
@@ -216,9 +220,6 @@ class DuplicateProcessor(Processor):
             self.port: int = 6379
             # 数据库索引
             # self.db_index: int = 0
-
-
-
 
         if not self.modelKey:
             raise KeyError("Duplication must set model key")

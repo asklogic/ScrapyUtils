@@ -52,12 +52,15 @@ class DefaultXpathParse(Parse):
 
         for index in range(length):
             model: Model = ModelManager.model(self.mapper_model._name)
+            error_index = 0
             for key in mapper:
                 try:
                     setattr(model, key, parsed_mapper[key][index])
                 except:
+                    error_index = error_index + 1
                     setattr(model, key, None)
-            parsed_result.append(model)
+            if not error_index * 2 > len(mapper.keys()):
+                parsed_result.append(model)
 
         if self.auto_yield:
             for model in parsed_result:

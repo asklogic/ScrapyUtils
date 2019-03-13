@@ -47,6 +47,8 @@ class DefaultXpathParse(Parse):
                 parsed_mapper[key] = value[6:]
             elif value.startswith("context:"):
                 parsed_mapper[key] = self.context[value[8:]]
+            elif value.startswith("fixed:"):
+                parsed_mapper[key] = xpathParse(content, value[6:])[0]
             else:
                 parsed = xpathParse(content, value)
                 parsed_mapper[key] = parsed

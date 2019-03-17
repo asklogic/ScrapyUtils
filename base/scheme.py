@@ -4,7 +4,7 @@ from typing import Dict, Generator
 from base.Model import Model
 from base.Scraper import Scraper
 from base.task import Task
-from base.lib import ComponentMeta
+from base.lib import ComponentMeta, Component
 
 
 class SchemeMeta(ComponentMeta):
@@ -22,7 +22,7 @@ class SchemeMeta(ComponentMeta):
         return super().__new__(cls, name, bases, attrs)
 
 
-class Scheme(object):
+class Scheme(Component):
     _active: bool
     priority: int
 

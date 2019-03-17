@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import Tuple, List, Dict, Any
 from base.Model import Model, ModelManager
-from base.lib import ComponentMeta
+from base.lib import ComponentMeta, Component
 
 from base.log import act
 
 
-class BaseProcess(object):
+class BaseProcess(Component):
     pass
 
 

@@ -75,7 +75,7 @@ class TestCore(TestCase):
         scraper = prepare.get_scraper()
         task = prepare.get_tasks()
 
-        sys_hub, dump_hub = core.build_Hub(model, processors)
+        sys_hub, dump_hub = core.build_hub(model, processors)
 
         sys_hub.activate()
         dump_hub.activate()
@@ -101,7 +101,7 @@ class TestCore(TestCase):
         processors = core.initProcessor(target)
         model = core.initModel(target)
 
-        sys_hub, dump_hub = core.build_Hub(model, processors)
+        sys_hub, dump_hub = core.build_hub(model, processors)
 
         # proxy
         if not prepare.ProxyAble:

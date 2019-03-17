@@ -29,10 +29,9 @@ class baseEvnetHandler(RegexMatchingEventHandler):
         # 清屏
         subprocess.Popen('cls', shell=True)
 
-
-        subprocess.Popen("\nmodified! {0}th changes".format(self.check_count), shell=True)
+        subprocess.Popen(['echo', "modified! {0}th changes".format(self.check_count)], shell=True)
         if event.is_directory:
-            subprocess.Popen(['echo',"directory modified: {0}".format(event.src_path)], shell=True)
+            subprocess.Popen(['echo', "directory modified: {0}".format(event.src_path)], shell=True)
         else:
             subprocess.Popen(['echo', "file modified: {0}".format(event.src_path)], shell=True)
 

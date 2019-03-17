@@ -91,7 +91,7 @@ class TestCore(TestCase):
 
         # scheme = core.load_scheme(con)
 
-        sys_hub, dump_hub = core.build_Hub(model, processor)
+        sys_hub, dump_hub = core.build_hub(model, processor)
         sys_hub.activate()
         dump_hub.activate()
 

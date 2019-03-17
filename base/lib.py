@@ -1,8 +1,6 @@
 from typing import List, Dict
 
 
-
-
 class Config(object):
 
     def __init__(self, config_file, config_name: str):
@@ -75,3 +73,7 @@ class ComponentMeta(type):
             attrs["_active"] = False
 
         return type.__new__(cls, name, bases, attrs)
+
+
+class Component(object, metaclass=ComponentMeta):
+    pass

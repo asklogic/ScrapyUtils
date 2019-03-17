@@ -1,20 +1,78 @@
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator, Any
+from typing import *
+from types import *
 import threading
 import scrapy_config
 import queue
 import time
 
 from base.log import act, status
-from base.lib import Config, ComponentMeta
+from base.lib import Config, ComponentMeta, Component
 from base.task import Task
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
 from base.scheme import Action, Parse
 from base.Process import Processor, Pipeline
-from base.common import Proxy_Processor
+from base.common import Proxy_Processor, DefaultAction, DefaultXpathParse
 from base.hub import Hub
 from base.Scraper import Scraper
 from base.scheme import Scheme
+
+path: str
+
+
+def load_files(target_name: str) -> List[ModuleType]:
+    target_package: List[ModuleType] = []
+
+    for file_names in ['action', 'parse', 'prepare', 'model', 'process']:
+        try:
+            module = __import__('.'.join([target_name, file_names]), fromlist=[target_name])
+            target_package.append(module)
+        except ModuleNotFoundError as me:
+            # TODO
+            act.error("project must set a {}.py".format(file_names))
+            act.critical("failed in load_files")
+            raise me
+
+    return target_package
+
+
+def load_components(modules: List[ModuleType], target_name: str = None) -> Tuple[List[Component]]:
+    components: Set[Component] = set()
+    for module in modules:
+        attrs: List[str] = dir(module)
+        for attr in attrs:
+            current_attr = getattr(module, attr)
+
+            # issubclass 类型问题
+            # if (target_name and target_name in str(current_attr) and issubclass(current_attr, Component)):
+            if (target_name and target_name in str(current_attr) and not attr.startswith('__')):
+                components.add(current_attr)
+
+    prepares: List[Prepare] = [x for x in components if issubclass(x, Prepare)]
+    schemes: List[Scheme] = [x for x in components if issubclass(x, Scheme)]
+    models: List[Model] = [x for x in components if issubclass(x, Model)]
+    processors: List[Processor] = [x for x in components if issubclass(x, Processor)]
+
+    return load_default_component((prepares, schemes, models, processors))
+
+
+def load_default_component(components: Tuple[List[Component]]) -> Tuple[List[Component] or Component]:
+    prepares, schemes, models, processors = components
+
+    if not prepares:
+        raise ModuleNotFoundError("there isn't have prepare class in Prepare.py")
+
+    if not schemes:
+        schemes: List[Component]
+        schemes.append(DefaultAction)
+        schemes.append(DefaultXpathParse)
+    if not Model:
+        pass
+
+    if not Processor:
+        pass
+
+    return prepares[0], schemes, models, processors
 
 
 def _load_module(target_root: str or None, file_name: str):
@@ -193,7 +251,7 @@ def initProcessor(target: str) -> List[type(Processor)]:
     return actives
 
 
-def build_Hub(models: List[type(Model)], processor: List[type(Processor)], setting: Dict):
+def build_hub(models: List[type(Model)], processor: List[type(Processor)], setting: Dict):
     sys_hub = Hub([ProxyModel, TaskModel], Pipeline([], setting), feed=True, timeout=10)
     sys_hub.remove_pipeline("ProxyModel")
     sys_hub.remove_pipeline("TaskModel")

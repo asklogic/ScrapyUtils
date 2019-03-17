@@ -46,7 +46,7 @@ def single_run(target: str):
             for key, item in task[0].param.items():
                 schemes[0].context[key] = item
 
-    sys_hub, dump_hub = core.build_Hub(model, processors, prepare.setting)
+    sys_hub, dump_hub = core.build_hub(model, processors, prepare.setting)
 
     sys_hub.activate()
     dump_hub.activate()
@@ -80,7 +80,7 @@ def thread_run(target: str):
     # set threading
     core.barrier = threading.Barrier(prepare.Thread)
 
-    sys_hub, dump_hub = core.build_Hub(model, processors, prepare.setting)
+    sys_hub, dump_hub = core.build_hub(model, processors, prepare.setting)
 
     # setting
     # proxy

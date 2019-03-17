@@ -3,13 +3,13 @@ from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 
 from base.Scraper import Scraper, RequestScraper
 
-from base.lib import ComponentMeta
+from base.lib import ComponentMeta, Component
 from base.scheme import Scheme
 from base.Process import Processor
 from base.task import Task
 
 
-class BasePrepare(object, metaclass=ComponentMeta):
+class BasePrepare(Component, metaclass=ComponentMeta):
     # component property
     _name: str
     _active: bool
@@ -18,7 +18,7 @@ class BasePrepare(object, metaclass=ComponentMeta):
     schemeList: List[Scheme] = []
     processorList: List[Processor] = []
 
-    setting : Dict = {}
+    setting: Dict = {}
 
     # config
     ProxyAble: bool = False

@@ -9,11 +9,11 @@ from .parse import *
 from .process import *
 
 
-class TestMockSimplePrepare(Prepare):
+class TestCorePrepare(Prepare):
     _active = True
     schemeList = [
-        TestMockSimpleAction,
-        TestMockSimpleParse,
+        TestCoreAction,
+        TestCoreParse,
     ]
     
     # processorList = []

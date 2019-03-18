@@ -1,4 +1,5 @@
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
+from types import *
 from base.lib import Config
 
 import queue
@@ -58,7 +59,7 @@ def single_run(target: str):
     sys_hub.stop()
 
 
-def thread_run(target: str):
+def _thread_run(target: str):
     # loading
     act.info("thread run")
     act.info("Target Job: " + target)
@@ -102,12 +103,78 @@ def thread_run(target: str):
     thread_List = []
 
     for i in range(prepare.Thread):
-        t = core.ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, prepare=prepare)
+        t = core._ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, prepare=prepare)
         thread_List.append(t)
         t.setDaemon(True)
         t.start()
 
     [t.join() for t in thread_List]
+    sys_hub.stop()
+    dump_hub.stop()
+
+
+def thread_run(target_name: str):
+    # step 1: load files
+    modules: List[ModuleType] = core.load_files(target_name)
+
+    # step 2: load components
+    components = core.load_components(modules, target_name=target_name)
+    prepare, schemes, models, processors = components
+
+    act.info("thread run")
+    act.info("Target Job: " + target_name)
+    act.info("Target Prepare: " + prepare._name + str(prepare))
+    act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
+    act.info("Target Models: " + str([x._name for x in models]))
+    act.info("Target Process: " + str([x._name for x in processors]))
+
+    thread = prepare.Thread
+    # step 3.1: build thread scraper list
+    scraper_list, tasks = core.build_thread_prepare(prepare, thread)
+    act.info("Detect Task number : " + str(len(tasks)))
+    act.info("Build Scraper finish. Thread number: " + str(len(scraper_list)))
+
+    # step 3.2: build thread scheme list ( context
+    schemes_list = core.build_thread_schemes(schemes, thread)
+
+    # step 3.3: build hub
+    sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
+    # temp
+    # TODO
+    if not prepare.ProxyAble:
+        sys_hub.remove_pipeline("ProxyModel")
+        act.info("Proxy Pipeline shutdown")
+
+    else:
+        core.temp_appendProxy(sys_hub, prepare.Thread)
+        act.info("Proxy Pipeline startup")
+
+    sys_hub.activate()
+    dump_hub.activate()
+
+    for task in tasks:
+        sys_hub.save(task)
+
+    # step 4: init thread
+    core.barrier = threading.Barrier(prepare.Thread)
+
+    thread_List = []
+
+    act.info("run thread")
+
+    for i in range(prepare.Thread):
+        t = core.ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, prepare=prepare, schemes=schemes_list[i],
+                              scraper=scraper_list[i])
+        thread_List.append(t)
+        t.setDaemon(True)
+        t.start()
+
+    [t.join() for t in thread_List]
+
+    # step 5: run command
+
+    # step 6: exit
+
     sys_hub.stop()
     dump_hub.stop()
 

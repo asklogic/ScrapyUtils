@@ -102,7 +102,7 @@ class TestCore(TestCase):
         thread_List = []
 
         for i in range(scrapy_config.Thread):
-            t = core.ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, config=con)
+            t = core._ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, config=con)
             thread_List.append(t)
             t.setDaemon(True)
             t.start()

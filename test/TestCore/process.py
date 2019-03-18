@@ -8,7 +8,7 @@ from .model import *
 from base.common import DumpProcessor
 
 
-class TestMockSimpleProcess(Processor):
+class TestCoreProcess(Processor):
     _active = True
 
     def process_item(self, model: Model) -> Any:

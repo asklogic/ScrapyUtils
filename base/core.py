@@ -17,6 +17,8 @@ from base.hub import Hub
 from base.Scraper import Scraper
 from base.scheme import Scheme
 
+import copy
+
 path: str
 
 
@@ -36,7 +38,8 @@ def load_files(target_name: str) -> List[ModuleType]:
     return target_package
 
 
-def load_components(modules: List[ModuleType], target_name: str = None) -> Tuple[List[Component]]:
+def load_components(modules: List[ModuleType], target_name: str = None) -> Tuple[
+    Prepare, List[Scheme], List[Model], List[Processor]]:
     components: Set[Component] = set()
     for module in modules:
         attrs: List[str] = dir(module)
@@ -56,8 +59,21 @@ def load_components(modules: List[ModuleType], target_name: str = None) -> Tuple
     return load_default_component((prepares, schemes, models, processors))
 
 
-def load_default_component(components: Tuple[List[Component]]) -> Tuple[List[Component] or Component]:
+def load_default_component(components: Tuple[
+    List[Prepare],
+    List[Scheme],
+    List[Model],
+    List[Processor]]) -> Tuple[
+    Prepare,
+    List[Scheme],
+    List[Model],
+    List[Processor]]:
     prepares, schemes, models, processors = components
+
+    prepares: List[Prepare]
+    schemes: List[Scheme]
+    models: List[Model]
+    processors: List[Processor]
 
     if not prepares:
         raise ModuleNotFoundError("there isn't have prepare class in Prepare.py")
@@ -66,6 +82,14 @@ def load_default_component(components: Tuple[List[Component]]) -> Tuple[List[Com
         schemes: List[Component]
         schemes.append(DefaultAction)
         schemes.append(DefaultXpathParse)
+
+    if prepares[0].schemeList:
+        schemes = prepares[0].schemeList
+
+    if prepares[0].processorList:
+        processors = prepares[0].processorList
+
+    # TODO
     if not Model:
         pass
 
@@ -73,6 +97,42 @@ def load_default_component(components: Tuple[List[Component]]) -> Tuple[List[Com
         pass
 
     return prepares[0], schemes, models, processors
+
+
+def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
+    schemes = [x() for x in scheme_list]
+    # 同一个dict
+    context = {}
+    for scheme in schemes:
+        scheme.context = context
+    return schemes
+
+
+def build_context(task: Task, schemes: List[Scheme]):
+    if task.param and type(task.param) is dict:
+        for key, item in task.param.items():
+            schemes[0].context[key] = item
+
+
+def build_thread_prepare(prepare: Prepare, thread: int) -> Tuple[List[Scraper], List[Task]]:
+    scraper, tasks = build_prepare(prepare)
+    scrapers: List[Scraper] = []
+    for i in range(thread):
+        thread_scraper: Scraper = copy.deepcopy(scraper)
+        thread_scraper.activate()
+        scrapers.append(thread_scraper)
+    return scrapers, tasks
+
+
+def build_thread_schemes(schemes: List[Scheme], thread: int) -> List[List[Scheme]]:
+    schemes = build_schemes(schemes)
+    schemes_list: List[List[Scheme]] = []
+    for i in range(thread):
+        thread_schemes = []
+        for scheme in schemes:
+            thread_schemes.append(copy.deepcopy(scheme))
+        schemes_list.append(thread_schemes)
+    return schemes_list
 
 
 def _load_module(target_root: str or None, file_name: str):
@@ -252,6 +312,9 @@ def initProcessor(target: str) -> List[type(Processor)]:
 
 
 def build_hub(models: List[type(Model)], processor: List[type(Processor)], setting: Dict):
+    for model in models:
+        ModelManager.add_model(model)
+
     sys_hub = Hub([ProxyModel, TaskModel], Pipeline([], setting), feed=True, timeout=10)
     sys_hub.remove_pipeline("ProxyModel")
     sys_hub.remove_pipeline("TaskModel")
@@ -309,7 +372,7 @@ barrier = None
 lock = threading.Lock()
 
 
-class ScrapyThread(threading.Thread):
+class _ScrapyThread(threading.Thread):
     def __init__(self, sys_hub: Hub, dump_hub: Hub, prepare: Prepare):
         threading.Thread.__init__(self)
 
@@ -399,3 +462,75 @@ class ScrapyThread(threading.Thread):
             proxyInfo: ProxyModel = self.sys.pop("ProxyModel")
 
             scraper.set_proxy((proxyInfo.ip, proxyInfo.port))
+
+
+class ScrapyThread(threading.Thread):
+    def __init__(self, sys_hub: Hub, dump_hub: Hub, prepare: Prepare, schemes: List[Scheme], scraper: Scraper):
+        threading.Thread.__init__(self)
+
+        self.sys: Hub = sys_hub
+        self.dump: Hub = dump_hub
+        self.prepare: Prepare = prepare
+        self.schemes: List[Scheme] = schemes
+        self.scraper: Scraper = scraper
+
+        self.proxy: bool = False
+        self.proxy = self.prepare.ProxyAble
+
+    def run(self):
+        # load and init scraper
+
+        # reset
+        self.reset()
+
+        # wait
+        barrier.wait()
+
+        # python trigger.py thread ScjstBase
+        # loop
+        try:
+            while True:
+                self.sync(self.prepare.Block)
+                task = self.sys.pop("TaskModel")
+
+                build_context(task, self.schemes)
+
+                res = scrapy(self.schemes, self.scraper, task, self.dump, self.sys)
+                if res:
+                    status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
+                elif task.count < 5:
+                    # reset
+                    self.reset()
+
+                    # sleep
+                    time.sleep(self.prepare.Block * 2)
+                    status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
+
+                    # back to sys
+                    task.count = task.count + 1
+                    self.sys.save(task)
+                else:
+                    time.sleep(self.prepare.Block * 2)
+                    status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
+
+        except queue.Empty as qe:
+            status.info("finish")
+
+        self.scraper.quit()
+
+    def sync(self, delay: int = 0):
+        lock.acquire()
+        if delay:
+            time.sleep(delay)
+        else:
+            time.sleep(0.5)
+        lock.release()
+
+    def reset(self, ):
+        self.scraper.clear_session()
+        if self.proxy:
+            proxyInfo: ProxyModel = self.sys.pop("ProxyModel")
+            self.scraper.set_proxy((proxyInfo.ip, proxyInfo.port))
+
+        for scheme in self.schemes:
+            scheme.context.clear()

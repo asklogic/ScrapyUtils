@@ -4,6 +4,9 @@ import requests
 from base.Model import ProxyModel
 import time
 
+import peewee
+import redis
+
 headers = {
     'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -71,3 +74,23 @@ def get_proxy_model(number: int) -> List[ProxyModel]:
         m.ip = p.split(":")[0]
         m.port = p.split(":")[1]
         yield m
+
+
+def rebuild_duplication_info(rdb: redis.Redis, table: peewee.Model, primary_key: str, duplicated: list, key):
+    all_key = []
+    all_key.extend(duplicated)
+    all_key.append("*")
+    for k in rdb.keys(":".join(all_key)):
+        rdb.delete(k)
+    print("delete exist keys")
+
+    count = table.select().count()
+    for i in range(1000, count + 1000, 1000):
+        end = i
+        start = end - 1000
+
+        for item in table.select().where(
+                (getattr(table, primary_key) > start) & (getattr(table, primary_key) < end)):
+            # print(item)
+            rdb.set("".join([":".join(duplicated), ":", getattr(item, key)]), 1)
+        print("done start: {0}. end: {1}".format(start, end))

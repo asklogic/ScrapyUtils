@@ -20,6 +20,8 @@ from base.scheme import Scheme
 from base import core
 import os
 
+import threading
+
 
 class TestEngine(TestCase):
 
@@ -27,67 +29,14 @@ class TestEngine(TestCase):
         # mock env
 
         # set test path
+        import sys
         core.path = r'E:\cloudWF\python\ScrapyUtils\test'
+        sys.path.append(r'E:\cloudWF\python\ScrapyUtils\test')
 
         super().setUp()
 
-    def _test_init(self):
-        # step 1: load files
-        target_name = "TestMock"
-        modules: List[ModuleType] = core.load_files(target_name)
-
-        # not exist target project
-        # not complete files
-
-        # step 2: load components
-
-        components = core.load_components(modules, target_name=target_name)
-
-        prepare, schemes, models, processors = components
-
-        # must have prepare component ( or not?
-        # default scheme component
-        # TODO
-
-        # step 3: build component
-
-        scraper, tasks = core.build_prepare(prepare)
-        sys_hub, dump_hub = core.build_hub(modules, processors, prepare.setting)
-
-        # step 3.1: thread
-
-        thread_shemes: List[List[Scheme]] = core.build_thread_shemes(schemes)
-        thread_scraper: List[scraper] = core.build_thread_scrapers(scraper)
-
-        # step4 : wait and finish
-
-        sys_hub.activate()
-        dump_hub.activate()
-
-        # core.scrapy(scheme_list=schemes, scraper=scraper, task=tasks[0], dump_hub=dump_hub, sys_hub=sys_hub)
-
-        sys_hub.stop()
-        dump_hub.stop()
-
-    def _test_thread_run(self):
-
-        target_name = "TestMock"
-
-        # step 1: load files
-        modules: List[ModuleType] = core.load_files(target_name)
-
-        # not exist target project
-        # not complete files
-
-        # step 2: load components
-
-        components = core.load_components(modules)
-        prepare, schemes, models, processors = components
-
-        pass
-
-    def test_single_run(self):
-        target_name = "TestMock"
+    def _test_single_run(self):
+        target_name = "TestMockSingle"
         # step 1: load files
         modules: List[ModuleType] = core.load_files(target_name)
 
@@ -108,23 +57,30 @@ class TestEngine(TestCase):
         schemes = core.build_schemes(schemes)
 
         # step 3.3: build context
-        current_task = task[0]
-        if current_task.param and type(current_task.param) is dict:
-            for key, item in current_task.param.items():
-                schemes[0].context[key] = item
+
+        current_task = tasks[0]
+
+        core.build_context(current_task, schemes)
 
         # step 3.4: build hubs
         sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
 
+        sys_hub.activate()
+        dump_hub.activate()
+
         # step 4: Scrapy
         core.scrapy(schemes, scraper, current_task, dump_hub, sys_hub)
+
+        for i in range(15):
+            model = dump_hub.pop("TestMockSingleModel")
+            self.assertIsInstance(model, Model)
 
         # step 5: Scrapy
         scraper.quit()
         dump_hub.stop()
         sys_hub.stop()
 
-    def test_core_load_files(self):
+    def _test_thread_run(self):
         target_name = "TestMockThread"
         # step 1: load files
         modules: List[ModuleType] = core.load_files(target_name)
@@ -135,22 +91,66 @@ class TestEngine(TestCase):
 
         # step 3: build components
 
+        thread = prepare.Thread
+
         # step 3.1: build thread scraper list
         scraper_list, tasks = core.build_thread_prepare(prepare, thread)
+
+        for scraper in scraper_list:
+            # print(scraper)
+            # print(id(scraper))
+            self.assertIsInstance(scraper, Scraper)
+
+        for task in tasks:
+            self.assertIsInstance(task, Model)
 
         # step 3.2: build thread scheme list ( context
         schemes_list = core.build_thread_schemes(schemes, thread)
 
+        for thread_schemes in schemes_list:
+            for scheme in thread_schemes:
+                # print(scheme)
+                # print(id(scheme))
+                self.assertIsInstance(scheme, Scheme)
+
         # step 3.3: build hub
         sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
 
+        # temp
+        # TODO
+        if not prepare.ProxyAble:
+            sys_hub.remove_pipeline("ProxyModel")
+        else:
+            core.temp_appendProxy(sys_hub, prepare.Thread)
+
+        sys_hub.activate()
+        dump_hub.activate()
+
+        for task in tasks:
+            sys_hub.save(task)
+
         # step 4: init thread
+        core.barrier = threading.Barrier(prepare.Thread)
+
+        thread_List = []
+
+        for i in range(prepare.Thread):
+            t = core.ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, prepare=prepare, schemes=schemes_list[i],
+                                  scraper=scraper_list[i])
+            thread_List.append(t)
+            t.setDaemon(True)
+            t.start()
+
+        [t.join() for t in thread_List]
 
         # step 5: run command
 
         # step 6: exit
 
-    def test_core_load_files_no_preapre(self):
+        sys_hub.stop()
+        dump_hub.stop()
+
+    def test_core_load_files_no_prepare(self):
         target_name = "TestMockFailed"
 
         # not have prepare
@@ -175,9 +175,9 @@ class TestEngine(TestCase):
         self.assertNotEqual(schemes, [])
         # TODO
 
-    def __test_load_component_default(self):
+    def _test_load_component_default(self):
         # abort
-        target_name = "TestMockSimple"
+        target_name = "TestMock"
         modules: List[ModuleType] = core.load_files(target_name)
         prepare, schemes, models, processors = core.load_components(modules, target_name=target_name)
 

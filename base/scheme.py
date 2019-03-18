@@ -25,6 +25,7 @@ class SchemeMeta(ComponentMeta):
 class Scheme(Component):
     _active: bool
     priority: int
+    context: dict
 
 
 class Action(Scheme, metaclass=SchemeMeta):

@@ -1,4 +1,4 @@
-from base.engine import single_run,thread_run
+from base.engine import single_run,_thread_run
 from base.lib import Config
 
 
@@ -10,4 +10,4 @@ def build_run(config_file, args: str):
     if args[1] == "single":
         single_run(args[2])
     elif args[1] == 'thread':
-        thread_run(args[2])
+        _thread_run(args[2])

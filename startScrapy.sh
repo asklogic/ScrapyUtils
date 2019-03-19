@@ -1,5 +1,4 @@
-
-
+#i/bin/sh
 echo $1
 
 nohup python3 -u trigger.py thread $1 >thread.out 2>&1 &

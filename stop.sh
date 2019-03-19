@@ -1,5 +1,4 @@
 #i/bin/sh
-
 ps -ef | grep 'trigger.py thread'
 
 pid1=`ps -ef|grep 'trigger.py thread' | grep  'python3'|awk '{print($2)}'`

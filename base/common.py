@@ -218,9 +218,10 @@ class JsonFileProcessor(Processor):
 
 class DuplicateProcessor(Processor):
     # property
-    host: int
-    port: int
+    host: int = '127.0.0.1'
+    port: int = '6379'
     db_index: int = 0
+    password: str = ''
 
     # Duplicate property
     baseList: List[str]
@@ -229,13 +230,12 @@ class DuplicateProcessor(Processor):
     def __init__(self, settings: dict):
         super().__init__(settings)
 
-        if not settings.get("duplication"):
-            # TODO
-            # 地址
-            self.host: str = "127.0.0.1"
-            self.port: int = 6379
-            # 数据库索引
-            # self.db_index: int = 0
+        duplication_setting = settings.get('duplication')
+
+        # TODO
+        if duplication_setting:
+            if duplication_setting.get('password'):
+                self.password = duplication_setting.get('password')
 
         if not self.modelKey:
             raise KeyError("Duplication must set model key")

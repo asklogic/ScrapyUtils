@@ -81,7 +81,7 @@ def resource_feed(resource: Resource):
                     resource.add(model)
             except Exception as e:
                 act.error("[Resource - Pipeline] feed error - " + str(e))
-                # act.exception(e)
+                act.exception(e)
                 time.sleep(1.2)
         time.sleep(0.5)
 
@@ -98,6 +98,7 @@ def resource_dump(resource: Resource):
 
             except Exception as e:
                 act.error("[Resource - Pipeline] dump error - " + str(e))
+                act.exception(e)
                 [resource.add(x) for x in to_dump_models]
                 time.sleep(1.2)
         time.sleep(0.5)
@@ -110,6 +111,7 @@ def dump_processing(to_dump_models: List[Model], pipeline: Pipeline):
         pipeline.dump_model(to_dump_models)
     except Exception as e:
         act.error("[Resource - Pipeline] dump error - " + str(e))
+        act.exception(e)
         time.sleep(1)
         return False
     return True

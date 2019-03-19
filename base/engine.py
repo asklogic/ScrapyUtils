@@ -12,7 +12,7 @@ from base.Process import Pipeline
 from base import core
 
 
-def single_run(target: str):
+def _single_run(target: str):
     act.info("single run")
     act.info("Target Job: " + target)
 
@@ -54,6 +54,45 @@ def single_run(target: str):
 
     core.scrapy(schemes, scraper, task[0], dump_hub, sys_hub)
 
+    scraper.quit()
+    dump_hub.stop()
+    sys_hub.stop()
+
+
+def single_run(target_name):
+    # step 1: load files
+    modules: List[ModuleType] = core.load_files(target_name)
+    # step 2: load components
+    components = core.load_components(modules, target_name=target_name)
+    prepare, schemes, models, processors = components
+
+    act.info("single run")
+    act.info("Target Job: " + target_name)
+    act.info("Target Prepare: " + prepare._name + str(prepare))
+    act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
+    act.info("Target Models: " + str([x._name for x in models]))
+    act.info("Target Process: " + str([x._name for x in processors]))
+
+    # step 3.1: build single scraper
+    scraper, tasks = core.build_prepare(prepare)
+
+    # step 3.2: build single schemes
+    schemes = core.build_schemes(schemes)
+
+    # step 3.3: build context
+    current_task = tasks[0]
+    core.build_context(current_task, schemes)
+
+    # step 3.4: build hubs
+    sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
+
+    sys_hub.activate()
+    dump_hub.activate()
+
+    # step 4: Scrapy
+    core.scrapy(schemes, scraper, current_task, dump_hub, sys_hub)
+
+    # step 5: exit
     scraper.quit()
     dump_hub.stop()
     sys_hub.stop()

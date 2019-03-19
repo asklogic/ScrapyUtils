@@ -130,7 +130,7 @@ def build_thread_schemes(schemes: List[Scheme], thread: int) -> List[List[Scheme
     for i in range(thread):
         thread_schemes = []
         for scheme in schemes:
-            thread_schemes.append(copy.deepcopy(scheme))
+            thread_schemes.append(copy.copy(scheme))
         schemes_list.append(thread_schemes)
     return schemes_list
 

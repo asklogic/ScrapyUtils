@@ -260,7 +260,8 @@ class DuplicateProcessor(Processor):
         :return:
         """
         # if not self.db:
-        self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, decode_responses=True)
+        self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, password=self.password,
+                              decode_responses=True)
         try:
             self.db.keys("1")
         except redis.ConnectionError as e:
@@ -275,7 +276,7 @@ class DuplicateProcessor(Processor):
 
     def process_item(self, model: Model) -> Any:
         key = getattr(model, self.modelKey)
-        if self.check_identification(key):
+        if key and self.check_identification(key):
             return model
         else:
             return False

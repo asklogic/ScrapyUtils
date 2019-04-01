@@ -315,6 +315,8 @@ def build_hub(models: List[type(Model)], processor: List[type(Processor)], setti
     for model in models:
         ModelManager.add_model(model)
 
+    ModelManager.add_model(ProxyModel)
+
     sys_hub = Hub([ProxyModel, TaskModel], Pipeline([], setting), feed=True, timeout=10)
     sys_hub.remove_pipeline("ProxyModel")
     sys_hub.remove_pipeline("TaskModel")

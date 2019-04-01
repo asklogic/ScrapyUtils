@@ -150,13 +150,7 @@ class TestEngine(TestCase):
         sys_hub.stop()
         dump_hub.stop()
 
-    def test_core_load_files_no_prepare(self):
-        target_name = "TestMockFailed"
 
-        # not have prepare
-
-        self.assertRaises(ModuleNotFoundError, core.load_files, target_name)
-        # modules: List[ModuleType] = core.load_files(target_name)
 
     def test_load_component(self):
         target_name = "TestMock"
@@ -182,3 +176,14 @@ class TestEngine(TestCase):
         prepare, schemes, models, processors = core.load_components(modules, target_name=target_name)
 
         self.assertTrue(issubclass(prepare, Prepare))
+
+    def test_core_load_files_no_prepare(self):
+        target_name = "TestMockFailed"
+
+        # not have prepare
+
+        self.assertRaises(ModuleNotFoundError, core.load_files, target_name)
+        # modules: List[ModuleType] = core.load_files(target_name)
+
+    def test_load_target_not_exist(self):
+        pass

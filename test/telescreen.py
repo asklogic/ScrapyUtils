@@ -5,11 +5,18 @@ import os
 import sys
 
 import subprocess
+import threading
 
-path = r"E:\cloudWF\python\ScrapyUtils"
+path = r"D:\cloudWF\python\ScrapyUtils"
 
 environ = os.environ
 environ["PYTHONPATH"] = path
+
+check_signal = False
+check_count = 1
+loop_signal = True
+
+modified_info: list = []
 
 
 class baseEvnetHandler(RegexMatchingEventHandler):
@@ -23,22 +30,55 @@ class baseEvnetHandler(RegexMatchingEventHandler):
         ]
         super(baseEvnetHandler, self).__init__(re_list)
 
-        # subprocess.Popen(["echo", "run"], shell=True)
-
-    def on_modified(self, event):
+    def on_modified(self, event: FileModifiedEvent):
+        # print(event.src_path)
         # 清屏
-        subprocess.Popen('cls', shell=True)
+        # subprocess.Popen('cls', shell=True)
+        #
+        # subprocess.Popen(['echo', "modified! {0}th changes".format(self.check_count)], shell=True)
+        # if event.is_directory:
+        #     subprocess.Popen(['echo', "directory modified: {0}".format(event.src_path)], shell=True)
+        # else:
+        #     subprocess.Popen(['echo', "file modified: {0}".format(event.src_path)], shell=True)
+        #
+        #     subprocess.Popen("python -m unittest -v {0}".format(self.target), shell=True, env=environ)
 
-        subprocess.Popen(['echo', "modified! {0}th changes".format(self.check_count)], shell=True)
-        if event.is_directory:
-            subprocess.Popen(['echo', "directory modified: {0}".format(event.src_path)], shell=True)
-        else:
-            subprocess.Popen(['echo', "file modified: {0}".format(event.src_path)], shell=True)
+        global check_signal
+        global modified_info
 
-            subprocess.Popen("python  -m unittest -v {0}".format(self.target), shell=True, env=environ)
-            # os.system("python  -m unittest -v {0}".format(self.target))
+        check_signal = True
 
-        self.check_count = self.check_count + 1
+        current_info = os.path.basename(event.src_path)
+        if current_info not in modified_info:
+            modified_info.append(current_info)
+
+
+
+def check_thread():
+    global loop_signal
+    global check_signal
+    global check_count
+    global modified_info
+
+    while loop_signal:
+
+        if check_signal:
+            # subprocess.Popen('cls', shell=True)
+            # subprocess.Popen(['echo', "modified! {0}th changes".format(check_count)], shell=True)
+            # subprocess.Popen("python -m unittest -v {0}".format(target), shell=True, env=environ)
+
+            os.system('cls')
+            os.system('echo modified! {0}th changes'.format(check_count))
+            os.system('echo modified info: {0}'.format('\n'.join(modified_info)))
+
+            os.system('python -m unittest -v {0}'.format(target))
+
+            check_signal = False
+            check_count = check_count + 1
+            modified_info.clear()
+
+        time.sleep(1)
+
 
 
 ### test
@@ -66,10 +106,20 @@ if __name__ == "__main__":
     observer.schedule(event_handler, os.path.dirname(os.getcwd()), recursive=True)
     print("telescreen start")
 
+    observer.setDaemon(True)
     observer.start()
+
+    t = threading.Thread(target=check_thread)
+    t.setDaemon(True)
+
+    t.start()
+
+    # temp
+    # TODO refactor daemon thread
+
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        loop_signal = False
         observer.stop()
-    observer.join()

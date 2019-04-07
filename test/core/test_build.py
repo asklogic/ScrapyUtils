@@ -3,6 +3,7 @@ from typing import *
 from types import *
 
 from base import core, common, command
+from base.lib import BaseSetting, Setting
 
 
 class TestBuild(TestCase):
@@ -22,9 +23,6 @@ class TestBuild(TestCase):
 
         super().setUp()
 
-
-
     def test_prepare(self):
-        pass
-        # scraper, tasks , setting = core.build_prepare(self.prepare)
-
+        scraper, tasks = core.build_prepare(self.prepare)
+        setting = self.prepare.generate()

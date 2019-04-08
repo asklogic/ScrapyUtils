@@ -128,3 +128,4 @@ class TaskModel(Model):
     url = Field()
     param = Field()
     count = Field()
+

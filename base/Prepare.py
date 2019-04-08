@@ -1,13 +1,14 @@
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
+import warnings
 
 from base.Scraper import Scraper, RequestScraper
 
-from base.lib import ComponentMeta, Component
+from base.lib import ComponentMeta, Component, Setting
 from base.scheme import Scheme
 from base.Process import Processor
 from base.task import Task
-
+from base.Model import TaskModel
 
 class BasePrepare(Component, metaclass=ComponentMeta):
     # component property
@@ -34,9 +35,11 @@ class Prepare(BasePrepare):
     def __del__(self):
         self.end_prepare()
 
+    # TODO
     def start_prepare(self):
         pass
 
+    # TODO
     def end_prepare(self):
         pass
 
@@ -69,9 +72,12 @@ class Prepare(BasePrepare):
     def get_scraper(cls) -> Scraper:
         scraper = cls.scraper_prepared()
         if isinstance(scraper, Scraper):
+
             # TODO
             return scraper
         else:
+            warnings.warn('scraper_prepared must return a Scraper Instance. start default RequestScraper ')
+            # warnings.warn('start default RequestScraper')
             r = RequestScraper()
             r.set_timeout(5)
             return r
@@ -80,12 +86,27 @@ class Prepare(BasePrepare):
 
     @classmethod
     def get_tasks(cls) -> List[Task]:
-        tasks = cls.task_prepared()
+        iterable = cls.task_prepared()
+
+        #
+        if iterable is None:
+            raise Exception("didn't yield task.")
         try:
-            tasks = list(cls.task_prepared())
+            tasks = list(iterable)
         except TypeError as te:
-            raise TypeError("function task_prepared must return a iterable")
+            raise TypeError("task_prepared must return a iterable")
+
+        for task in tasks:
+            if not isinstance(task, TaskModel):
+                raise TypeError("task_prepared must yield Task Instance")
+
         return tasks
+
+    def generate(self):
+        setting = Setting()
+
+
+
 
 
 # TODO

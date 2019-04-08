@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Callable
 
 
 class Config(object):
@@ -76,4 +76,26 @@ class ComponentMeta(type):
 
 
 class Component(object, metaclass=ComponentMeta):
+    pass
+
+
+class BaseSetting(object):
+    Thread: int = 12
+    Block: int = 0.5
+
+    ProxyAble: bool = False
+
+    target: str
+    Prepare: str
+    Scheme: List[str]
+    Model: List[str]
+    Processor: List[str]
+
+    Duplication: dict
+
+    ProxyFunc: Callable
+
+
+
+class Setting(BaseSetting):
     pass

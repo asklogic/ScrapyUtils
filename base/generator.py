@@ -117,9 +117,7 @@ def overwrite(job_name):
 
 
 if __name__ == '__main__':
-    target = "SysProjectContract"
+    target = "ProxyTest"
     dir_generator(target)
     component_generate(target)
-    # overwrite("other_test")
-    # job_generation("other_test")
-    # config_generation("ProxyInfo")
+

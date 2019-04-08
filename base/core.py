@@ -115,10 +115,10 @@ def build_context(task: Task, schemes: List[Scheme]):
 
 
 def build_thread_prepare(prepare: Prepare, thread: int) -> Tuple[List[Scraper], List[Task]]:
-    scraper, tasks = build_prepare(prepare)
+    tasks = prepare.get_tasks()
     scrapers: List[Scraper] = []
     for i in range(thread):
-        thread_scraper: Scraper = copy.deepcopy(scraper)
+        thread_scraper: Scraper = prepare.get_scraper()
         thread_scraper.activate()
         scrapers.append(thread_scraper)
     return scrapers, tasks
@@ -129,8 +129,11 @@ def build_thread_schemes(schemes: List[Scheme], thread: int) -> List[List[Scheme
     schemes_list: List[List[Scheme]] = []
     for i in range(thread):
         thread_schemes = []
+        context = {}
         for scheme in schemes:
-            thread_schemes.append(copy.copy(scheme))
+            current: schemes = copy.copy(scheme)
+            current.context = context
+            thread_schemes.append(current)
         schemes_list.append(thread_schemes)
     return schemes_list
 

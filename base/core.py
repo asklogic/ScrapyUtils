@@ -119,7 +119,6 @@ def build_thread_prepare(prepare: Prepare, thread: int) -> Tuple[List[Scraper], 
     scrapers: List[Scraper] = []
     for i in range(thread):
         thread_scraper: Scraper = prepare.get_scraper()
-        thread_scraper.activate()
         scrapers.append(thread_scraper)
     return scrapers, tasks
 
@@ -252,13 +251,15 @@ def load_scheme(config: Config) -> List[Action or Parse]:
 
 
 def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
-    scraper, task = prepare.do()
-    if not task:
-        act.warning("[Config] prepare must yield tasks")
-        raise TypeError("[Config] build_prepare error")
-    if not scraper:
-        scraper = DefaultRequestPrepare.get_scraper()
-    return (scraper, task)
+    try:
+        scraper = prepare.get_scraper()
+        tasks = prepare.get_tasks()
+    except Exception as e:
+        act.exception(e)
+        raise Exception('build_prepare failed')
+    return scraper, tasks
+
+
 
 
 def generate_task(prepare: Prepare) -> List[Task]:

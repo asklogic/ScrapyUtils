@@ -4,13 +4,14 @@ import warnings
 
 from base.Scraper import Scraper, RequestScraper
 
-from base.lib import ComponentMeta, Component, Setting
+from base.lib import ComponentMeta, Component, Setting, BaseSetting
 from base.scheme import Scheme
 from base.Process import Processor
 from base.task import Task
 from base.Model import TaskModel
 
-class BasePrepare(Component, metaclass=ComponentMeta):
+
+class BasePrepare(Component, BaseSetting, metaclass=ComponentMeta):
     # component property
     _name: str
     _active: bool
@@ -70,25 +71,28 @@ class Prepare(BasePrepare):
 
     @classmethod
     def get_scraper(cls) -> Scraper:
-        scraper = cls.scraper_prepared()
-        if isinstance(scraper, Scraper):
+        try:
+            scraper = cls.scraper_prepared()
+            if isinstance(scraper, Scraper):
+                return scraper
+            else:
+                warnings.warn('scraper_prepared must return a Scraper Instance. start default RequestScraper ')
+                r = RequestScraper()
+                r.set_timeout(5)
+                return r
 
-            # TODO
-            return scraper
-        else:
-            warnings.warn('scraper_prepared must return a Scraper Instance. start default RequestScraper ')
-            # warnings.warn('start default RequestScraper')
+        # TODO
+        except Exception as e:
+            warnings.warn('failed in scraper_prepared. start default RequestScraper ')
             r = RequestScraper()
             r.set_timeout(5)
             return r
-        # fixme
-        # raise Exception("scraper_prepared must return a Scraper Instance")
 
     @classmethod
     def get_tasks(cls) -> List[Task]:
         iterable = cls.task_prepared()
 
-        #
+
         if iterable is None:
             raise Exception("didn't yield task.")
         try:
@@ -104,9 +108,6 @@ class Prepare(BasePrepare):
 
     def generate(self):
         setting = Setting()
-
-
-
 
 
 # TODO

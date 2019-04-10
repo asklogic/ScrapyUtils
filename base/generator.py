@@ -117,7 +117,7 @@ def overwrite(job_name):
 
 
 if __name__ == '__main__':
-    target = "SysProjectPermit"
+    target = "SysProjectEntity"
     dir_generator(target)
     component_generate(target)
 

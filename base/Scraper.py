@@ -112,9 +112,6 @@ class RequestScraper(Scraper):
         self._req.keep_alive = self.keep_alive
         self._req.headers = self._headers
 
-
-
-
     def get(self, url: str, params: Dict = None) -> str:
         res = self._req.get(url=url, timeout=self.timeout, headers=self._headers, proxies=self.current_proxy,
                             params=params, stream=False, verify=False)

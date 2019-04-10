@@ -9,27 +9,24 @@ from .parse import *
 from .process import *
 
 
-class TestMockPrepare(Prepare):
+class TestMockErrorPrepare(Prepare):
     _active = True
     schemeList = [
-        TestMockAction,
-        TestMockParse,
+        TestMockErrorAction,
+        TestMockErrorParse,
     ]
     
     # processorList = []
 
     @classmethod
     def task_prepared(cls):
-        for i in range(10):
-            task = Task()
-            task.url = "https://www.kuaidaili.com/free/inha/"
-            task.param = {
-                'info' : 123,
-            }
-            yield task
+        task = Task()
+        task.url = "about:blank"
+        raise Exception('error')
+        yield task
 
     @classmethod
     def scraper_prepared(cls) -> Scraper:
-        r = RequestScraper()
-        r.set_timeout(10)
-        return r
+        raise Exception('error')
+
+

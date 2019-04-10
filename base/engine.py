@@ -217,6 +217,8 @@ def thread_run(target_name: str):
     sys_hub.stop()
     dump_hub.stop()
 
+    [x.quit() for x in scraper_list]
+
 
 if __name__ == '__main__':
     pass

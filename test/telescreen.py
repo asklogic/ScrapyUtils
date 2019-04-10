@@ -7,7 +7,7 @@ import sys
 import subprocess
 import threading
 
-path = r"D:\cloudWF\python\ScrapyUtils"
+path = r"E:\cloudWF\python\ScrapyUtils"
 
 environ = os.environ
 environ["PYTHONPATH"] = path

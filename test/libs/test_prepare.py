@@ -41,6 +41,16 @@ class MockFailedPrepare(Prepare):
     def task_prepared(cls) -> List[Task]:
         return 'another some error data'
 
+class MockErrorPrepare(Prepare):
+
+    @classmethod
+    def scraper_prepared(cls) -> Scraper:
+        raise Exception('scraper prepared')
+
+    @classmethod
+    def task_prepared(cls) -> List[Task]:
+        raise Exception('task prepared')
+
 
 class TestPrepare(TestCase):
 
@@ -48,6 +58,7 @@ class TestPrepare(TestCase):
         self.normal = MockNormalPrepare()
         self.failed = MockFailedPrepare()
         self.default = MockDefaultPrepare()
+        self.error = MockErrorPrepare()
 
         ModelManager.add_model(TaskModel)
         super().setUp()
@@ -77,23 +88,34 @@ class TestPrepare(TestCase):
         self.assertIsInstance(scraper, str)
         self.assertEqual('some error str', scraper)
 
-    def test_get_scraper_default(self):
+        # exception in scraper_prepared
+        with self.assertRaises(Exception) as e:
+            self.error.scraper_prepared()
+
+    def test_get_scraper(self):
         with self.assertWarns(UserWarning):
             scraper = self.default.get_scraper()
         self.assertIsInstance(scraper, RequestScraper)
         scraper.quit()
 
+        scraper = self.normal.get_scraper()
+        self.assertIsInstance(scraper, FireFoxScraper)
+        scraper.quit()
+
     def test_get_scraper_failed(self):
 
         with self.assertWarns(UserWarning):
-            scraper = self.failed.get_scraper()
-        scraper.quit()
+            failed_scraper = self.failed.get_scraper()
 
-    def test_get_scraper_custom(self):
-        scraper = self.normal.get_scraper()
+        self.assertIsInstance(failed_scraper, RequestScraper)
+        failed_scraper.quit()
 
-        self.assertIsInstance(scraper, FireFoxScraper)
-        scraper.quit()
+        with self.assertWarns(UserWarning):
+            error_scraper = self.error.get_scraper()
+
+        self.assertIsInstance(error_scraper, RequestScraper)
+        error_scraper.quit()
+
 
     def test_get_scraper_thread_default(self):
 
@@ -134,12 +156,13 @@ class TestPrepare(TestCase):
         with self.assertRaises(Exception):
             tasks = self.default.get_tasks()
 
-    # def test_do(self):
-    #     self.fail()
-    #
+
     def test_generate_setting(self):
         setting = self.normal.generate()
         self.assertIsInstance(setting, object)
 
-
+    def test_demo(self):
+        pass
+        # self.default.get_tasks()
+        # self.failed.get_tasks()
 

@@ -6,7 +6,7 @@ import queue
 import time
 
 from base.log import act, status
-from base.lib import Config, ComponentMeta, Component
+from base.lib import Config, ComponentMeta, Component,Setting
 from base.task import Task
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
@@ -23,25 +23,29 @@ path: str
 
 
 def load_files(target_name: str) -> List[ModuleType]:
-    target_package: List[ModuleType] = []
+    target_modules: List[ModuleType] = []
 
     for file_names in ['action', 'parse', 'prepare', 'model', 'process']:
         try:
             module = __import__('.'.join([target_name, file_names]), fromlist=[target_name])
-            target_package.append(module)
+            target_modules.append(module)
         except ModuleNotFoundError as me:
             # TODO
             act.error("project must set a {}.py".format(file_names))
             act.critical("failed in load_files")
             raise me
 
-    return target_package
+    return target_modules
 
 
-def load_components(modules: List[ModuleType], target_name: str = None) -> Tuple[
-    Prepare, List[Scheme], List[Model], List[Processor]]:
+def load_components(target_name: str = None) -> Tuple[Prepare, List[Scheme], List[Model], List[Processor]]:
+    # search modules in target dir
+    target_modules = load_files(target_name)
+
+    # load all components
     components: Set[Component] = set()
-    for module in modules:
+
+    for module in target_modules:
         attrs: List[str] = dir(module)
         for attr in attrs:
             current_attr = getattr(module, attr)
@@ -50,12 +54,13 @@ def load_components(modules: List[ModuleType], target_name: str = None) -> Tuple
             # if (target_name and target_name in str(current_attr) and issubclass(current_attr, Component)):
             if (target_name and target_name in str(current_attr) and not attr.startswith('__')):
                 components.add(current_attr)
-
+    # classify components & pack ups
     prepares: List[Prepare] = [x for x in components if issubclass(x, Prepare)]
     schemes: List[Scheme] = [x for x in components if issubclass(x, Scheme)]
     models: List[Model] = [x for x in components if issubclass(x, Model)]
     processors: List[Processor] = [x for x in components if issubclass(x, Processor)]
 
+    # TODO refact default
     return load_default_component((prepares, schemes, models, processors))
 
 
@@ -98,6 +103,17 @@ def load_default_component(components: Tuple[
 
     return prepares[0], schemes, models, processors
 
+
+def load_setting(prepare:Prepare) -> Setting:
+
+    setting = Setting()
+
+    config = __import__('config')
+
+    setting.load_prepare(Prepare)
+    setting.load_config(config)
+
+    return setting
 
 def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     schemes = [x() for x in scheme_list]
@@ -258,8 +274,6 @@ def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
         act.exception(e)
         raise Exception('build_prepare failed')
     return scraper, tasks
-
-
 
 
 def generate_task(prepare: Prepare) -> List[Task]:

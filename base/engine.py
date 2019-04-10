@@ -60,10 +60,8 @@ def _single_run(target: str):
 
 
 def single_run(target_name):
-    # step 1: load files
-    modules: List[ModuleType] = core.load_files(target_name)
-    # step 2: load components
-    components = core.load_components(modules, target_name=target_name)
+    components = core.load_components(target_name)
+
     prepare, schemes, models, processors = components
 
     act.info("single run")
@@ -153,11 +151,8 @@ def _thread_run(target: str):
 
 
 def thread_run(target_name: str):
-    # step 1: load files
-    modules: List[ModuleType] = core.load_files(target_name)
+    components = core.load_components(target_name)
 
-    # step 2: load components
-    components = core.load_components(modules, target_name=target_name)
     prepare, schemes, models, processors = components
 
     act.info("thread run")

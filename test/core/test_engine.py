@@ -35,13 +35,10 @@ class TestEngine(TestCase):
 
         super().setUp()
 
-    def _test_single_run(self):
+    def test_single_run(self):
         target_name = "TestMockSingle"
-        # step 1: load files
-        modules: List[ModuleType] = core.load_files(target_name)
-
-        # step 2: load components
-        components = core.load_components(modules, target_name=target_name)
+        # step 1 & 2: load components
+        components = core.load_components(target_name)
         prepare, schemes, models, processors = components
 
         # step 3: build components
@@ -82,11 +79,8 @@ class TestEngine(TestCase):
 
     def _test_thread_run(self):
         target_name = "TestMockThread"
-        # step 1: load files
-        modules: List[ModuleType] = core.load_files(target_name)
-
-        # step 2: load components
-        components = core.load_components(modules, target_name=target_name)
+        # step 1 & 2: load components
+        components = core.load_components(target_name)
         prepare, schemes, models, processors = components
 
         # step 3: build components

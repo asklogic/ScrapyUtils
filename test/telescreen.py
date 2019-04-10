@@ -7,7 +7,7 @@ import sys
 import subprocess
 import threading
 
-path = r"E:\cloudWF\python\ScrapyUtils"
+path = os.path.abspath(os.path.dirname(os.getcwd()))
 
 environ = os.environ
 environ["PYTHONPATH"] = path
@@ -71,7 +71,9 @@ def check_thread():
             os.system('echo modified! {0}th changes'.format(check_count))
             os.system('echo modified info: {0}'.format('\n'.join(modified_info)))
 
-            os.system('python -m unittest -v {0}'.format(target))
+            os.system('python -m unittest -v -c -b {0}'.format(target))
+
+
 
             check_signal = False
             check_count = check_count + 1

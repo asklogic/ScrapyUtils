@@ -6,7 +6,7 @@ import unittest
 from base import core, common, command
 
 from base.log import act, status
-from base.lib import Config, ComponentMeta, Component,Setting
+from base.lib import Config, ComponentMeta, Component, Setting
 from base.task import Task
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
@@ -28,6 +28,9 @@ class TestBuild(TestCase):
         # modules: List[ModuleType] = core.load_files(target_name)
 
         self.normal = core.load_components('TestMock')
+
+        self.normal_setting = core.load_setting(self.normal[0])
+
         # prepare, schemes, models, processors = core.load_components(modules, target_name=target_name)
 
         # modules = core.load_files('TestMockError')
@@ -55,7 +58,6 @@ class TestBuild(TestCase):
             current_target = 'TestMockNotExist'
             prepare, schemes, models, processors = core.load_components(current_target)
 
-
     def test_build_prepare(self):
         scraper, tasks = core.build_prepare(prepare=self.normal[0])
         scraper.quit()
@@ -71,21 +73,35 @@ class TestBuild(TestCase):
         self.assertIn('build_prepare failed', str(e.exception))
 
     def test_load_setting(self):
-
         setting = core.load_setting(self.normal[0])
 
         self.assertIsInstance(setting, Setting)
 
-        self.assertEqual(setting.Thread, 15)
-        self.assertEqual(len(setting.Scheme), 3)
+        self.assertEqual(setting.Thread, 5)
+        self.assertEqual(len(setting.SchemeList), 2)
 
     @unittest.skip
     def test_load_setting_failed(self):
+        # TODO
         self.fail()
 
+    @unittest.skip
     def test_build_scheme(self):
-        pass
+        schemes = self.normal_setting.SchemeList
+        print(schemes[1])
+        self.assertTrue(issubclass(schemes[0], Action))
+        self.assertTrue(issubclass(schemes[1], Parse))
 
+
+
+
+
+
+    @unittest.skip
     def test_demo(self):
-        pass
+        components = core.load_components('TestMockThread')
+        setting = core.load_setting(components[0])
+
+
+
 

@@ -158,11 +158,6 @@ class TestPrepare(TestCase):
 
 
     def test_generate_setting(self):
-        setting = self.normal.generate()
-        self.assertIsInstance(setting, object)
+        self.fail()
 
-    def test_demo(self):
-        pass
-        # self.default.get_tasks()
-        # self.failed.get_tasks()
 

@@ -17,8 +17,8 @@ class BasePrepare(Component, BaseSetting, metaclass=ComponentMeta):
     _active: bool
 
     # prepare property
-    schemeList: List[Scheme] = []
-    processorList: List[Processor] = []
+    SchemeList: List[Scheme] = []
+    ProcessorList: List[Processor] = []
 
     setting: Dict = {}
 
@@ -28,7 +28,8 @@ class BasePrepare(Component, BaseSetting, metaclass=ComponentMeta):
     Block: int = 0.2
 
 
-class Prepare(BasePrepare):
+class Prepare(BasePrepare, BaseSetting):
+    Force: bool = True
 
     def __int__(self):
         self.start_prepare()
@@ -91,7 +92,6 @@ class Prepare(BasePrepare):
     @classmethod
     def get_tasks(cls) -> List[Task]:
         iterable = cls.task_prepared()
-
 
         if iterable is None:
             raise Exception("didn't yield task.")

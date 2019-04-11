@@ -6,7 +6,7 @@ import queue
 import time
 
 from base.log import act, status
-from base.lib import Config, ComponentMeta, Component,Setting
+from base.lib import Config, ComponentMeta, Component, Setting
 from base.task import Task
 from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
@@ -60,11 +60,11 @@ def load_components(target_name: str = None) -> Tuple[Prepare, List[Scheme], Lis
     models: List[Model] = [x for x in components if issubclass(x, Model)]
     processors: List[Processor] = [x for x in components if issubclass(x, Processor)]
 
-    # TODO refact default
-    return load_default_component((prepares, schemes, models, processors))
+    return _check_components((prepares, schemes, models, processors))
 
 
-def load_default_component(components: Tuple[
+
+def _check_components(components: Tuple[
     List[Prepare],
     List[Scheme],
     List[Model],
@@ -73,47 +73,43 @@ def load_default_component(components: Tuple[
     List[Scheme],
     List[Model],
     List[Processor]]:
+    # unpack
     prepares, schemes, models, processors = components
 
-    prepares: List[Prepare]
-    schemes: List[Scheme]
-    models: List[Model]
-    processors: List[Processor]
-
+    # prepare
     if not prepares:
         raise ModuleNotFoundError("there isn't have prepare class in Prepare.py")
+    activated_prepares = [x for x in prepares if x._active]
 
-    if not schemes:
-        schemes: List[Component]
-        schemes.append(DefaultAction)
-        schemes.append(DefaultXpathParse)
+    if not activated_prepares:
+        raise TypeError('must set a activated Prepare class')
+    current_prepare = activated_prepares[0]
 
-    if prepares[0].schemeList:
-        schemes = prepares[0].schemeList
+    if current_prepare.SchemeList:
+        activated_schemes = current_prepare.SchemeList
+    else:
+        activated_schemes = [x for x in schemes if x._active]
 
-    if prepares[0].processorList:
-        processors = prepares[0].processorList
+    if current_prepare.ProcessorList:
+        activated_processors = current_prepare.ProcessorList
+    else:
+        activated_processors = [x for x in schemes if x._active]
 
-    # TODO
-    if not Model:
-        pass
+    activated_models = [x for x in models if x._active]
 
-    if not Processor:
-        pass
+    # TODO log
 
-    return prepares[0], schemes, models, processors
+    return current_prepare, activated_schemes, activated_models, activated_processors
 
 
-def load_setting(prepare:Prepare) -> Setting:
-
+def load_setting(prepare: Prepare) -> Setting:
     setting = Setting()
-
     config = __import__('config')
-
-    setting.load_prepare(Prepare)
     setting.load_config(config)
+    setting.load_prepare(prepare)
 
     return setting
+
 
 def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     schemes = [x() for x in scheme_list]

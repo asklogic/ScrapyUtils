@@ -11,12 +11,14 @@ from .process import *
 
 class TestMockPrepare(Prepare):
     _active = True
-    schemeList = [
+    SchemeList = [
         TestMockAction,
         TestMockParse,
     ]
     
     # processorList = []
+
+    Block = 1
 
     @classmethod
     def task_prepared(cls):

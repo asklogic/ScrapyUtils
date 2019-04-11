@@ -71,9 +71,8 @@ def check_thread():
             os.system('echo modified! {0}th changes'.format(check_count))
             os.system('echo modified info: {0}'.format('\n'.join(modified_info)))
 
+            # os.system('python -m unittest -v -c {0}'.format(target))
             os.system('python -m unittest -v -c -b {0}'.format(target))
-
-
 
             check_signal = False
             check_count = check_count + 1

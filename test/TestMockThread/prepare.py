@@ -11,7 +11,7 @@ from .process import *
 
 class TestMockThreadPrepare(Prepare):
     _active = True
-    schemeList = [
+    SchemeList = [
         TestMockThreadAction,
         TestMockThreadParse,
     ]

@@ -1,4 +1,5 @@
-from typing import List, Dict, Callable
+from typing import *
+from types import *
 
 
 class Config(object):
@@ -80,22 +81,50 @@ class Component(object, metaclass=ComponentMeta):
 
 
 class BaseSetting(object):
-    Thread: int = 12
-    Block: int = 0.5
+    # common
+    Thread: int = None
+    Block: int = None
+    FailedBlock: int = None
 
-    ProxyAble: bool = False
+    # component
+    Target: str = None
+    Prepare: str = None
+    SchemeList: List[str or ClassVar] = None
+    Model: List[str] = None
+    Processor: List[str] = None
 
-    target: str
-    Prepare: str
-    Scheme: List[str]
-    Model: List[str]
-    Processor: List[str]
-
-    Duplication: dict
-
-    ProxyFunc: Callable
-
+    # Proxy
+    ProxyAble: bool = None
+    ProxyFunc: Callable = None
+    # Processor
+    Duplication: dict = None
 
 
 class Setting(BaseSetting):
-    pass
+    Thread = 5
+    Block = 0.5
+    FailedBlock = Block * 2
+
+    Target = ''
+    Prepare = ''
+    SchemeList = []
+    Model = []
+    Processor = []
+
+    # Proxy
+    ProxyAble: bool = None
+    ProxyFunc: Callable = lambda x: x
+
+    # Processor
+    Duplication: dict = {}
+
+    def load_prepare(self, prepare):
+        for x in [x for x in dir(BaseSetting) if not x.startswith('__')]:
+            if getattr(prepare, x) is not None:
+                setattr(self, x, getattr(prepare, x))
+
+
+    def load_config(self, module: ModuleType):
+        for x in [x for x in dir(BaseSetting) if not x.startswith('__')]:
+            if hasattr(module, x):
+                setattr(self, x, getattr(module, x))

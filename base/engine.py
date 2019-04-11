@@ -79,7 +79,7 @@ def single_run(target_name):
 
     # step 3.3: build context
     current_task = tasks[0]
-    core.build_context(current_task, schemes)
+    core.load_context(current_task, schemes)
 
     # step 3.4: build hubs
     sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)

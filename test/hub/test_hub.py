@@ -18,8 +18,8 @@ from base.Model import ProxyModel, ModelManager, FailedTaskModel, TaskModel, Fie
 from base.hub import Hub
 from base.tool import get_proxy_model, jinglin
 
-import faker
 import redis
+import faker
 
 f = faker.Faker(locale='zh_CN')
 

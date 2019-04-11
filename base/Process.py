@@ -1,8 +1,7 @@
 from abc import abstractmethod
 from typing import Tuple, List, Dict, Any
 from base.Model import Model, ModelManager
-from base.lib import ComponentMeta, Component
-
+from base.lib import ComponentMeta, Component, Setting
 from base.log import act
 
 
@@ -39,13 +38,13 @@ class Processor(object, metaclass=ProcessorMeta):
     _name: str
     data: []
 
-    def __init__(self, settings: dict):
+    def __init__(self, setting: Setting):
         self.count: int = 0
         self.next: Processor = None
         self.data = []
 
     @abstractmethod
-    def start_task(self, settings: dict):
+    def start_task(self, setting: Setting):
         pass
 
     @abstractmethod
@@ -69,7 +68,7 @@ class Pipeline(object):
     head: Processor = None
     processor_list: List[Processor] = []
 
-    def __init__(self, processor_list: List[type(Processor)] = (), settings: Dict[str, str] = {}):
+    def __init__(self, processor_list: List[type(Processor)] = (), setting: Setting = Setting()):
         """
         构建process
         :param processor_list: processor对象列表
@@ -80,8 +79,8 @@ class Pipeline(object):
         process_count: List[int] = []
 
         for process in processor_list:
-            current_process: Processor = process(settings)
-            current_process.start_task(settings)
+            current_process: Processor = process(setting)
+            current_process.start_task(setting)
             self.add_process(current_process)
 
     def add_process(self, processor: Processor):
@@ -163,18 +162,8 @@ class Pipeline(object):
         :param model_name: model 名称
         :return: 返回进过full过滤过的Model 保证Model值都被填满
         """
-        list(map(lambda x: x.start_process(number, ModelManager.model_class(model_name)), self.processor_list))
 
-        # TODO
-        # FIXME ? wtf ?
-        # model_list = []
-        # for i in range(number):
-        #     m = ModelManager.model(model_name)
-        #     print("True id ", id(m.data))
-        #
-        #     model_list.append(m)
-        # [print("List True id ", id(x.data)) for x in model_list]
-        # model_list = [ModelManager.model(model_name) for i in range(number)]
+        list(map(lambda x: x.start_process(number, ModelManager.model_class(model_name)), self.processor_list))
 
         act.debug("[Pipeline] feed model start. Model: {0}  number: {1}".format(model_name, number))
         result_list: List[Model] = []

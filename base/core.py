@@ -63,7 +63,6 @@ def load_components(target_name: str = None) -> Tuple[Prepare, List[Scheme], Lis
     return _check_components((prepares, schemes, models, processors))
 
 
-
 def _check_components(components: Tuple[
     List[Prepare],
     List[Scheme],
@@ -93,7 +92,7 @@ def _check_components(components: Tuple[
     if current_prepare.ProcessorList:
         activated_processors = current_prepare.ProcessorList
     else:
-        activated_processors = [x for x in schemes if x._active]
+        activated_processors = [x for x in processors if x._active]
 
     activated_models = [x for x in models if x._active]
 
@@ -111,6 +110,18 @@ def load_setting(prepare: Prepare) -> Setting:
     return setting
 
 
+def active_schemes(setting: Setting) -> List[Scheme]:
+    schemes = [x() for x in setting.SchemeList]
+
+    context = {}
+    for scheme in schemes:
+        scheme.context = context
+    return schemes
+
+
+
+
+
 def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     schemes = [x() for x in scheme_list]
     # 同一个dict
@@ -120,7 +131,7 @@ def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     return schemes
 
 
-def build_context(task: Task, schemes: List[Scheme]):
+def load_context(task: Task, schemes: List[Scheme]):
     if task.param and type(task.param) is dict:
         for key, item in task.param.items():
             schemes[0].context[key] = item
@@ -509,7 +520,7 @@ class ScrapyThread(threading.Thread):
                 self.sync(self.prepare.Block)
                 task = self.sys.pop("TaskModel")
 
-                build_context(task, self.schemes)
+                load_context(task, self.schemes)
 
                 res = scrapy(self.schemes, self.scraper, task, self.dump, self.sys)
                 if res:

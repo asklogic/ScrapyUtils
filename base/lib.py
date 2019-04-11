@@ -93,6 +93,15 @@ class BaseSetting(object):
     Model: List[str] = None
     Processor: List[str] = None
 
+    # hubs
+
+    Timeout = 5
+    DumpLimit = 1500
+    FeedLimit = 50
+
+    HubFailedBlock = 2
+    HubFailedRetry = 4
+
     # Proxy
     ProxyAble: bool = None
     ProxyFunc: Callable = None
@@ -122,7 +131,6 @@ class Setting(BaseSetting):
         for x in [x for x in dir(BaseSetting) if not x.startswith('__')]:
             if getattr(prepare, x) is not None:
                 setattr(self, x, getattr(prepare, x))
-
 
     def load_config(self, module: ModuleType):
         for x in [x for x in dir(BaseSetting) if not x.startswith('__')]:

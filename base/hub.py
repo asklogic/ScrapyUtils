@@ -3,107 +3,174 @@ from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 
 from multiprocessing.dummy import Process, Queue
 import time
+import warnings
 
-from base.Model import Model
-from base.Process import Pipeline
+from base.Model import Model, ModelManager
+from base.Process import Pipeline, Processor
 from base.log import act, status
+from base.lib import Setting
 
 
 class Resource(object):
+    _storage: Queue
 
-    def __init__(self, model_class: type(Model), timeout: int, limit: int, feed, pipeline: Pipeline = None):
+    timeout: int = 5
+    dump_limit: int = 500
+    feed_limit: int = 500
+    model: type(Model) = Model
+
+    dump_pipeline: Pipeline = None
+    feed_pipeline: Pipeline = None
+
+    # sub thread
+    dump_thread: Process = None
+    feed_thread: Process = None
+
+    process_failed: int = 2
+    failed_retry: int = 3
+
+    name: str
+
+    trigger: bool
+
+    def __init__(self, model_class: type(Model) = Model, timeout: int = 5,
+                 dump_limit: int = 500, feed_limit: int = 100,
+                 feed_pipeline: Pipeline = None, dump_pipeline: Pipeline = None,
+                 process_failed: int = 2, failed_retry: int = 3, name: str = None):
+        # init property
         self._storage: Queue = Queue()
         self.trigger: bool = True
+
+        # param
         self.model: type(Model) = model_class
-        self.pipeline: Pipeline = pipeline
-
-        self.limit = limit
-        self.thread: Process = None
         self.timeout: int = timeout
+        self.dump_limit = dump_limit
+        self.feed_limit = feed_limit
 
-        self.feed = feed
+        if int(feed_limit * 1.5) > dump_limit and self.feed_pipeline and self.dump_pipeline:
+            warnings.warn('feed limit is bigger than dump limit. Double dump limit')
+            self.dump_limit = dump_limit * 2
+
+        # fixme
+        # TODO  空processor pipeline会无限导入?
+
+        self.feed_pipeline: Pipeline = feed_pipeline
+        self.dump_pipeline: Pipeline = dump_pipeline
+
+        self.process_failed = process_failed
+        self.thread: Process = None
+
+        if not name:
+            name = model_class._name
+        self.name = name
+
+        # other
+        ModelManager.add_model(model_class=model_class)
 
     def start(self):
-        if self.feed:
-            self.thread = Process(target=resource_feed, args=(self,))
-        else:
-            self.thread = Process(target=resource_dump, args=(self,))
 
-        self.thread.daemon = True
+        self.dump_thread = Process(target=resource_dump, args=(self,))
+        self.feed_thread = Process(target=resource_feed, args=(self,))
 
-        self.thread.start()
+        self.dump_thread.daemon = True
+        self.feed_thread.daemon = True
+
+        self.dump_thread.start()
+        self.feed_thread.start()
 
     def set_timeout(self, timeout: int):
         self.timeout = timeout
 
-    def stop(self):
-        # 阻塞资源线程
-        if self.pipeline:
-            self.trigger = False
-            self.thread.join(timeout=10)
-        else:
-            return [self.pop() for i in range(self.size())]
+    def stop(self, dump_all=False) -> List[Model] or None:
+        # block resource process
+        self.trigger = False
+        if self.feed_thread:
+            self.feed_thread.join(timeout=10)
 
-        if self.feed:
-            remain = [self.pop() for i in range(self.size())]
-            self.pipeline.end_task()
-            return remain
-        else:
-            remain = [self.pop() for i in range(self.size())]
+        if self.dump_thread:
+            self.dump_thread.join(timeout=10)
 
-            if dump_processing(remain, self.pipeline):
-                self.pipeline.end_task()
-                act.info("[Resource] remain dump success")
-                return True
+        # remain model to dump
+        if dump_all and self.dump_pipeline:
+            remain = [self.pop() for i in range(self.size())]
+            result = dump_processing(remain, self.dump_pipeline)
+
+            if self.dump_pipeline:
+                self.dump_pipeline.end_task()
+            if self.dump_pipeline:
+                self.dump_pipeline.end_task()
+
+            if result:
+                return []
             else:
-                self.pipeline.end_task()
-                act.warning("[Resource] remain dump failed")
                 return remain
+
+        else:
+            if self.dump_pipeline:
+                self.dump_pipeline.end_task()
+            if self.dump_pipeline:
+                self.dump_pipeline.end_task()
+
+            remain = [self.pop() for i in range(self.size())]
+            return remain
 
     def size(self) -> int:
         return self._storage.qsize()
 
-    def add(self, model):
-        self._storage.put(model)
+    def add(self, model, force=True):
+        if isinstance(model, self.model):
+            self._storage.put(model)
+        elif force:
+            warnings.warn("model should'n add in this Resource")
+            self._storage.put(model)
+        else:
+            warnings.warn("model can not add in this Resource")
 
     def pop(self):
-        return self._storage.get(timeout=5)
+        return self._storage.get(timeout=self.timeout)
 
 
 def resource_feed(resource: Resource):
-    while resource.trigger and resource.pipeline:
-        if resource.size() < int(resource.limit / 2):
+    retry = resource.failed_retry
+
+    while resource.trigger and resource.feed_pipeline and retry > 0:
+        if resource.size() < int(resource.feed_limit / 2):
             try:
-                model_list = resource.pipeline.feed_model(resource.model._name, resource.limit)
+                model_list = resource.feed_pipeline.feed_model(resource.model._name, resource.feed_limit)
                 if not model_list:
                     raise Exception("process nothing!")
                 for model in model_list:
                     resource.add(model)
+
             except Exception as e:
-                act.error("[Resource - Pipeline] feed error - " + str(e))
+                act.error("[Resource {0}] feed error ({1}) ] - {2}".format(resource.name, retry, str(e)))
                 act.exception(e)
-                time.sleep(1.2)
-        time.sleep(0.5)
+
+                retry -= 1
+                time.sleep(resource.process_failed)
+        time.sleep(0.33)
 
 
 def resource_dump(resource: Resource):
     to_dump_models = []
-    remain = []
 
-    while resource.trigger:
-        if resource.size() >= resource.limit:
+    retry = resource.failed_retry
+    while resource.trigger and resource.dump_pipeline and retry > 0:
+        if resource.size() >= resource.dump_limit:
             try:
-                to_dump_models = [resource.pop() for x in range(resource.limit)]
-                resource.pipeline.dump_model(to_dump_models)
+                to_dump_models = [resource.pop() for x in range(resource.dump_limit)]
+                resource.dump_pipeline.dump_model(to_dump_models)
 
             except Exception as e:
-                act.error("[Resource - Pipeline] dump error - " + str(e))
+                act.error("[Resource {0}] dump error ({1}) ] - {2}".format(resource.name, retry, str(e)))
                 act.exception(e)
-                [resource.add(x) for x in to_dump_models]
-                time.sleep(1.2)
-        time.sleep(0.5)
 
-    act.info("[Resource - Pipeline] Dump Thread Finish")
+                retry -= 1
+                [resource.add(x) for x in to_dump_models]
+                time.sleep(resource.process_failed)
+        time.sleep(0.33)
+    if resource.dump_pipeline:
+        act.info("[Resource {0}] Dump Thread Finish".format(resource.name))
 
 
 def dump_processing(to_dump_models: List[Model], pipeline: Pipeline):
@@ -122,30 +189,40 @@ class Hub(object):
     hub
     暂时存储Model 并且可以pop / save Model
     """
+    model_list: List[str] = []
+    resource_list: List[Resource] = []
 
-    def __init__(self, models: List[type(Model)], pipeline: Pipeline, timeout: int = 10, limit: int = 50,
-                 feed: bool = False):
+    activated = False
+
+    def __init__(self, models: List[type(Model)] = (Model,), dump_processors=(), feed_processors=(), setting=Setting()):
 
         self.model_list: List[str] = [x._name for x in models]
-        # self._models: List[type(Model)] = models
-        self.resource_list: List[Resource] = []
-        for model in models:
-            resource = Resource(model, timeout, limit, feed, pipeline)
 
+        self.activated = False
+        self.resource_list: List[Resource] = []
+
+        for processor in dump_processors:
+            pass
+
+        for processor in feed_processors:
+            pass
+
+        # activated 先后
+        for model in models:
+            resource = Resource(model, timeout=setting.Timeout,
+                                dump_limit=setting.DumpLimit, feed_limit=setting.FeedLimit,
+                                process_failed=setting.HubFailedBlock, failed_retry=setting.HubFailedRetry)
             self.resource_list.append(resource)
-            # self.producer = threading.Thread(target=pipeline_process, args=(self.res,), daemon=True)
 
     def activate(self):
         """
         使Resource子线程运行
         :return:
         """
+        if self.activated:
+            warnings.warn('hub has already activated')
         for resource in self.resource_list:
-            if resource.pipeline:
-                resource.start()
-            else:
-                # TODO 没有设置Pipeline1
-                pass
+            resource.start()
 
     def set_timeout(self, model_name: str, timeout: int):
         if not model_name in self.model_list:
@@ -153,10 +230,23 @@ class Hub(object):
         resource = self.resource_list[self.model_list.index(model_name)]
         resource.set_timeout(timeout)
 
-    def pop(self, model_name: str):
-        if not model_name in self.model_list:
+    def get_number(self, model_name: str) -> int:
+        resource = self._resource(model_name)
+        return resource.size()
+
+    def _resource(self, model_name) -> Resource:
+        if model_name not in self.model_list:
             raise KeyError("Model name {} didn't register in hub".format(model_name))
-        resource = self.resource_list[self.model_list.index(model_name)]
+
+        if len(model_name) is 1 and model_name[0] is 'Model':
+            resource = self.resource_list[0]
+        else:
+            resource = self.resource_list[self.model_list.index(model_name)]
+
+        return resource
+
+    def pop(self, model_name: str) -> Model:
+        resource = self._resource(model_name)
         return resource.pop()
 
     def save(self, model: Model):
@@ -165,20 +255,31 @@ class Hub(object):
         resource = self.resource_list[self.model_list.index(model._name)]
         resource.add(model)
 
+    def add_dump_pipeline(self, model_name: str, pipeline: Pipeline):
+
+        if self.activated:
+            warnings.warn('hub has already activated')
+            return
+        resource = self._resource(model_name)
+        resource.dump_pipeline = pipeline
+
+    def add_feed_pipeline(self, model_name: str, pipeline: Pipeline):
+        if self.activated:
+            warnings.warn('hub has already activated')
+            return
+
+        resource = self._resource(model_name)
+        resource.feed_pipeline = pipeline
+
     def remove_pipeline(self, model_name: str):
-        if not model_name in self.model_list:
-            raise KeyError("Model name {} didn't register in hub".format(model_name))
-        resource = self.resource_list[self.model_list.index(model_name)]
-        resource.pipeline = None
-        resource.timeout = 10
+        if self.activated:
+            warnings.warn('hub has already activated')
+            return
 
-    def replace_pipeline(self, model_name: str, pipeline: Pipeline, limit: 50):
-        if not model_name in self.model_list:
-            raise KeyError("Model name {} didn't register in hub".format(model_name))
-        resource = self.resource_list[self.model_list.index(model_name)]
-        resource.pipeline = pipeline
-        resource.limit = limit
+        resource = self._resource(model_name)
 
+        resource.feed_pipeline = None
+        resource.dump_pipeline = None
 
     # def __del__(self):
     #     self.stop()

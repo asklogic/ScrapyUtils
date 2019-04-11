@@ -35,6 +35,7 @@ class TestBuild(TestCase):
 
         # modules = core.load_files('TestMockError')
         self.failed = core.load_components('TestMockError')
+        self.failed_setting = core.load_setting(self.failed[0])
 
         from base.log import act
         act.disabled = True
@@ -85,23 +86,27 @@ class TestBuild(TestCase):
         # TODO
         self.fail()
 
+    # @unittest.skip
+    def test_active_schemes(self):
+        setting = self.normal_setting
+
+        scheme_packs: List[Scheme] = core.active_schemes(setting)
+
+        print(scheme_packs[1])
+        self.assertTrue(isinstance(scheme_packs[0], Action))
+        self.assertTrue(isinstance(scheme_packs[1], Parse))
+
+        context = scheme_packs[0].context
+        [self.assertEqual(context, x.context) for x in scheme_packs]
+
+        context_id = id(scheme_packs[0].context)
+        [self.assertEqual(context_id, id(x.context)) for x in scheme_packs]
+
+    
     @unittest.skip
-    def test_build_scheme(self):
-        schemes = self.normal_setting.SchemeList
-        print(schemes[1])
-        self.assertTrue(issubclass(schemes[0], Action))
-        self.assertTrue(issubclass(schemes[1], Parse))
+    def test_load_context(self):
+        pass
 
-
-
-
-
-
-    @unittest.skip
     def test_demo(self):
         components = core.load_components('TestMockThread')
         setting = core.load_setting(components[0])
-
-
-
-

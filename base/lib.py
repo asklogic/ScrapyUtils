@@ -105,6 +105,9 @@ class BaseSetting(object):
     # Proxy
     ProxyAble: bool = None
     ProxyFunc: Callable = None
+
+    ProxyURL: str = None
+
     # Processor
     Duplication: dict = None
 
@@ -121,8 +124,10 @@ class Setting(BaseSetting):
     Processor = []
 
     # Proxy
-    ProxyAble: bool = None
-    ProxyFunc: Callable = lambda x: x
+    ProxyAble: bool = False
+    ProxyFunc: Callable = None
+
+    ProxyURL: str = ''
 
     # Processor
     Duplication: dict = {}

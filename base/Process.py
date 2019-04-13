@@ -38,10 +38,14 @@ class Processor(object, metaclass=ProcessorMeta):
     _name: str
     data: []
 
+    setting: Setting
+
     def __init__(self, setting: Setting):
         self.count: int = 0
         self.next: Processor = None
         self.data = []
+
+        self.setting = setting
 
     @abstractmethod
     def start_task(self, setting: Setting):

@@ -208,6 +208,7 @@ class Hub(object):
             pass
 
         # activated 先后
+        # TODO setting 默认参数问题
         for model in models:
             resource = Resource(model, timeout=setting.Timeout,
                                 dump_limit=setting.DumpLimit, feed_limit=setting.FeedLimit,

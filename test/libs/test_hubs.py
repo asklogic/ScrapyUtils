@@ -36,8 +36,6 @@ class MockCompanyModel(Model):
 class MockEmptyProcessor(Processor):
 
     def process_item(self, model: Model) -> Any:
-        # time.sleep(1)
-        # print(model.pure_data())
         pass
 
 
@@ -181,8 +179,6 @@ class TestHub(unittest.TestCase):
         dump_hub.add_dump_pipeline('Model', dump_pipeline)
 
         # TODO proxy pipeline
-
-
 
 
 

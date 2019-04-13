@@ -8,8 +8,9 @@ def single_test(target):
 
 
 @click.command()
-@click.option('--count', default=1, help='Number of greetings.')
-def invoke_test():
+@click.argument('name')
+def invoke_test(name = 'default'):
+    print('arg' , name)
     pass
 
 
@@ -26,5 +27,6 @@ def hello(count, name):
 
 if __name__ == '__main__':
     # single_test()
-    # invoke_test()
-    hello()
+    invoke_test()
+    # hello()
+    pass

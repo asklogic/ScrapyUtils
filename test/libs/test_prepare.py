@@ -157,7 +157,7 @@ class TestPrepare(TestCase):
             tasks = self.default.get_tasks()
 
 
-    def test_generate_setting(self):
-        self.fail()
+    # def test_generate_setting(self):
+    #     self.fail()
 
 

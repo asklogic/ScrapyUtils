@@ -24,6 +24,4 @@ class TestScheme(unittest.TestCase):
         super().tearDown()
 
     def test_init(self):
-
-
         pass

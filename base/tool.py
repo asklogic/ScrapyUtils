@@ -13,7 +13,6 @@ headers = {
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
     "Content-Type": "application/x-www-form-urlencoded",
-
     'Connection': 'close',
     'Cache-Control': 'max-age=0',
 }

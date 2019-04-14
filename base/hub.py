@@ -143,7 +143,7 @@ def resource_feed(resource: Resource):
                     resource.add(model)
 
             except Exception as e:
-                act.error("[Resource {0}] feed error ({1}) ] - {2}".format(resource.name, retry, str(e)))
+                act.error("[Resource {0} feed error ] retry: {1}".format(resource.name, retry))
                 act.exception(e)
 
                 retry -= 1
@@ -212,7 +212,7 @@ class Hub(object):
         for model in models:
             resource = Resource(model, timeout=setting.Timeout,
                                 dump_limit=setting.DumpLimit, feed_limit=setting.FeedLimit,
-                                process_failed=setting.HubFailedBlock, failed_retry=setting.HubFailedRetry)
+                                process_failed=setting.PipelineFailedBlock, failed_retry=setting.PipelineFailedRetry)
             self.resource_list.append(resource)
 
     def activate(self):

@@ -99,14 +99,15 @@ class BaseSetting(object):
     DumpLimit = 1500
     FeedLimit = 50
 
-    HubFailedBlock = 2
-    HubFailedRetry = 4
+    PipelineFailedBlock = 2
+    PipelineFailedRetry = 4
 
     # Proxy
     ProxyAble: bool = None
     ProxyFunc: Callable = None
 
     ProxyURL: str = None
+    ProxyNumberParam: tuple = None
 
     # Processor
     Duplication: dict = None
@@ -128,9 +129,14 @@ class Setting(BaseSetting):
     ProxyFunc: Callable = None
 
     ProxyURL: str = ''
+    ProxyNumberParam = ''
 
     # Processor
-    Duplication: dict = {}
+    Duplication: dict = {
+        'host': '127.0.0.1',
+        'port': '6379',
+        'password': '',
+    }
 
     def load_prepare(self, prepare):
         for x in [x for x in dir(BaseSetting) if not x.startswith('__')]:

@@ -15,23 +15,14 @@ class TestMockPrepare(Prepare):
         TestMockAction,
         TestMockParse,
     ]
-    
-    # processorList = []
 
     Block = 1
+    
+    # ProcessorList = []
 
     @classmethod
     def task_prepared(cls):
-        for i in range(10):
-            task = Task()
-            task.url = "https://www.kuaidaili.com/free/inha/"
-            task.param = {
-                'info' : 123,
-            }
-            yield task
-
-    @classmethod
-    def scraper_prepared(cls) -> Scraper:
-        r = RequestScraper()
-        r.set_timeout(10)
-        return r
+        task = Task()
+        task.url = "about:blank"
+        
+        yield task

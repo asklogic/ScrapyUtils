@@ -196,6 +196,7 @@ class Hub(object):
 
     def __init__(self, models: List[type(Model)] = (Model,), dump_processors=(), feed_processors=(), setting=Setting()):
 
+        pass
         self.model_list: List[str] = [x._name for x in models]
 
         self.activated = False
@@ -236,11 +237,11 @@ class Hub(object):
         return resource.size()
 
     def _resource(self, model_name) -> Resource:
-        if model_name not in self.model_list:
-            raise KeyError("Model name {} didn't register in hub".format(model_name))
 
-        if len(model_name) is 1 and model_name[0] is 'Model':
+        if len(self.model_list) is 1 and self.model_list[0] is 'Model':
             resource = self.resource_list[0]
+        elif model_name not in self.model_list:
+            raise KeyError("Model name {} didn't register in hub".format(model_name))
         else:
             resource = self.resource_list[self.model_list.index(model_name)]
 
@@ -251,9 +252,7 @@ class Hub(object):
         return resource.pop()
 
     def save(self, model: Model):
-        if not model._name in self.model_list:
-            raise KeyError("Model name {} didn't register in hub".format(model._name))
-        resource = self.resource_list[self.model_list.index(model._name)]
+        resource = self._resource(model_name=model._name)
         resource.add(model)
 
     def add_dump_pipeline(self, model_name: str, pipeline: Pipeline):
@@ -285,9 +284,9 @@ class Hub(object):
     # def __del__(self):
     #     self.stop()
 
-    def stop(self):
+    def stop(self, dump_all=False):
         act.info("[Hub] Exiting Hub. Stop Resource thread")
         for resource in self.resource_list:
-            resource.stop()
+            resource.stop(dump_all)
 
         act.info("[Hub] Exited")

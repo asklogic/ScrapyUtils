@@ -3,7 +3,7 @@ from base.Scraper import Scraper
 from base.common import Task
 
 
-class TestMockErrorAction(Action):
+class TestMockServerAction(Action):
     _active = True
 
     def scraping(self, task: Task, scraper: Scraper) -> str:

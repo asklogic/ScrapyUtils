@@ -3,17 +3,15 @@ from base.Scraper import Scraper
 from base.common import Task
 
 
-class TestMockThreadAction(Action):
+class TestMockCustomAction(Action):
     _active = True
 
     def scraping(self, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
 
 
-class TestPageAction(Action):
+class TestAction(Action):
     _active = True
 
     def scraping(self, task: Task, scraper: Scraper) -> str:
-
-        url = task.url +  str(task.param) + r'/'
-        return scraper.get(url=url)
+        pass

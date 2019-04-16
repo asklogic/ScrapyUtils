@@ -117,7 +117,8 @@ def overwrite(job_name):
 
 
 if __name__ == '__main__':
-    target = "SysProjectEntity"
+    target = "TestMockServer"
     dir_generator(target)
     component_generate(target)
+
 

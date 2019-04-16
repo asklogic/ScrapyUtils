@@ -9,11 +9,11 @@ from .parse import *
 from .process import *
 
 
-class TestMockSinglePrepare(Prepare):
+class TestMockFailedPrepare(Prepare):
     _active = True
     SchemeList = [
-        TestMockSingleAction,
-        TestMockSingleParse,
+        TestMockFailedAction,
+        TestMockFailedParse,
     ]
     
     # ProcessorList = []
@@ -24,3 +24,8 @@ class TestMockSinglePrepare(Prepare):
         task.url = "about:blank"
         
         yield task
+
+    @classmethod
+    def scraper_prepared(cls) -> Scraper:
+        raise Exception('test mock exception')
+

@@ -13,7 +13,7 @@ from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta, Field
 from base.scheme import Action, Parse
 from base.Process import Processor, Pipeline
-from base.common import Proxy_Processor, DefaultAction, DefaultXpathParse
+from base.common import DefaultAction, DefaultXpathParse
 from base.hub import Hub, Resource
 from base.Scraper import Scraper
 from base.scheme import Scheme

@@ -12,7 +12,6 @@ from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
 from base.scheme import Action, Parse
 from base.Process import Processor, Pipeline
-from base.common import Proxy_Processor
 from base.hub import Hub
 from base.Scraper import Scraper
 from base.scheme import Scheme
@@ -35,7 +34,7 @@ class TestEngine(TestCase):
 
         super().setUp()
 
-    def test_single_run(self):
+    def _test_single_run(self):
         target_name = "TestMockSingle"
         # step 1 & 2: load components
         components = core.load_components(target_name)
@@ -144,40 +143,44 @@ class TestEngine(TestCase):
         sys_hub.stop()
         dump_hub.stop()
 
+    def test_thread_run(self):
+        target_name = "TestMockThread"
+        setting = core.build_setting(target_name)
 
+        # temp
+        setting.Thread = 1
 
-    def test_load_component(self):
-        target_name = "TestMock"
-        modules: List[ModuleType] = core.load_files(target_name)
-        prepare, schemes, models, processors = core.load_components(modules, target_name=target_name)
+        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
+        schemes = core.build_schemes(setting.CurrentSchemeList)
 
-        self.assertTrue(issubclass(prepare, Prepare))
-        for scheme in schemes:
-            self.assertTrue(issubclass(scheme, Scheme))
-        for model in models:
-            self.assertTrue(issubclass(model, Model))
-        for processor in processors:
-            self.assertTrue(issubclass(processor, Processor))
+        sys_hub, dump_hub = core.build_hub(setting=setting)
 
-        # 不为空
-        self.assertNotEqual(schemes, [])
-        # TODO
+        # assert
 
-    def _test_load_component_default(self):
-        # abort
-        target_name = "TestMock"
-        modules: List[ModuleType] = core.load_files(target_name)
-        prepare, schemes, models, processors = core.load_components(modules, target_name=target_name)
+        self.assertIs(len(setting.CurrentSchemeList), 2)
+        self.assertIs(setting.CurrentSchemeList[0]._name, 'TestPageAction')
+        self.assertIs(setting.CurrentSchemeList[1]._name, 'Mapping')
 
-        self.assertTrue(issubclass(prepare, Prepare))
+        self.assertIs(len(setting.CurrentModels), 1)
+        self.assertIs(setting.CurrentModels[0]._name, 'TestMockThreadModel')
 
-    def test_core_load_files_no_prepare(self):
-        target_name = "TestMockFailed"
+        self.assertIs(len(setting.CurrentProcessorsList), 1)
+        self.assertIs(setting.CurrentProcessorsList[0]._name, 'TestMockThreadProcess')
 
-        # not have prepare
+        sys_hub.activate()
+        dump_hub.activate()
 
-        self.assertRaises(ModuleNotFoundError, core.load_files, target_name)
-        # modules: List[ModuleType] = core.load_files(target_name)
+        ##### no task
+        # for task in tasks:
+        #     sys_hub.save(task)
 
-    def test_load_target_not_exist(self):
-        pass
+        thread_List = []
+        for i in range(setting.Thread):
+            t = core.ScrapyThread(sys_hub, dump_hub, schemes, scrapers[i], setting)
+            thread_List.append(t)
+            t.setDaemon(True)
+            t.start()
+
+        [t.join() for t in thread_List]
+        sys_hub.stop()
+        dump_hub.stop()

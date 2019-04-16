@@ -58,7 +58,6 @@ from base.Process import Processor
 from base.common import JsonFileProcessor, DuplicateProcessor, DumpProcessor
 
 from .model import *
-from base.common import DumpProcessor
 
 
 class ${class_name}Process(Processor):
@@ -84,12 +83,12 @@ from .process import *
 
 class ${class_name}Prepare(Prepare):
     _active = True
-    schemeList = [
+    SchemeList = [
         ${class_name}Action,
         ${class_name}Parse,
     ]
     
-    # processorList = []
+    # ProcessorList = []
 
     @classmethod
     def task_prepared(cls):

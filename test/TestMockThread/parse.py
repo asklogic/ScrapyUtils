@@ -5,7 +5,7 @@ from base.scheme import Parse
 from .model import *
 
 from base.tool import xpathParse, xpathParseList
-from base.common import DefaultXpathParse, HiddenInputParse 
+from base.common import DefaultXpathParse, HiddenInputParse
 
 
 class TestMockThreadParse(Parse):
@@ -15,3 +15,8 @@ class TestMockThreadParse(Parse):
         m = ModelManager.model('TestMockThreadModel')
         m.filed = "filed content"
         yield m
+
+
+class Mapping(DefaultXpathParse):
+    mapper_model = TestMockThreadModel
+    auto_yield = True

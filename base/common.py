@@ -5,10 +5,11 @@ from os import path as path
 from typing import List, Dict, Generator, Any
 
 import redis
-
+import peewee
 from base.Model import ModelManager, TaskModel, Model, ProxyModel
 from base.Process import Processor
 from base.Scraper import Scraper
+from base.lib import Setting
 from base.log import act
 from base.scheme import Action, Parse
 from base.task import Task
@@ -16,6 +17,7 @@ from base.tool import xpathParse, jinglin, xpathParseList
 from scrapy_config import Project_Path
 
 ModelManager.add_model(TaskModel)
+from urllib.parse import ParseResult
 
 
 class DefaultAction(Action):
@@ -216,62 +218,144 @@ class JsonFileProcessor(Processor):
         return model
 
 
+class DumpProcessor(Processor):
+
+    def start_task(self, settings: dict):
+        self.data = []
+
+    def start_process(self, number: int, model: str = "Model"):
+        self.data.clear()
+
+    def process_item(self, model: Model) -> Any:
+        self.data.append(model.pure_data())
+
+    def end_process(self):
+        print('data len', len(self.data))
+
+
+class DumpInPeeweeProcessor(Processor):
+    table: peewee.Model = None
+
+    def start_task(self, setting: Setting):
+        assert bool(self.table)
+
+    def process_item(self, model: Model) -> Any:
+        self.data.append(model.pure_data())
+
+    def end_process(self):
+        if self.data:
+            self.table.insert(self.data)
+        self.data.clear()
+
+
+class ProxyProcessor(Processor):
+    query_param: Dict = {}
+
+    query_parsed: ParseResult
+    query_number_key = ''
+
+    _headers = {
+        'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        "Content-Type": "application/x-www-form-urlencoded",
+        'Connection': 'close',
+        'Cache-Control': 'max-age=0',
+    }
+
+    def start_task(self, setting: Setting):
+        if not setting.ProxyFunc and setting.ProxyURL is '':
+            raise Exception("didn't set proxy info. check setting")
+
+        if setting.ProxyURL:
+            self.query_parsed = urlparse(setting.ProxyURL)
+
+            for item in parse_qsl(self.query_parsed.query):
+                self.query_param[item[0]] = item[1]
+
+        if setting.ProxyNumberParam:
+            self.query_number_key = setting.ProxyNumberParam
+        else:
+            self.query_number_key = 'qty'
+
+        if setting.ProxyFunc:
+            self.proxy_get = setting.ProxyFunc
+
+    def proxy_get(self, number: int):
+
+        self.query_param[self.query_number_key] = number
+        result = list(tuple(self.query_parsed))
+        result[4] = urlencode(self.query_param)
+
+        url = urlunparse(tuple(result))
+
+        res = requests.get(url, headers=self._headers)
+
+        assert res.status_code >= 200 and res.status_code < 300
+
+        proxy_list = res.content.decode("utf-8").split("\r\n")
+
+        for proxy in proxy_list:
+            assert ':' in proxy
+
+        self.proxy_list = proxy_list
+
+    def start_process(self, number: int, model: str = "Model"):
+
+        self.proxy_get(number)
+
+        print('proxy success')
+
+    def process_item(self, model: Model) -> Any:
+        proxy = self.proxy_list.pop().split(":")
+        model.ip = proxy[0]
+        model.port = proxy[1]
+        return model
+
+
 class DuplicateProcessor(Processor):
     # property
     host: int = '127.0.0.1'
     port: int = '6379'
-    db_index: int = 0
+    db: int = 0
     password: str = ''
 
+    redis_connect: redis.Redis = None
+
     # Duplicate property
-    baseList: List[str]
-    modelKey: str
+    baseList: List[str] = []
+    modelKey: str = ''
 
-    def __init__(self, settings: dict):
-        super().__init__(settings)
+    def start_task(self, setting: Setting):
+        assert bool(self.modelKey)
 
-        duplication_setting = settings.get('duplication')
+        duplication_setting = setting.Duplication
 
-        # TODO
-        if duplication_setting:
-            if duplication_setting.get('password'):
-                self.password = duplication_setting.get('password')
-
-        if not self.modelKey:
-            raise KeyError("Duplication must set model key")
+        for key, value in duplication_setting.items():
+            setattr(self, key, value)
 
         if self.baseList:
-            self.set_base(self.baseList)
+            self._set_base(self.baseList)
         else:
-            if settings.get("target"):
-                self.set_base([settings.get("target"), self.modelKey])
-            else:
-                self.set_base(["default", self.modelKey])
+            self._set_base(baseList=[setting.Target, self.modelKey])
 
-        # redis数据库
-        self.db: redis.Redis = None
-
-        # 链接
         self.connect()
 
     def connect(self):
-        """
-        重新连接
-        :return:
-        """
-        # if not self.db:
-        self.db = redis.Redis(host=self.host, port=self.port, db=self.db_index, password=self.password,
-                              decode_responses=True)
+        self.redis_connect = redis.Redis(host=self.host, port=self.port, db=self.db,
+                                         password=self.password, decode_responses=True,
+                                         socket_connect_timeout=3)
         try:
-            self.db.keys("1")
+            self.redis_connect.keys('1')
         except redis.ConnectionError as e:
             print(e.args)
             raise TypeError('redis connect failed')
 
-    def set_base(self, baseList: List):
+    def _set_base(self, baseList: List):
         self.base = ":".join(baseList)
 
-    def key(self, key: str) -> str:
+    def _key(self, key: str) -> str:
         return ":".join([self.base, key])
 
     def process_item(self, model: Model) -> Any:
@@ -288,7 +372,7 @@ class DuplicateProcessor(Processor):
         :param key_name:
         :return:
         """
-        return self.db.exists(self.key(key_name))
+        return self.redis_connect.exists(self._key(key_name))
 
     def save_identification(self, key_name):
         """
@@ -296,7 +380,7 @@ class DuplicateProcessor(Processor):
         :param key_name:
         :return:
         """
-        self.db.set(self.key(key_name), 1)
+        self.redis_connect.set(self._key(key_name), 1)
 
     def check_identification(self, key):
         """
@@ -311,31 +395,3 @@ class DuplicateProcessor(Processor):
         else:
             self.save_identification(key)
             return True
-
-
-class DumpProcessor(Processor):
-
-    def start_task(self, settings: dict):
-        self.data = []
-
-    def start_process(self, number: int, model: str = "Model"):
-        self.data.clear()
-
-    def process_item(self, model: Model) -> Any:
-        self.data.append(model.pure_data())
-
-    def end_process(self):
-        print('data len', len(self.data))
-
-
-class Proxy_Processor(Processor):
-    target = ProxyModel
-
-    def start_process(self, number: int, model: str = "Model"):
-        self.proxy_data: [] = jinglin(number)
-
-    def process_item(self, model: ProxyModel) -> Any:
-        proxy = self.proxy_data.pop().split(":")
-        model.ip = proxy[0]
-        model.port = proxy[1]
-        return model

@@ -9,24 +9,19 @@ from .parse import *
 from .process import *
 
 
-class TestMockErrorPrepare(Prepare):
+class TestMockErrorComPrepare(Prepare):
     _active = True
-    schemeList = [
-        TestMockErrorAction,
-        TestMockErrorParse,
+    SchemeList = [
+        TestMockErrorComAction,
+        'NotExistAction',
+        TestMockErrorComParse,
     ]
     
-    # processorList = []
+    # ProcessorList = []
 
     @classmethod
     def task_prepared(cls):
         task = Task()
         task.url = "about:blank"
-        raise Exception('error')
+        
         yield task
-
-    @classmethod
-    def scraper_prepared(cls) -> Scraper:
-        raise Exception('error')
-
-

@@ -1,5 +1,6 @@
 
 
+Block = 2.2
 # Thread = 15
 
-FailedBlock = 10
+FailedBlock = 5

@@ -12,7 +12,7 @@ from base.Prepare import Prepare, DefaultRequestPrepare
 from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta, Field
 from base.scheme import Action, Parse
 from base.Process import Processor, Pipeline
-from base.common import Proxy_Processor, DefaultAction, DefaultXpathParse
+from base.common import DefaultAction, DefaultXpathParse
 from base.hub import Hub
 from base.Scraper import Scraper
 from base.scheme import Scheme
@@ -113,7 +113,7 @@ class TestHub(unittest.TestCase):
 
     def test_save_failed(self):
         with self.assertRaises(KeyError):
-            [self.empty.save(x) for x in self.mock_models]
+            [self.normal.save(x) for x in self.mock_companies]
 
     def test_pop(self):
         [self.normal.save(x) for x in self.mock_models]
@@ -128,11 +128,11 @@ class TestHub(unittest.TestCase):
         self.assertEqual(self.normal.get_number('MockModel'), 20)
 
         with self.assertRaises(KeyError):
-            model = self.empty.get_number('MockModel')
+            model = self.normal.get_number('MockCompanyModel')
 
     def test_pop_empty_hub(self):
         with self.assertRaises(KeyError):
-            model = self.empty.pop('MockModel')
+            model = self.normal.pop('MockCompanyModel')
 
     def test_dump_hub(self):
         self.assertEqual(self.dump.get_number('MockModel'), 0)
@@ -172,13 +172,23 @@ class TestHub(unittest.TestCase):
     def test_build_hub(self):
         setting = Setting()
 
+        setting.DumpLimit = 5
+
         sys_hub = Hub([ProxyModel, TaskModel], setting=setting)
         dump_hub = Hub(setting=setting)
 
-        dump_pipeline = Pipeline([], setting=setting)
+        dump_pipeline = Pipeline([MockCommonProceesor], setting=setting)
         dump_hub.add_dump_pipeline('Model', dump_pipeline)
 
+        [dump_hub.save(x) for x in self.mock_companies[:20]]
+        [dump_hub.save(x) for x in self.mock_models[:20]]
+
+
+        sys_hub.activate()
+        dump_hub.activate()
+
+        time.sleep(2)
+
+        dump_hub.stop(dump_all=True)
+
         # TODO proxy pipeline
-
-
-

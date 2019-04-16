@@ -9,14 +9,14 @@ from .parse import *
 from .process import *
 
 
-class TestCorePrepare(Prepare):
+class TestMockServerPrepare(Prepare):
     _active = True
-    schemeList = [
-        TestCoreAction,
-        TestCoreParse,
+    SchemeList = [
+        TestMockServerAction,
+        TestMockServerParse,
     ]
     
-    # processorList = []
+    # ProcessorList = []
 
     @classmethod
     def task_prepared(cls):

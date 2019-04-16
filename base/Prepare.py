@@ -16,16 +16,7 @@ class BasePrepare(Component, BaseSetting, metaclass=ComponentMeta):
     _name: str
     _active: bool
 
-    # prepare property
-    SchemeList: List[Scheme] = []
-    ProcessorList: List[Processor] = []
 
-    setting: Dict = {}
-
-    # config
-    ProxyAble: bool = False
-    Thread: int = 5
-    Block: int = 0.2
 
 
 class Prepare(BasePrepare, BaseSetting):

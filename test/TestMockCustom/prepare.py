@@ -9,23 +9,26 @@ from .parse import *
 from .process import *
 
 
-class TestMockThreadPrepare(Prepare):
+class TestMockCustomPrepare(Prepare):
     _active = True
     SchemeList = [
-        # TestMockThreadAction,
-        'TestPageAction',
-        # TestMockThreadParse,
-        Mapping,
+        TestMockCustomAction,
+        'TestAction',
+        TestMockCustomParse,
     ]
 
-    # ProcessorList = []
+    Block = 0.4
 
-    Block = 1
-    Thread = 3
+    ProxyURL = 'https://docs.python.org/3/library/urllib.request.html#module-urllib.request'
+
+
+    
+    # ProcessorList = []
 
     @classmethod
     def task_prepared(cls):
-        for i in range(2,10):
+
+        for i in range(10):
             task = Task()
             task.url = 'https://www.kuaidaili.com/free/inha/'
             task.param = i
@@ -34,5 +37,6 @@ class TestMockThreadPrepare(Prepare):
     @classmethod
     def scraper_prepared(cls) -> Scraper:
         r = RequestScraper()
-        r.set_timeout(5)
         return r
+
+

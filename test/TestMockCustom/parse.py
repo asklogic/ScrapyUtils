@@ -8,10 +8,10 @@ from base.tool import xpathParse, xpathParseList
 from base.common import DefaultXpathParse, HiddenInputParse 
 
 
-class TestCoreParse(Parse):
+class TestMockCustomParse(Parse):
     _active = True
 
     def parsing(self, content: str) -> Model or Generator[Model]:
-        m = ModelManager.model('TestCoreModel')
+        m = ModelManager.model('TestMockCustomModel')
         m.filed = "filed content"
         yield m

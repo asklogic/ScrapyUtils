@@ -1,7 +1,7 @@
 from base.Model import Model, Field
 
 
-class TestMockSingleModel(Model):
+class TestMockErrorComModel(Model):
     _active = True
     
     filed = Field()

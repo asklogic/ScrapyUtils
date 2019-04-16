@@ -3,6 +3,7 @@ from typing import *
 
 from base import core
 from base.lib import Setting, BaseSetting
+from base.task import Task
 from base.Prepare import Prepare
 
 from base.scheme import Scheme
@@ -11,12 +12,10 @@ from base.scheme import Scheme
 class TestScheme(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.normal = core.load_components('TestMock')
+        self.normal_setting = core.build_setting('TestMock')
 
-        self.normal_setting = core.load_setting(self.normal[0])
-
-        self.prepare: Prepare = self.normal[0]
-        self.schemes: List[Scheme] = self.normal_setting.SchemeList
+        self.prepare: Prepare = self.normal_setting.CurrentPrepare
+        self.schemes: List[Scheme] = self.normal_setting.CurrentSchemeList
 
         super().setUp()
 
@@ -25,3 +24,35 @@ class TestScheme(unittest.TestCase):
 
     def test_init(self):
         pass
+
+    def test_build_scheme(self):
+        [self.assertTrue(issubclass(x, Scheme)) for x in self.schemes]
+        schemes = core.build_schemes(self.schemes)
+
+        [self.assertIsInstance(x, Scheme) for x in schemes]
+
+        id_list = [id(x) for x in schemes]
+        self.assertEqual(len(id_list), len(set(id_list)))
+
+        context_id = id(schemes[0].context)
+
+        [self.assertEqual(id(x.context), context_id) for x in schemes]
+
+    def test_load_context(self):
+        task = Task()
+
+        task.param = {
+            'uid': '10'
+        }
+
+        schemes = core.build_schemes(self.schemes)
+
+        core.load_context(task, schemes)
+
+        context_list = [x.context for x in schemes]
+
+        self.assertEqual(len(set([id(x) for x in context_list])),1)
+
+        for context in context_list:
+
+            self.assertTrue(context.get('uid'), '10')

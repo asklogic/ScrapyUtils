@@ -9,7 +9,6 @@ from base.lib import Setting
 from base.task import Task
 from base.Process import Processor, Pipeline
 
-from base.common import Proxy_Processor
 
 import requests
 import faker
@@ -119,6 +118,71 @@ class ProxyProcessor(Processor):
 
 import redis
 
+class ProxyProcessor(Processor):
+    query_param: Dict = {}
+
+    query_parsed: ParseResult
+    query_number_key = ''
+
+    _headers = {
+        'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        "Content-Type": "application/x-www-form-urlencoded",
+        'Connection': 'close',
+        'Cache-Control': 'max-age=0',
+    }
+
+    def start_task(self, setting: Setting):
+        if not setting.ProxyFunc and setting.ProxyURL is '':
+            raise Exception("didn't set proxy info. check setting")
+
+        if setting.ProxyURL:
+            self.query_parsed = urlparse(setting.ProxyURL)
+
+            for item in parse_qsl(self.query_parsed.query):
+                self.query_param[item[0]] = item[1]
+
+        if setting.ProxyNumberParam:
+            self.query_number_key = setting.ProxyNumberParam
+        else:
+            self.query_number_key = 'qty'
+
+        if setting.ProxyFunc:
+            self.proxy_get = setting.ProxyFunc
+
+    def proxy_get(self, number: int):
+
+        self.query_param[self.query_number_key] = number
+        result = list(tuple(self.query_parsed))
+        result[4] = urlencode(self.query_param)
+
+        url = urlunparse(tuple(result))
+
+        res = requests.get(url, headers=self._headers)
+
+        assert res.status_code >= 200 and res.status_code < 300
+
+        proxy_list = res.content.decode("utf-8").split("\r\n")
+
+        for proxy in proxy_list:
+            assert ':' in proxy
+
+        self.proxy_list = proxy_list
+
+    def start_process(self, number: int, model: str = "Model"):
+
+        self.proxy_get(number)
+
+        print('proxy success')
+
+    def process_item(self, model: Model) -> Any:
+        proxy = self.proxy_list.pop().split(":")
+        model.ip = proxy[0]
+        model.port = proxy[1]
+        return model
+
 
 class DuplicateProcessor(Processor):
     # property
@@ -144,18 +208,19 @@ class DuplicateProcessor(Processor):
         if self.baseList:
             self._set_base(self.baseList)
         else:
-            self._set_base([setting.Target, self.modelKey])
+            self._set_base(baseList=[setting.Target, self.modelKey])
+
+        self.connect()
 
     def connect(self):
         self.redis_connect = redis.Redis(host=self.host, port=self.port, db=self.db,
-                                         password=self.password, decode_responses=True)
+                                         password=self.password, decode_responses=True,
+                                         socket_connect_timeout=3)
         try:
-            self.redis_connect.ping()
+            self.redis_connect.keys('1')
         except redis.ConnectionError as e:
             print(e.args)
             raise TypeError('redis connect failed')
-
-
 
     def _set_base(self, baseList: List):
         self.base = ":".join(baseList)
@@ -202,6 +267,19 @@ class DuplicateProcessor(Processor):
             return True
 
 
+class FailedDuplication(DuplicateProcessor):
+    pass
+
+
+class CannotConnectDuplication(DuplicateProcessor):
+    modelKey = MockCompanyModel
+
+
+class CustomMockDuplication(DuplicateProcessor):
+    modelKey = 'name'
+    baseList = ['testcustom', 'company', 'name']
+
+
 class TestCommonHub(TestCase):
 
     def setUp(self) -> None:
@@ -213,6 +291,18 @@ class TestCommonHub(TestCase):
 
         self.custom_dump_hub = Hub(setting=setting)
 
+        # mock models
+        models = [MockModel() for x in range(100)]
+        for model in models:
+            model.name = f.name()
+            model.age = f.random_int(max=60)
+        self.mock_models = models
+
+        companies = [MockCompanyModel() for x in range(100)]
+        for company in companies:
+            company.name = f.bs()
+            company.address = f.address()
+        self.mock_companies = companies
         super().setUp()
 
     def tearDown(self) -> None:
@@ -277,3 +367,38 @@ class TestCommonHub(TestCase):
         self.assertEqual(test_feed_hub.get_number('ProxyModel'), 20)
 
         test_feed_hub.stop()
+
+    @unittest.skip
+    def test_duplication_failed(self):
+        failed_setting = Setting()
+
+        failed_setting.Duplication = {
+            'host': '1.1.1.1',
+        }
+        with self.assertRaises(Exception):
+            pipeline = Pipeline([FailedDuplication], setting=failed_setting)
+
+        with self.assertRaises(TypeError):
+            pipeline = Pipeline([CannotConnectDuplication], setting=failed_setting)
+
+        failed = Hub(setting=failed_setting)
+
+        failed.add_feed_pipeline('Model', pipeline=pipeline)
+
+    @unittest.skip
+    def test_duplication(self):
+        setting = Setting()
+
+        pipeline = Pipeline([CustomMockDuplication], setting=setting)
+        r = redis.Redis()
+
+        for k in r.keys('testcustom:*'):
+            r.delete(k)
+
+        hub = Hub(setting=setting)
+        hub.add_dump_pipeline('Model', pipeline=pipeline)
+        hub.activate()
+        time.sleep(1)
+        hub.stop(dump_all=True)
+
+        self.assertEqual(len(r.keys('testcustom:*')), 100)

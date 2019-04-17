@@ -125,6 +125,7 @@ def build_setting(target: str) -> Setting:
     setting = Setting()
 
     # 2. load config.py
+
     config = __import__('config')
     setting.load_config(config)
 
@@ -558,7 +559,7 @@ class ScrapyThread(threading.Thread):
                 res = scrapy(self.schemes, self.scraper, task, self.dump, self.sys)
                 if res:
                     status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
-                elif task.count < 5:
+                elif task.count < self.setting.FailedRetry:
                     # reset
                     self.reset()
 

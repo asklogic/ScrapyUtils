@@ -151,37 +151,26 @@ def _thread_run(target: str):
 
 
 def thread_run(target_name: str):
-    components = core.load_components(target_name)
+    setting = core.build_setting(target_name)
 
-    prepare, schemes, models, processors = components
+
+    scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
+    schemes = core.build_schemes(setting.CurrentSchemeList)
+
+    sys_hub, dump_hub = core.build_hub(setting=setting)
+    sys_hub, dump_hub = core.build_hub(setting=setting)
 
     act.info("thread run")
     act.info("Target Job: " + target_name)
-    act.info("Target Prepare: " + prepare._name + str(prepare))
-    act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
-    act.info("Target Models: " + str([x._name for x in models]))
-    act.info("Target Process: " + str([x._name for x in processors]))
+    act.info("Target Prepare: " + setting.CurrentPrepare._name + str(setting.CurrentPrepare))
+    act.info("Target Schemes list: " + str([x._name for x in setting.CurrentSchemeList]))
+    act.info("Target Models: " + str([x._name for x in setting.CurrentModels]))
+    act.info("Target Process: " + str([x._name for x in setting.CurrentProcessorsList]))
 
-    thread = prepare.Thread
-    # step 3.1: build thread scraper list
-    scraper_list, tasks = core.build_thread_prepare(prepare, thread)
+
     act.info("Detect Task number : " + str(len(tasks)))
-    act.info("Build Scraper finish. Thread number: " + str(len(scraper_list)))
+    act.info("Build Scraper finish. Thread number: " + str(setting.Thread))
 
-    # step 3.2: build thread scheme list ( context
-    schemes_list = core.build_thread_schemes(schemes, thread)
-
-    # step 3.3: build hub
-    sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
-    # temp
-    # TODO
-    if not prepare.ProxyAble:
-        sys_hub.remove_pipeline("ProxyModel")
-        act.info("Proxy Pipeline shutdown")
-
-    else:
-        core.temp_appendProxy(sys_hub, prepare.Thread)
-        act.info("Proxy Pipeline startup")
 
     sys_hub.activate()
     dump_hub.activate()
@@ -189,30 +178,20 @@ def thread_run(target_name: str):
     for task in tasks:
         sys_hub.save(task)
 
-    # step 4: init thread
-    core.barrier = threading.Barrier(prepare.Thread)
-
     thread_List = []
-
-    act.info("run thread")
-
-    for i in range(prepare.Thread):
-        t = core.ScrapyThread(sys_hub=sys_hub, dump_hub=dump_hub, prepare=prepare, schemes=schemes_list[i],
-                              scraper=scraper_list[i])
+    for i in range(setting.Thread):
+        t = core.ScrapyThread(sys_hub, dump_hub, schemes, scrapers[i], setting)
         thread_List.append(t)
         t.setDaemon(True)
         t.start()
 
     [t.join() for t in thread_List]
+    sys_hub.stop(True)
+    dump_hub.stop(True)
 
-    # step 5: run command
 
-    # step 6: exit
 
-    sys_hub.stop()
-    dump_hub.stop()
-
-    [x.quit() for x in scraper_list]
+    [x.quit() for x in scrapers]
 
 
 if __name__ == '__main__':

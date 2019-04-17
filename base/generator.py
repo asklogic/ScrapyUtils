@@ -116,9 +116,12 @@ def overwrite(job_name):
                 f.writelines(code)
 
 
-if __name__ == '__main__':
-    target = "TestMockServer"
+def generate(target: str):
     dir_generator(target)
     component_generate(target)
 
 
+if __name__ == '__main__':
+    target = "TestMockServer"
+    dir_generator(target)
+    component_generate(target)

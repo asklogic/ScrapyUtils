@@ -1,13 +1,14 @@
 from abc import ABCMeta, abstractmethod
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any
 import typing
+from urllib3.exceptions import InsecureRequestWarning
 
 from selenium.webdriver import Firefox, FirefoxOptions
 
 import requests
 
 requests.adapters.DEFAULT_RETRIES = 5
-
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class BaseScraper(object):
     pass

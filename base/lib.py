@@ -89,6 +89,7 @@ class BaseSetting(object):
     Thread: int = None
     Block: int = None
     FailedBlock: int = None
+    FailedRetry: int = None
 
     # component
     Target: str = None
@@ -121,6 +122,7 @@ class Setting(BaseSetting):
     Thread = 5
     Block = 0.5
     FailedBlock = Block * 2
+    FailedRetry: int = 3
 
     Target = ''
     Prepare = ''
@@ -157,6 +159,7 @@ class Setting(BaseSetting):
         self.Thread = 5
         self.Block = 0.5
         self.FailedBlock = self.Block * 2
+        self.FailedRetry: int = 3
 
         # components
         self.Target = ''

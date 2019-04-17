@@ -182,5 +182,5 @@ class TestEngine(TestCase):
             t.start()
 
         [t.join() for t in thread_List]
-        sys_hub.stop()
-        dump_hub.stop()
+        sys_hub.stop(True)
+        dump_hub.stop(True)

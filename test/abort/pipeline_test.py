@@ -7,8 +7,9 @@ import sys
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 from base.Container import Container
-from base.Process import Processor, Pipeline
-from base.Model import Model, Field
+from base.hub.pipeline import Pipeline
+from base.components.proceesor import Processor
+from base.components.model import Field, Model
 from base import _core
 from faker import Faker
 import os
@@ -138,7 +139,6 @@ class Pipeline_Test(TestCase):
 
         t1 = time.time()
 
-        from test_job.model import CustomTestModel
         for i in range(4000):
             m = self.model()
             m.name = f.name()
@@ -181,7 +181,6 @@ class Pipeline_Test(TestCase):
 
         process = _core.load_process(config)
 
-        import test_job.process
         # self.assertEqual(process, [test_job.process.CustomProcess])
 
         print([x.__name__ for x in process])

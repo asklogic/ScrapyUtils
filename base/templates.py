@@ -3,8 +3,8 @@
 
 # action
 
-action_template = """from base.scheme import Action
-from base.Scraper import Scraper
+action_template = """from base.components.scheme import Action
+from base.libs.scraper import Scraper
 from base.common import Task
 
 
@@ -19,12 +19,12 @@ class ${class_name}Action(Action):
 
 parse_template = """from typing import Generator
 
-from base.Model import ModelManager, Model
-from base.scheme import Parse
+from base.components.model import ModelManager
+from base.components.scheme import Parse
 from .model import *
 
-from base.tool import xpathParse, xpathParseList
-from base.common import DefaultXpathParse, HiddenInputParse 
+from base.common import DefaultXpathParse, HiddenInputParse
+from base.tool import xpathParse, xpathParseList 
 
 
 class ${class_name}Parse(Parse):
@@ -38,7 +38,7 @@ class ${class_name}Parse(Parse):
 
 # model
 
-model_template = """from base.Model import Model, Field
+model_template = """from base.components.model import Field, Model
 
 
 class ${class_name}Model(Model):
@@ -53,9 +53,9 @@ class ${class_name}Model(Model):
 
 process_template = """from typing import Any
 
-from base.Model import Model
-from base.Process import Processor
-from base.common import JsonFileProcessor, DuplicateProcessor, DumpProcessor
+from base.components.proceesor import Processor
+from base.common import DumpInPeeweeProcessor, DuplicateProcessor, JsonFileProcessor
+
 
 from .model import *
 
@@ -72,9 +72,10 @@ class ${class_name}Process(Processor):
 
 prepare_template = """from typing import List
 
-from base.Scraper import BaseScraper, RequestScraper
-from base.Prepare import Prepare
-from base.task import Task
+from base.components.prepare import Prepare
+from base.libs.task import Task
+from base.libs.scraper import BaseScraper,RequestScraper,FireFoxScraper
+
 
 from .action import *
 from .parse import *

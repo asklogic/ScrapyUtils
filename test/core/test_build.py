@@ -1,21 +1,12 @@
 from unittest import TestCase
-from typing import *
-from types import *
-import unittest
 
-from base import core, common, command
+from base import core
 
-from base.log import act, status
-from base.lib import Config, ComponentMeta, Component, Setting
-from base.task import Task
-from base.Prepare import Prepare, DefaultRequestPrepare
-from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
-from base.scheme import Action, Parse
-from base.Process import Processor, Pipeline
-from base.common import DefaultAction, DefaultXpathParse
-from base.hub import Hub
-from base.Scraper import Scraper, RequestScraper
-from base.scheme import Scheme
+from base.components.prepare import Prepare
+from base.components.model import Model
+from base.components.scheme import Scheme
+from base.components.proceesor import Processor
+from base.libs.scraper import Scraper, RequestScraper
 
 
 class TestBuild(TestCase):

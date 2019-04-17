@@ -1,5 +1,4 @@
-from abc import abstractmethod, ABCMeta
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator, Any
+from typing import Dict, Any
 
 
 class Field(object):
@@ -9,7 +8,6 @@ class Field(object):
         self.xpath = xpath
 
 
-# fixme
 class ModelMeta(type):
     def __new__(cls, name, bases, attrs: dict):
 
@@ -81,6 +79,8 @@ class Model(object, metaclass=ModelMeta):
     def pure_data(self):
         return self._data
 
+# ModelManager
+
 
 class ManagerMeta(type):
 
@@ -117,15 +117,3 @@ class ModelManager(object, metaclass=ManagerMeta):
         cls.registered[model_class._name] = model_class
         for model in args:
             cls.registered[model._name] = model
-
-
-class ProxyModel(Model):
-    ip = Field()
-    port = Field()
-
-
-class TaskModel(Model):
-    url = Field()
-    param = Field()
-    count = Field()
-

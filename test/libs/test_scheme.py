@@ -2,11 +2,10 @@ import unittest
 from typing import *
 
 from base import core
-from base.lib import Setting, BaseSetting
-from base.task import Task
-from base.Prepare import Prepare
+from base.libs.task import Task
+from base.components.prepare import Prepare
 
-from base.scheme import Scheme
+from base.components.scheme import Scheme
 
 
 class TestScheme(unittest.TestCase):

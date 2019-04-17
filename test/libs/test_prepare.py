@@ -1,16 +1,14 @@
 from typing import List
 from unittest import TestCase
-from unittest import SkipTest
 import unittest
-import warnings
 
-from base.Prepare import Prepare
+from base.components.prepare import Prepare
 
 # mock prepare
-from base.Scraper import Scraper, FireFoxScraper, RequestScraper
-from base.task import Task
+from base.libs.scraper import Scraper, FireFoxScraper, RequestScraper
+from base.libs.task import Task, TaskModel
 
-from base.Model import ModelManager, TaskModel
+from base.components.model import ModelManager
 
 
 class MockNormalPrepare(Prepare):

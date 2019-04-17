@@ -1,11 +1,8 @@
 from typing import Any
 
-from base.Model import Model
-from base.Process import Processor
-from base.common import JsonFileProcessor, DuplicateProcessor, DumpProcessor
+from base.components.proceesor import Processor
 
 from .model import *
-from base.common import DumpProcessor
 
 
 class TestMockSingleProcess(Processor):

@@ -5,7 +5,7 @@ import sys
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base import Scraper
+from base.libs import scraper
 
 
 class scraper_Test(TestCase):
@@ -14,7 +14,7 @@ class scraper_Test(TestCase):
         self.assertEqual(1, 1)
 
     def Requests_scraper(self):
-        r = Scraper.RequestScraper()
+        r = scraper.RequestScraper()
 
         # Done
         # self.assertIsInstance(r, Scraper.RequestScraper)

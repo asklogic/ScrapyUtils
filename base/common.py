@@ -6,22 +6,22 @@ from typing import List, Dict, Generator, Any
 
 import redis
 import peewee
-from base.Model import ModelManager, TaskModel, Model, ProxyModel
-from base.Process import Processor
-from base.Scraper import Scraper
-from base.lib import Setting
-from base.log import act
-from base.scheme import Action, Parse
-from base.task import Task
-from base.tool import xpathParse, jinglin, xpathParseList
-from scrapy_config import Project_Path
-
-ModelManager.add_model(TaskModel)
 from urllib.parse import ParseResult
+
+from base.components.model import Model, ModelManager, Field
+from base.components.proceesor import Processor
+from base.libs.scraper import Scraper
+from base.libs.setting import Setting
+from base.libs.task import TaskModel
+from base.log import act
+from base.components.scheme import Action, Parse
+from base.libs.task import Task
+from scrapy_config import Project_Path
+from base.tool import xpathParse
 
 
 class DefaultAction(Action):
-    def scraping(self, task: Task, scraper: Scraper) -> str:
+    def scraping(self, task:Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
 
 
@@ -241,10 +241,11 @@ class DumpInPeeweeProcessor(Processor):
 
     def process_item(self, model: Model) -> Any:
         self.data.append(model.pure_data())
+        return model
 
     def end_process(self):
         if self.data:
-            self.table.insert(self.data)
+            self.table.insert(self.data).execute()
         self.data.clear()
 
 
@@ -395,3 +396,8 @@ class DuplicateProcessor(Processor):
         else:
             self.save_identification(key)
             return True
+
+
+class ProxyModel(Model):
+    ip = Field()
+    port = Field()

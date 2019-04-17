@@ -1,12 +1,7 @@
-from typing import List
-
-from base.Scraper import BaseScraper, RequestScraper
-from base.Prepare import Prepare
-from base.task import Task
+from base.components.prepare import Prepare
 
 from .action import *
 from .parse import *
-from .process import *
 
 
 class TestMockSinglePrepare(Prepare):

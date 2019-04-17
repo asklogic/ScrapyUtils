@@ -1,5 +1,4 @@
 from base.engine import _single_run, _thread_run, thread_run, single_run
-from base.lib import Config
 import click
 from base.generator import generate as gen
 

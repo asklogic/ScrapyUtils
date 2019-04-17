@@ -1,22 +1,11 @@
 from unittest import TestCase
 from typing import *
-from types import *
-import unittest
 import time
 
-from base import core, common, command
-
-from base.log import act, status
-from base.lib import Config, ComponentMeta, Component, Setting
-from base.task import Task
-from base.Prepare import Prepare, DefaultRequestPrepare
-from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta, Field
-from base.scheme import Action, Parse
-from base.Process import Processor, Pipeline
-from base.common import DefaultAction, DefaultXpathParse
-from base.hub import Hub, Resource
-from base.Scraper import Scraper
-from base.scheme import Scheme
+from base.components.model import Field, Model
+from base.hub.pipeline import Pipeline
+from base.components.proceesor import Processor
+from base.hub.hub import Resource
 
 import faker
 

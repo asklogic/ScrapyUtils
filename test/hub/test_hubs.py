@@ -1,21 +1,15 @@
-from unittest import TestCase
 from typing import *
-from types import *
 import unittest
 import copy
-from base import core, common, command
+from base import core
 
-from base.log import act, status
-from base.lib import Config, ComponentMeta, Component, Setting
-from base.task import Task
-from base.Prepare import Prepare, DefaultRequestPrepare
-from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta, Field
-from base.scheme import Action, Parse
-from base.Process import Processor, Pipeline
-from base.common import DefaultAction, DefaultXpathParse
-from base.hub import Hub
-from base.Scraper import Scraper
-from base.scheme import Scheme
+from base.libs.setting import Setting
+from base.common import ProxyModel
+from base.libs.task import TaskModel
+from base.components.model import Field, Model
+from base.hub.pipeline import Pipeline
+from base.components.proceesor import Processor
+from base.hub.hub import Hub
 
 import faker
 import time
@@ -60,8 +54,7 @@ class TestHub(unittest.TestCase):
         self.empty = Hub()
         self.normal = Hub(models=[MockModel])
 
-        components = core.load_components('TestMock')
-        setting = core.load_setting(components[0])
+        setting = core.build_setting('TestMock')
 
         self.empty_dump = Hub(models=[MockModel])
 

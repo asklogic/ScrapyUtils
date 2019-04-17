@@ -5,10 +5,10 @@ import sys
 
 sys.path.insert(0, r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Prepare import Prepare
-from base.Model import Model
-from base.scheme import Action, Parse
-from base.Process import Processor
+from base.components.prepare import Prepare
+from base.components.model import Model
+from base.components.scheme import Action, Parse
+from base.components.proceesor import Processor
 
 import base.core as core
 import threading

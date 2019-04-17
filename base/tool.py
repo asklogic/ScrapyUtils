@@ -1,7 +1,6 @@
 from lxml import etree
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 import requests
-from base.Model import ProxyModel
 import time
 
 import peewee
@@ -66,13 +65,6 @@ def jinglin(number):
     return proxyList
 
 
-def get_proxy_model(number: int) -> List[ProxyModel]:
-    proxy_list = jinglin(number)
-    for p in proxy_list:
-        m = ProxyModel()
-        m.ip = p.split(":")[0]
-        m.port = p.split(":")[1]
-        yield m
 
 
 def rebuild_duplication_info(rdb: redis.Redis, table: peewee.Model, primary_key: str, duplicated: list, key):

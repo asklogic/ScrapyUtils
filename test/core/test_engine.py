@@ -1,23 +1,11 @@
 from unittest import TestCase
-from typing import *
-from types import ModuleType
+
+from base.libs.task import TaskModel
+from base.components.model import Model
+from base.components.scheme import Scheme
+from base.libs.scraper import Scraper
 
 from base import core
-from base import common, command
-
-from base.log import act, status
-from base.lib import Config, ComponentMeta, Component
-from base.task import Task
-from base.Prepare import Prepare, DefaultRequestPrepare
-from base.Model import Model, TaskModel, ProxyModel, ModelManager, ModelMeta
-from base.scheme import Action, Parse
-from base.Process import Processor, Pipeline
-from base.hub import Hub
-from base.Scraper import Scraper
-from base.scheme import Scheme
-
-from base import core
-import os
 
 import threading
 
@@ -58,7 +46,7 @@ class TestEngine(TestCase):
 
         core.load_context(current_task, schemes)
 
-        # step 3.4: build hubs
+        # step 3.4: build hub
         sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
 
         sys_hub.activate()

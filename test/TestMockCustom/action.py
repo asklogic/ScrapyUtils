@@ -1,5 +1,5 @@
-from base.scheme import Action
-from base.Scraper import Scraper
+from base.components.scheme import Action
+from base.libs.scraper import Scraper
 from base.common import Task
 
 

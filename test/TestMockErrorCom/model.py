@@ -1,4 +1,4 @@
-from base.Model import Model, Field
+from base.components.model import Field, Model
 
 
 class TestMockErrorComModel(Model):

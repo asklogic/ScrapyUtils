@@ -6,12 +6,11 @@ import sys
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Process import Pipeline
-from base.Process import Pipeline, Processor, target
-from base.common import JsonFileProcessor
-from base.Model import ProxyModel, Model, ModelManager, Field
-
-from base.tool import get_proxy_model, jinglin
+from base.hub.pipeline import Pipeline
+from base.Process import Pipeline, target
+from base.components.proceesor import Processor
+from base.common import JsonFileProcessor, ProxyModel
+from base.components.model import Field, Model, ModelManager
 
 
 class TestFeedModel(Model):

@@ -1,5 +1,13 @@
-from base.Model import TaskModel, ModelManager
+from base.components.model import ModelManager, Model, Field
 
+
+
+
+
+class TaskModel(Model):
+    url = Field()
+    param = Field()
+    count = Field()
 
 class Task(object):
     url: str

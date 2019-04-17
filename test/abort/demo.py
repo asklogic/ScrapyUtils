@@ -1,12 +1,9 @@
-from selenium import webdriver
-import requests
-
-import os
 import json
 import scrapy_config
-from base.Model import Model
+from base.components.model import Model
 # from scjst_base.peewee_connect import ProjectBase
-from base.Process import Processor, Pipeline
+from base.hub.pipeline import Pipeline
+from base.components.proceesor import Processor
 from faker import Faker
 import threadpool
 
@@ -207,7 +204,6 @@ def threadpool_test():
 
 # threadpool_test()
 
-import multiprocessing
 from multiprocessing import dummy
 
 

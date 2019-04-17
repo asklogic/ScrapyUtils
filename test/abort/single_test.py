@@ -3,9 +3,9 @@ from unittest import TestCase
 
 import sys
 
-sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
+import base.components.model
 
-import base.generator
+sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 
 class do_core_Test(TestCase):
@@ -20,8 +20,8 @@ class do_core_Test(TestCase):
 
     def test_core(self):
         import base._core as core
-        from base.task import Task
-        import base.Scraper as s
+        from base.libs.task import Task
+        import base.libs.scraper as s
         import base.Model as m
 
         # prepare
@@ -39,19 +39,16 @@ class do_core_Test(TestCase):
         self.assertEqual(core.load_models([], "hope"), [ProxyModel])
         self.assertEqual(core.load_models(["nope"], "hope"), [])
 
-        self.assertIsInstance(manager, m.ModelManager)
+        self.assertIsInstance(manager, base.components.model.ModelManager)
         self.assertEqual(manager.get("ProxyModel"), [])
 
         # load scheme
-        from hope.action import newAction
-        from hope.parse import NewParse
         from base.common import DefaultXpathParse
         # Done
         schemes = core.load_scheme(["xpath"], 'hope')
         self.assertEqual(schemes[0], DefaultXpathParse)
 
         # Done
-        from conserve import DefaultConserve
         # self.assertEqual(core.load_conserve(), DefaultConserve)
 
         conserve = core.load_conserve()

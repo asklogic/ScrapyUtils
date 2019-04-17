@@ -1,12 +1,12 @@
 import unittest
 
 from base import core
-from base.lib import Setting, BaseSetting
+from base.libs.setting import BaseSetting, Setting
 
-from base.Prepare import Prepare
-from base.scheme import Scheme, Action, Parse
-from base.Model import Model
-from base.Process import Processor
+from base.components.prepare import Prepare
+from base.components.scheme import Action, Parse, Scheme
+from base.components.model import Model
+from base.components.proceesor import Processor
 
 
 class TestSetting(unittest.TestCase):

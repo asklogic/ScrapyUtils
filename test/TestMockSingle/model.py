@@ -1,4 +1,5 @@
-from base.Model import Model, Field
+from base.Model import Field
+from base.components.model import Model
 
 
 class TestMockSingleModel(Model):

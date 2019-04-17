@@ -1,14 +1,13 @@
-from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
+from typing import List
 
 from multiprocessing.dummy import Process, Queue
 import time
 import warnings
 
-from base.Model import Model, ModelManager
-from base.Process import Pipeline, Processor
-from base.log import act, status
-from base.lib import Setting
+from base.components.model import Model, ModelManager
+from base.hub.pipeline import Pipeline
+from base.log import act
+from base.libs.setting import Setting
 
 
 class Resource(object):

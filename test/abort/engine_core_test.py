@@ -4,15 +4,13 @@ from unittest import TestCase
 import sys
 
 import base.common
-import base.task
+import base.components.model
+import base.libs.task
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
 from base import lib as Lib
-from base import Action
-from base import Scraper
 from base import Conserve
-from base import Prepare
 from base import Container
 from base import Model
 from base import _core
@@ -45,8 +43,8 @@ class Engine_Core_Test(TestCase):
 
         scraper, task = _core.do_prepare(config.prepare, config.job)
 
-        self.assertIsInstance(scraper, Scraper.Scraper)
-        self.assertIsInstance(task[0], base.task.Task)
+        self.assertIsInstance(scraper, scraper.Scraper)
+        self.assertIsInstance(task[0], base.libs.task.Task)
 
         # conserve
         conserve = _core.load_conserve(config.conserve, config.job)
@@ -70,7 +68,7 @@ class Engine_Core_Test(TestCase):
 
         # manager
         manager = _core.register_manager(models=models)
-        self.assertIsInstance(manager, Model.ModelManager)
+        self.assertIsInstance(manager, base.components.model.ModelManager)
 
         # scheme
         schemes = _core.load_scheme(config.schemes, config.job)

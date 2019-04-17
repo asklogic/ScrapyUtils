@@ -1,14 +1,7 @@
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
-from types import *
-from base.lib import Config
-
-import queue
-import scrapy_config
 import time
 import threading
 
-from base.log import status, act
-from base.Process import Pipeline
+from base.log import act
 from base import core
 
 
@@ -81,7 +74,7 @@ def single_run(target_name):
     current_task = tasks[0]
     core.load_context(current_task, schemes)
 
-    # step 3.4: build hubs
+    # step 3.4: build hub
     sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
 
     sys_hub.activate()

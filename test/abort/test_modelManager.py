@@ -5,7 +5,9 @@ import sys
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Model import ModelManager, ProxyModel, FailedTaskModel
+from base.Model import FailedTaskModel
+from base.common import ProxyModel
+from base.components.model import ModelManager
 
 
 class TestModelManager(TestCase):

@@ -1,22 +1,17 @@
-from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 import warnings
+from abc import abstractmethod
+from typing import List, Tuple
 
-from base.Scraper import Scraper, RequestScraper
-
-from base.lib import ComponentMeta, Component, Setting, BaseSetting
-from base.scheme import Scheme
-from base.Process import Processor
-from base.task import Task
-from base.Model import TaskModel
+from base.components.base import Component, ComponentMeta
+from base.libs.scraper import Scraper, RequestScraper
+from base.libs.setting import BaseSetting, Setting
+from base.libs.task import Task, TaskModel
 
 
 class BasePrepare(Component, BaseSetting, metaclass=ComponentMeta):
     # component property
     _name: str
     _active: bool
-
-
 
 
 class Prepare(BasePrepare, BaseSetting):
@@ -99,18 +94,3 @@ class Prepare(BasePrepare, BaseSetting):
 
     def generate(self):
         setting = Setting()
-
-
-# TODO
-class DefaultRequestPrepare(Prepare):
-    @classmethod
-    def scraper_prepared(cls) -> Scraper:
-        r = RequestScraper()
-        return r
-
-
-# or ?
-# FIXME
-def get_default_scraper():
-    r = RequestScraper()
-    return r

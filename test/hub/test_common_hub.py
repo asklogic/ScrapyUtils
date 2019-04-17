@@ -1,14 +1,14 @@
 from unittest import TestCase
 from typing import *
-from types import *
 import unittest
 
-from base.hub import Hub
-from base.Model import TaskModel, Model, Field, ModelManager, ProxyModel
-from base.lib import Setting
-from base.task import Task
-from base.Process import Processor, Pipeline
-
+from base.hub.hub import Hub
+from base.common import ProxyModel
+from base.components.model import Field, Model
+from base.libs.setting import Setting
+from base.libs.task import Task, TaskModel
+from base.hub.pipeline import Pipeline
+from base.components.proceesor import Processor
 
 import requests
 import faker

@@ -1,21 +1,15 @@
 from abc import abstractmethod
 from typing import Dict, Generator
 
-from base.Model import Model
-from base.Scraper import Scraper
-from base.task import Task
-from base.lib import ComponentMeta, Component
+from base.components.model import Model
+from base.libs.scraper import Scraper
+from base.components.base import Component, ComponentMeta
+from base.libs.task import Task
 
 
 class SchemeMeta(ComponentMeta):
-    # priority_index = 100
 
     def __new__(cls, name, bases, attrs: dict):
-        # 在init里设置priority
-        # if not attrs.get("priority") and name not in ["Action", "Parse"]:
-        #     attrs["priority"] = cls.priority_index
-        #     cls.priority_index = cls.priority_index + 100
-
         if not attrs.get("priority") and name not in ["Action", "Parse"]:
             attrs["priority"] = 0
 

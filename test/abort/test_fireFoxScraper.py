@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Scraper import FireFoxScraper
+from base.libs.scraper import FireFoxScraper
 
 
 class TestFireFoxScraper(TestCase):

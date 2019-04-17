@@ -2,21 +2,18 @@ import unittest
 from typing import Any
 from unittest import TestCase
 import sys
-import multiprocessing.dummy as dummy
 import time
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Model import Model
-from base.lib import Config
+from base.Process import Pipeline
+from base.components.proceesor import Processor
+from base.common import JsonFileProcessor, DuplicateProcessor, ProxyModel
+from base.libs.task import TaskModel
+from base.components.model import Field, Model, ModelManager
 
-from base._core import load_default_models
-from base.Process import Pipeline, Processor, target
-from base.common import JsonFileProcessor, DuplicateProcessor
-from base.Model import ProxyModel, ModelManager, FailedTaskModel, TaskModel, Field
-
-from base.hub import Hub
-from base.tool import get_proxy_model, jinglin
+from base.hub.hub import Hub
+from base.tool import jinglin
 
 import redis
 import faker

@@ -1,71 +1,9 @@
-from abc import abstractmethod
-from typing import Tuple, List, Dict, Any
-from base.Model import Model, ModelManager
-from base.lib import ComponentMeta, Component, Setting
+from typing import List, Tuple
+
+from base.components.model import Model, ModelManager
+from base.components.proceesor import Processor
+from base.libs.setting import Setting
 from base.log import act
-
-
-class BaseProcess(Component):
-    pass
-
-
-def target(model: type(Model)):
-    def wrapper(func):
-        def innerwrapper(*args, **kwargs):
-            if not issubclass(model, Model):
-                raise TypeError("target must be class")
-            if isinstance(args[1], model):
-                return func(*args, **kwargs)
-            else:
-                return True
-
-        return innerwrapper
-
-    return wrapper
-
-
-class ProcessorMeta(ComponentMeta):
-
-    def __new__(cls, name, bases, attrs: dict):
-        if not attrs.get("target"):
-            attrs["target"] = Model
-        return super().__new__(cls, name, bases, attrs)
-
-
-class Processor(object, metaclass=ProcessorMeta):
-    target: type(Model)
-    _active: bool
-    _name: str
-    data: []
-
-    setting: Setting
-
-    def __init__(self, setting: Setting):
-        self.count: int = 0
-        self.next: Processor = None
-        self.data = []
-
-        self.setting = setting
-
-    @abstractmethod
-    def start_task(self, setting: Setting):
-        pass
-
-    @abstractmethod
-    def start_process(self, number: int, model: str = "Model"):
-        pass
-
-    @abstractmethod
-    def end_process(self):
-        pass
-
-    @abstractmethod
-    def end_task(self):
-        pass
-
-    @abstractmethod
-    def process_item(self, model: Model) -> Any:
-        pass
 
 
 class Pipeline(object):

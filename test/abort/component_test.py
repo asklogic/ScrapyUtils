@@ -5,8 +5,6 @@ import sys
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base import Scraper
-
 
 class Component_Test(TestCase):
     def test_project(self):

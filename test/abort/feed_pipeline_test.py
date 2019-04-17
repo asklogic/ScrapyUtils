@@ -7,11 +7,11 @@ import sys
 
 sys.path.append(r"E:\cloudWF\python\ScrapyUtils")
 
-from base.Model import Model, ModelManager
-from base.Process import Pipeline, Processor, target
-from base.Model import ProxyModel
-from base.Container import _Container
-from multiprocessing import dummy
+from base.components.model import ModelManager
+from base.Process import target
+from base.hub.pipeline import Pipeline
+from base.components.proceesor import Processor
+from base.common import ProxyModel
 
 
 # from

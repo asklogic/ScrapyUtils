@@ -81,6 +81,10 @@ class TestBuild(TestCase):
         self.assertIn('build_prepare failed', str(e.exception))
 
     def test_build_demo(self):
+        '''
+        build all components
+        :return:
+        '''
         setting = core.build_setting('TestMock')
 
         scrapers, tasks = core.build_thread_prepare(prepare=setting.CurrentPrepare,

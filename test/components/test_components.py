@@ -1,0 +1,66 @@
+import unittest
+from typing import Any
+
+from base.components import Prepare
+from base.components import Action, Parse, Scheme
+from base.components import Processor
+from base.components import Model
+from base.components.model import Field
+from base.components.base import Component
+
+from base.libs.setting import Setting
+
+
+class MockProcessor(Processor):
+
+    def process_item(self, model: Model) -> Any:
+        return model
+
+
+class MockPrepare(Prepare):
+    pass
+
+
+class MockModel(Prepare):
+    f = Field()
+    pass
+
+
+class MockAction(Prepare):
+    pass
+
+
+class TestComponents(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.setting = Setting()
+        super().setUp()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        super().tearDownClass()
+
+    def test_init(self):
+        mock_processor = MockProcessor()
+
+        self.assertTrue(hasattr(mock_processor, '_name'))
+        self.assertEqual(mock_processor._name, 'MockProcessor')
+
+        self.assertTrue(issubclass(mock_processor.__class__, Component))
+
+        mock_processor.check()
+        pass
+
+    def test_prepare(self):
+        mock_prepare = MockPrepare()
+
+        self.assertTrue(hasattr(mock_prepare, '_name'))
+        self.assertEqual(mock_prepare._name, 'MockPrepare')
+
+        self.assertTrue(type(mock_prepare), MockPrepare)
+        self.assertTrue(issubclass(mock_prepare.__class__, Component))
+        self.assertTrue(issubclass(mock_prepare.__class__, Prepare))
+
+
+    def test_demo(self):
+        pass

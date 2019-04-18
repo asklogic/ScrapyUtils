@@ -2,7 +2,7 @@ import os
 from os import path
 from base.log import act
 
-from base import templates
+from base.generate import templates
 from string import Template
 
 PROJECT_PATH = os.path.dirname(os.getcwd())

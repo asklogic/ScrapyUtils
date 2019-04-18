@@ -1,3 +1,4 @@
+from abc import abstractmethod
 
 
 class ComponentMeta(type):
@@ -11,4 +12,9 @@ class ComponentMeta(type):
 
 
 class Component(object, metaclass=ComponentMeta):
-    pass
+    _name: str
+
+    @abstractmethod
+    def check(self) -> bool:
+        pass
+

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any
 
-from base.components.base import ComponentMeta
+from base.components.base import ComponentMeta,Component
 from base.components.model import Model
 from base.libs.setting import Setting
 
@@ -14,15 +14,14 @@ class ProcessorMeta(ComponentMeta):
         return super().__new__(cls, name, bases, attrs)
 
 
-class Processor(object, metaclass=ProcessorMeta):
+class Processor(Component, metaclass=ProcessorMeta):
     target: type(Model)
     _active: bool
-    _name: str
     data: []
 
     setting: Setting
 
-    def __init__(self, setting: Setting):
+    def __init__(self, setting: Setting = Setting()):
         self.count: int = 0
         self.next: Processor = None
         self.data = []

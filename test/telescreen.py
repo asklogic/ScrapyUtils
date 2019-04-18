@@ -133,7 +133,7 @@ def watch(target: str):
     if not target.endswith('.py'):
         target = target + '.py'
     target_file = None
-    for file in _search_file(r'E:\cloudWF\python\ScrapyUtils\test'):
+    for file in _search_file(test_path):
         # print(os.path.basename(file))
         if os.path.basename(file) == target:
             target_file = file

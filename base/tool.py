@@ -2,7 +2,6 @@ from lxml import etree
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 import requests
 import time
-
 import peewee
 import redis
 

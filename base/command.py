@@ -1,6 +1,9 @@
 from base.engine import thread_run, single_run
 import click
 from base.generate.generator import generate as gen
+import os
+
+PROJECT_PATH = os.path.dirname(os.getcwd())
 
 
 @click.group()

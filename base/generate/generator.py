@@ -5,7 +5,8 @@ from base.log import act
 from base.generate import templates
 from string import Template
 
-PROJECT_PATH = os.path.dirname(os.getcwd())
+PROJECT_PATH = os.getcwd()
+
 
 generator_list = [
     "action.py",
@@ -122,6 +123,6 @@ def generate(target: str):
 
 
 if __name__ == '__main__':
-    target = "TestMockServer"
+    target = "ProxyKuai"
     dir_generator(target)
     component_generate(target)

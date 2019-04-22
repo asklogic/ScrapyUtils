@@ -38,8 +38,8 @@ class BaseSetting(object):
     Duplication: dict = None
 
     # default
-    Mapping: bool = False
-    MappingAutoYield: bool = False
+    Mapping: bool = None
+    MappingAutoYield: bool = None
 
 
 class Setting(BaseSetting):

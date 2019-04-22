@@ -79,6 +79,10 @@ class Model(object, metaclass=ModelMeta):
     def pure_data(self):
         return self._data
 
+    @classmethod
+    def get_name(cls):
+        return cls._name
+
 # ModelManager
 
 

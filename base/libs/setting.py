@@ -73,8 +73,6 @@ class Setting(BaseSetting):
 
     def __init__(self):
 
-
-
         # common
         self.Thread = 5
         self.Block = 0.5
@@ -126,25 +124,31 @@ class Setting(BaseSetting):
                 setattr(self, x, getattr(module, x))
 
     def check_components(self, components):
-        from base.components.prepare import Prepare
-        from base.components.scheme import Scheme
-        from base.components.model import Model
-        from base.components.proceesor import Processor
+        from base.components import Prepare, Scheme, Model, Processor, Action, Parse
 
         prepares, schemes, models, processors = components
+        prepares: List[Prepare]
+        schemes: List[Scheme]
+        models: List[Model]
+        processors: List[Processor]
 
+        if not prepares:
+            raise ModuleNotFoundError("there isn't have activated prepare class in Prepare.py")
+
+        # TODO 指定prepare
         for prepare in prepares:
             if self.Prepare == prepare._name:
                 self.CurrentPrepare = Prepare
 
+        # 选择所有启用的Prepare中最后一个
         if not self.CurrentPrepare and len(prepares) is not 0:
             self.CurrentPrepare = prepares[0]
-        if not self.CurrentPrepare:
-            raise ModuleNotFoundError("there isn't have activated prepare class in Prepare.py")
 
+        # 从该Prepare中读取设置
         self.load_prepare()
 
         # TODO refact
+        # 根据自带的components组件中读取
         for current_scheme in self.SchemeList:
             if type(current_scheme) is str:
                 res = [x for x in schemes if x._name == current_scheme]
@@ -183,12 +187,8 @@ class Setting(BaseSetting):
             else:
                 raise TypeError('elements of ProcessorsList only support str or Processor Type')
 
-    def check(self, components):
-        prepares, schemes, models, processors = components
-        # TODO
-        from base.components.scheme import Parse
-        from base.components.scheme import Action
-
+        # 没有设置schemes 自动添加
+        # actions在前 parse在后
         if not self.CurrentSchemeList:
             actions = [x for x in schemes if issubclass(x, Action)]
             parses = [x for x in schemes if issubclass(x, Parse)]
@@ -197,10 +197,19 @@ class Setting(BaseSetting):
             [self.CurrentSchemeList.append(x) for x in parses]
 
         if not [x for x in self.CurrentSchemeList if issubclass(x, Action)]:
-            raise warnings.warn('cannot found any action class')
+            raise warnings.warn('cannot found any action in schemes')
 
+        # 全部添加
         if not self.CurrentProcessorsList:
             self.CurrentProcessorsList = processors
 
+        # 全部添加
         if not self.CurrentModels:
             self.CurrentModels = models
+
+    def default(self):
+        from base.components import Action
+
+
+        last = self.CurrentSchemeList.index([x for x in self.CurrentSchemeList if issubclass(x, Action)][0])
+

@@ -47,7 +47,7 @@ class TestSetting(unittest.TestCase):
         # overwrite prepare
 
         # 4. add default and check
-        setting.check(components)
+        setting.default(components)
 
         # assert type
         self.components_type(setting)

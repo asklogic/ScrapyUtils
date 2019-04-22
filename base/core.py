@@ -3,6 +3,7 @@ from types import *
 import threading
 import queue
 import time
+import warnings
 
 from base.log import act, status
 from base.libs.setting import Setting
@@ -79,15 +80,18 @@ def build_setting(target: str) -> Setting:
 
     # 2. load config.py
 
-    config = __import__('config')
-    setting.load_config(config)
+    try:
+        config = __import__('config')
+        setting.load_config(config)
+    except ModuleNotFoundError as mnfe:
+        warnings.warn('there is not config.py')
 
     # 3. load and check components
     components = load_components(target)
     setting.check_components(components)
 
     # 4. add default and check prepare
-    setting.check(components)
+    setting.default()
 
     return setting
 

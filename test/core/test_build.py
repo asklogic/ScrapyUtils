@@ -92,3 +92,4 @@ class TestBuild(TestCase):
         schemes = core.build_schemes(setting.CurrentSchemeList)
 
         sys_hub, dump_hub = core.build_hub(setting=setting)
+

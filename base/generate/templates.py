@@ -84,13 +84,15 @@ from .process import *
 
 class ${class_name}Prepare(Prepare):
     _active = True
-    SchemeList = [
-        ${class_name}Action,
-        ${class_name}Parse,
-    ]
+    # SchemeList = [
+    #     ${class_name}Action,
+    #     ${class_name}Parse,
+    # ]
     
-    # ProcessorList = []
-
+    # ProcessorList = [
+    #     ${class_name}Process,
+    # ]
+    
     @classmethod
     def task_prepared(cls):
         task = Task()

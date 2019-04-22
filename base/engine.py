@@ -146,11 +146,9 @@ def _thread_run(target: str):
 def thread_run(target_name: str):
     setting = core.build_setting(target_name)
 
-
     scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
     schemes = core.build_schemes(setting.CurrentSchemeList)
 
-    sys_hub, dump_hub = core.build_hub(setting=setting)
     sys_hub, dump_hub = core.build_hub(setting=setting)
 
     act.info("thread run")

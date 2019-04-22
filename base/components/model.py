@@ -34,7 +34,7 @@ class ModelMeta(type):
         attrs["_name"] = name
         attrs["_mapper"] = mapper
 
-        if not attrs.get("_active"):
+        if attrs.get("_active") is None:
             attrs["_active"] = True
 
         return type.__new__(cls, name, bases, attrs)

@@ -5,7 +5,7 @@ class ComponentMeta(type):
     def __new__(mcs, name, bases, attrs: dict):
         attrs["_name"] = name
 
-        if not attrs.get("_active"):
+        if attrs.get("_active") is None:
             attrs["_active"] = True
 
         return type.__new__(mcs, name, bases, attrs)

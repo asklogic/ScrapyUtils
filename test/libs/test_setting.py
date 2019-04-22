@@ -47,7 +47,7 @@ class TestSetting(unittest.TestCase):
         # overwrite prepare
 
         # 4. add default and check
-        setting.default(components)
+        setting.default()
 
         # assert type
         self.components_type(setting)
@@ -100,8 +100,13 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(setting.ProxyURL,
                          'https://docs.python.org/3/library/urllib.request.html#module-urllib.request')
 
-        self.assertEqual(len(setting.CurrentModels), 2)
+        # scheme
+
+        self.assertEqual(len(setting.CurrentSchemeList), 3)
+
         self.assertEqual(setting.CurrentSchemeList[1]._name, 'TestAction')
+
+        self.assertEqual(len(setting.CurrentModels), 2)
 
         self.assertEqual(len(setting.CurrentProcessorsList), 2)
         # fixme 顺序问题
@@ -139,3 +144,41 @@ class TestSetting(unittest.TestCase):
             setting = core.build_setting(target=target)
 
         self.assertIn('cannot found target named', str(e.exception))
+
+    def test_default(self):
+        from base.common import XpathMappingParse
+        target = 'TestMock'
+
+        setting = Setting()
+        setting.Target = target
+
+        components = core.load_components(target)
+        setting.check_components(components)
+
+        setting.Mapping = True
+        setting.MappingAutoYield = True
+
+        setting.default()
+
+        # scheme
+        self.assertEqual(len(setting.CurrentSchemeList), 3)
+
+        self.assertEqual(setting.CurrentSchemeList[1]._name, 'XpathMappingParse')
+
+        schemes_list = core.build_thread_schemes(setting.CurrentSchemeList, 5)
+
+        for schemes in schemes_list:
+            mapping = schemes[1]
+            mapping: XpathMappingParse
+            self.assertEqual(mapping.get_name(), 'XpathMappingParse')
+            self.assertIsInstance(mapping, object)
+
+            # autoyield
+            self.assertEqual(mapping.autoyield, True)
+            # 2 个model
+            self.assertEqual(len(mapping.models), 2)
+            # mapper 为空
+            [self.assertEqual(bool(x._mapper), False) for x in mapping.models]
+
+
+

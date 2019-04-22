@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from base.libs.task import TaskModel
 from base.components.model import Model
 from base.components.scheme import Scheme
 from base.libs.scraper import Scraper
@@ -32,6 +31,9 @@ class TestEngine(TestCase):
 
         # step 3.1: build single scraper
         scraper, tasks = core.build_prepare(prepare)
+
+        from base.libs.task import TaskModel
+
 
         for task in tasks:
             self.assertIsInstance(task, TaskModel)

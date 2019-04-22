@@ -6,4 +6,8 @@ class TestMockModel(Model):
     
     filed = Field()
 
+class OtherMockModel(Model):
+    _active = True
 
+
+    filed = Field()

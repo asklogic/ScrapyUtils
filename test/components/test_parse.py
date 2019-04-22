@@ -516,7 +516,7 @@ var _hmt = _hmt || [];
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 })(window,document,'script','https://img.kuaidaili.com/ga/ga.js','ga');
-ga('create', 'UA-76097251-1', 'auto');
+ga('create', 'UA-76097251-1', 'autoyield');
 ga('send', 'pageview');
 
 (function(){document.getElementById('cxwz').oncontextmenu = function(){return false;}})();
@@ -537,7 +537,7 @@ class TestIPModel(Model):
 class XpathMappingParse(Parse):
     models: List[type(Model)] = []
     full: bool = False
-    auto: bool = True
+    autoyield: bool = True
 
     def check(self) -> bool:
         for model in self.models:
@@ -598,7 +598,7 @@ class XpathMappingParse(Parse):
 
                 parsed_result.append(data_model)
 
-            if self.auto:
+            if self.autoyield:
                 for parsed_model in parsed_result:
                     yield parsed_model
             else:

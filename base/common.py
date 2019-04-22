@@ -86,6 +86,79 @@ class DefaultXpathParse(Parse):
             self.context['mappers'] = parsed_result
 
 
+class XpathMappingParse(Parse):
+    models: List[type(Model)] = []
+    full: bool = False
+    autoyield: bool = True
+
+    def check(self) -> bool:
+        for model in self.models:
+            assert issubclass(model, Model)
+
+        return True
+
+    def parsing(self, content: str) -> Model or Generator[Model]:
+
+        for model in self.models:
+            if not model._mapper:
+                continue
+
+            parsed_mapper: Dict[str, List[str] or str] = {}
+            parsed_result: List[Model] = []
+            length = 1
+
+            for key, value in model._mapper.items():
+                # 常量get_name
+                if value.startswith("const:"):
+                    parsed_mapper[key] = value[6:]
+                # 从Task中获取的context
+                elif value.startswith("context:"):
+                    parsed_mapper[key] = self.context[value[8:]]
+                # 固定值
+                elif value.startswith("fixed:"):
+                    parsed_mapper[key] = xpathParse(content, value[6:])[0]
+                # 动态值
+                else:
+                    parsed = xpathParse(content, value)
+                    parsed_mapper[key] = parsed
+
+                    if len(parsed) > length:
+                        length = len(parsed)
+                    # length = length if len(parsed) <= length else len(parsed)
+
+            # 根据长度来生成model
+            for index in range(length):
+                data_model: Model = ModelManager.model(model.get_name())
+                for key, item in model._mapper.items():
+                    try:
+                        # 解析为列表
+                        if type(parsed_mapper[key]) is list:
+                            value = parsed_mapper[key][index]
+
+                            if self.full and not bool(value):
+                                value = "#"
+                            setattr(data_model, key, value)
+                        # 固定值
+                        else:
+                            if self.full and not parsed_mapper[key]:
+                                setattr(data_model, key, "#")
+                            else:
+                                setattr(data_model, key, parsed_mapper[key])
+                    except (KeyError, IndexError) as e:
+                        # 不存在key 设置为-
+                        setattr(data_model, key, '-')
+
+                parsed_result.append(data_model)
+
+            if self.autoyield:
+                for parsed_model in parsed_result:
+                    yield parsed_model
+            else:
+                self.context['mappers.' + model.get_name()] = parsed_result
+
+
+
+
 class HiddenInputParse(Parse):
     target_tag: str = 'input'
     target_property: str = 'type'

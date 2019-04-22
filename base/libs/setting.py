@@ -37,35 +37,13 @@ class BaseSetting(object):
     # ProcessorList
     Duplication: dict = None
 
+    # default
+    Mapping: bool = False
+    MappingAutoYield: bool = False
+
 
 class Setting(BaseSetting):
-    Thread = 5
-    Block = 0.5
-    FailedBlock = Block * 2
-    FailedRetry: int = 3
-
-    Target = ''
-    Prepare = ''
-    SchemeList = []
-    Model = []
-    ProcessorList = []
-
-    # Proxy
-    ProxyAble: bool = False
-    ProxyFunc: Callable = None
-
-    ProxyURL: str = ''
-    ProxyNumberParam = ''
-
-    # ProcessorList
-    Duplication: dict = {
-        'host': '127.0.0.1',
-        'port': '6379',
-        'password': '',
-    }
-
     # load
-
     CurrentPrepare = None
     CurrentSchemeList = []
     CurrentModels = []
@@ -111,6 +89,9 @@ class Setting(BaseSetting):
         self.CurrentSchemeList = []
         self.CurrentModels = []
         self.CurrentProcessorsList = []
+
+        self.Mapping = False
+        self.MappingAutoYield = True
 
     def load_prepare(self):
         for x in [x for x in dir(BaseSetting) if not x.startswith('__')]:
@@ -209,7 +190,12 @@ class Setting(BaseSetting):
 
     def default(self):
         from base.components import Action
+        from base.common import XpathMappingParse
 
+        if self.Mapping:
+            last = self.CurrentSchemeList.index([x for x in self.CurrentSchemeList if issubclass(x, Action)][-1])
 
-        last = self.CurrentSchemeList.index([x for x in self.CurrentSchemeList if issubclass(x, Action)][0])
+            XpathMappingParse.autoyield = self.MappingAutoYield
+            [XpathMappingParse.models.append(x) for x in self.CurrentModels]
+            self.CurrentSchemeList.insert(last+1, XpathMappingParse)
 

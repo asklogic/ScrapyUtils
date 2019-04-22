@@ -101,7 +101,7 @@ def cli():
 
 @click.command()
 @click.argument('folder')
-@click.option('--auto', default=True, help='Auto test all file.')
+@click.option('--autoyield', default=True, help='Auto test all file.')
 def module(folder: str, auto: bool):
     target = None
 

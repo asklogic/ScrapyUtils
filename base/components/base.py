@@ -6,7 +6,7 @@ class ComponentMeta(type):
         attrs["_name"] = name
 
         if not attrs.get("_active"):
-            attrs["_active"] = False
+            attrs["_active"] = True
 
         return type.__new__(mcs, name, bases, attrs)
 

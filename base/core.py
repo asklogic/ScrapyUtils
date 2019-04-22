@@ -20,8 +20,8 @@ from base.libs.scraper import Scraper
 
 import copy
 
-
 ModelManager.add_model(TaskModel)
+
 
 def load_files(target_name: str) -> List[ModuleType]:
     target_modules: List[ModuleType] = []
@@ -62,15 +62,12 @@ def load_components(target_name: str = None) -> Tuple[Prepare, List[Scheme], Lis
             if (target_name and target_name in str(current_attr) and not attr.startswith('__')):
                 components.add(current_attr)
     # classify components & pack ups
-    prepares: List[Prepare] = [x for x in components if issubclass(x, Prepare)]
-    schemes: List[Scheme] = [x for x in components if issubclass(x, Scheme)]
-    models: List[Model] = [x for x in components if issubclass(x, Model)]
-    processors: List[Processor] = [x for x in components if issubclass(x, Processor)]
+    prepares: List[Prepare] = [x for x in components if issubclass(x, Prepare) and x._active]
+    schemes: List[Scheme] = [x for x in components if issubclass(x, Scheme) and x._active]
+    models: List[Model] = [x for x in components if issubclass(x, Model) and x._active]
+    processors: List[Processor] = [x for x in components if issubclass(x, Processor) and x._active]
 
     return prepares, schemes, models, processors
-
-
-
 
 
 def build_setting(target: str) -> Setting:
@@ -94,8 +91,6 @@ def build_setting(target: str) -> Setting:
     setting.default()
 
     return setting
-
-
 
 
 def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
@@ -173,7 +168,6 @@ def _load_component(module, component: type) -> List[type]:
     return res
 
 
-
 def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
     try:
         scraper = prepare.get_scraper()
@@ -191,8 +185,6 @@ def generate_task(prepare: Prepare) -> List[Task]:
         act.warning("[Config] prepare must yield tasks")
         raise TypeError("[Config] build_prepare error")
     return task
-
-
 
 
 def build_hub(setting: Setting):
@@ -215,8 +207,6 @@ def build_hub(setting: Setting):
     dump_hub.add_dump_pipeline('Model', Pipeline(processors, setting=setting))
 
     return sys_hub, dump_hub
-
-
 
 
 def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub):

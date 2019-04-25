@@ -45,9 +45,20 @@ cli.add_command(test_module)
 cli.add_command(watch)
 
 
+@click.command()
+# @click.argument('asd', 'bas')
+@click.option('-asd', '--')
+def watcher(asd):
+    click.echo('success: ' + str(asd))
+
+# def watcher(asd, bas):
+#     click.echo('success: ' + str(asd))
+
+
 if __name__ == '__main__':
     # single_test()
     # invoke_test()
     # hello()
-    cli()
+    # cli()
+    watcher()
     pass

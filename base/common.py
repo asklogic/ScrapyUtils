@@ -25,67 +25,6 @@ class DefaultAction(Action):
         return scraper.get(url=task.url)
 
 
-class DefaultXpathParse(Parse):
-    length: int = -1
-    full: bool = True
-    mapper_model: Model = None
-    auto_yield: bool = False
-
-    def parsing(self, content: str) -> Model or Generator[Model]:
-
-        # TODO mapper如何加载?
-        if not self.mapper_model:
-            return
-        model: Model = ModelManager.model(self.mapper_model._name)
-        mapper: Dict[str, str] = model._mapper
-        parsed_mapper: Dict[str, List[str]] = {}
-        parsed_result: List[Model] = []
-
-        if self.length < 0:
-            self.length = 0
-
-        for key, value in mapper.items():
-            if value.startswith("const:"):
-                parsed_mapper[key] = value[6:]
-            elif value.startswith("context:"):
-                parsed_mapper[key] = self.context[value[8:]]
-            elif value.startswith("fixed:"):
-                parsed_mapper[key] = xpathParse(content, value[6:])[0]
-            else:
-                parsed = xpathParse(content, value)
-                parsed_mapper[key] = parsed
-                # if len(parsed) and parsed[0] is not 'None':
-                #     length = len(parsed)
-                self.length = self.length if len(parsed) <= self.length else len(parsed)
-
-        for index in range(self.length):
-            model: Model = ModelManager.model(self.mapper_model._name)
-            error_index = 0
-            for key in mapper:
-                try:
-                    if type(parsed_mapper[key]) == list:
-                        value = parsed_mapper[key][index]
-                        if self.full and not bool(value):
-                            value = "##"
-                        setattr(model, key, value)
-                    else:
-                        if self.full and not parsed_mapper[key]:
-                            setattr(model, key, "##")
-                        else:
-                            setattr(model, key, parsed_mapper[key])
-                except:
-                    error_index = error_index + 1
-                    setattr(model, key, None)
-            if not error_index * 2 > len(mapper.keys()):
-                parsed_result.append(model)
-
-        if self.auto_yield:
-            for model in parsed_result:
-                yield model
-        else:
-            self.context['mappers'] = parsed_result
-
-
 class XpathMappingParse(Parse):
     models: List[type(Model)] = []
     full: bool = False
@@ -155,8 +94,6 @@ class XpathMappingParse(Parse):
                     yield parsed_model
             else:
                 self.context['mappers.' + model.get_name()] = parsed_result
-
-
 
 
 class HiddenInputParse(Parse):

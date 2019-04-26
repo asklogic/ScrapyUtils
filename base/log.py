@@ -8,6 +8,7 @@ StatusLog.setLevel(logging.DEBUG)
 StatusLog.propagate = 0
 
 status_formatter = r"%(asctime)s - (%(threadName)s) - %(funcName)s [%(levelname)s] %(message)s"
+status_formatter = r"%(asctime)s - (%(threadName)s) - [%(levelname)s] %(message)s"
 status_f = logging.Formatter(status_formatter)
 
 chHandler = logging.StreamHandler()

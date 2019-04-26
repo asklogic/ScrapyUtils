@@ -227,8 +227,27 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dum
             else:
                 dump_hub.save(model)
     except Exception as e:
-        status.error("".join(["[Scrapy] scrapy error ", str(e.args)]))
-        # status.exception(e)
+        import traceback
+        import linecache
+
+        # TODO refact
+        error_info = []
+        error_info.extend(('Scheme:' + scheme.get_name(),))
+        error_info.extend(('Exception:' + e.__class__.__name__,))
+        error_info.extend(('msg: ' + ''.join(e.args),))
+
+        current = e.__traceback__
+
+        while current.tb_next is not None:
+            current = current.tb_next
+        code = current.tb_frame.f_code
+        print(linecache.getline(code.co_filename,current.tb_lineno,current.tb_frame.f_globals).strip())
+
+
+
+
+        status.error(' | '.join(error_info))
+
         return False
     return True
 

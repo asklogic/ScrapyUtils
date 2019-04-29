@@ -18,6 +18,9 @@ class ErrorAction(Action):
     def scraping(self, task: Task, scraper: Scraper) -> str:
         raise Exception('custom error action')
 
+class HTTPErrorAction(Action):
+    def scraping(self, task: Task, scraper: Scraper) -> str:
+        return scraper.get("http://wocao.wocao")
 
 class TestScrapy(TestCase):
 
@@ -41,9 +44,14 @@ class TestScrapy(TestCase):
         schemes = core.build_schemes(scheme_list)
 
         core.scrapy(schemes, self.scraper, self.task, self.dump, self.sys)
-        pass
 
     def test_demo(self):
         self.scraping([ErrorAction])
+
+    # @unittest.skip
+    def test_http_error(self):
+        self.scraping([HTTPErrorAction])
+
+
 
 

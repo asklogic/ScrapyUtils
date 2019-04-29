@@ -6,20 +6,23 @@ from base.libs.scraper import Scraper
 from base.components.base import Component, ComponentMeta
 from base.libs.task import Task
 
-
+from base.exception import HTTPStatusException
 class SchemeMeta(ComponentMeta):
 
     def __new__(cls, name, bases, attrs: dict):
-        if not attrs.get("priority") and name not in ["Action", "Parse"]:
-            attrs["priority"] = 0
+        # if not attrs.get("priority") and name not in ["Action", "Parse"]:
+        #     attrs["priority"] = 0
 
         return super().__new__(cls, name, bases, attrs)
 
 
 class Scheme(Component):
     _active: bool
-    priority: int
+    # priority: int
     context: dict
+
+    def scrapy_check(self):
+        pass
 
 
 class Action(Scheme, metaclass=SchemeMeta):
@@ -38,6 +41,13 @@ class Action(Scheme, metaclass=SchemeMeta):
         :param manager:
         :return:
         """
+        pass
+
+    def scrapy_check(self, content: str, scraper: Scraper):
+        status_code = scraper.get_status_code()
+
+        if status_code > 400:
+            raise HTTPStatusException()
         pass
 
 

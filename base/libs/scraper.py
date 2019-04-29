@@ -26,6 +26,10 @@ class Scraper(BaseScraper, metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_status_code(self) -> int:
+        pass
+
+    @abstractmethod
     def activate(self):
         '''
         激活Scraper
@@ -126,8 +130,11 @@ class RequestScraper(Scraper):
         self.last = res
         return res.content.decode("utf-8")
 
-    def origin_get(self) -> requests.Response:
+    def get_current(self) -> requests.Response:
         return self.last
+
+    def get_status_code(self):
+        return self.last.status_code
 
     def set_proxy(self, proxy: Tuple[str, str]):
         self.current_proxy = {
@@ -166,6 +173,10 @@ class FireFoxScraper(Scraper):
 
     def start_tab(self):
         pass
+
+    def get_status_code(self) -> int:
+        # FIXME selenium 无法判断状态码
+        return 200
 
     def activate(self):
         """

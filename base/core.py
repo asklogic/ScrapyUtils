@@ -234,17 +234,15 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dum
         error_info = []
         error_info.extend(('Scheme:' + scheme.get_name(),))
         error_info.extend(('Exception:' + e.__class__.__name__,))
-        error_info.extend(('msg: ' + ''.join(e.args),))
+        # error_info.extend(('msg: ' + ''.join(e.args),))
 
         current = e.__traceback__
 
         while current.tb_next is not None:
             current = current.tb_next
         code = current.tb_frame.f_code
-        print(linecache.getline(code.co_filename,current.tb_lineno,current.tb_frame.f_globals).strip())
-
-
-
+        code_content = linecache.getline(code.co_filename, current.tb_lineno, current.tb_frame.f_globals).strip()
+        error_info.extend(('\ncode: ' + code_content,))
 
         status.error(' | '.join(error_info))
 

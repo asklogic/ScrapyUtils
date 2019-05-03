@@ -18,6 +18,7 @@ class Component(object, metaclass=ComponentMeta):
     def check(self) -> bool:
         pass
 
+    @classmethod
     def get_name(self):
         return self._name
 

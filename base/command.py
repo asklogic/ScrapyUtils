@@ -1,6 +1,7 @@
 from typing import List
 
 from base.engine import thread_run, single_run
+from  base import core
 import click
 from base.generate.generator import generate as gen
 import os
@@ -62,7 +63,7 @@ class Command(object):
     def syntax(self):
         return '[Command]'
 
-    def log(self, msg, level=0, step='globle'):
+    def log(self, msg, level=0, step='global'):
         # TODO Level
         from logging import DEBUG
 
@@ -75,8 +76,17 @@ class Command(object):
         self.setting = None
         self.exitcode = -1
 
-    def build(self, **kw):
-        pass
+    def build(self, **kwargs):
+
+        if self.require_target:
+
+            assert kwargs.get('Target'), 'no target'
+
+            target = kwargs.get('Target')
+            setting = core.build_setting(target)
+
+            self.setting = setting
+
 
     def check_args(self, **kw):
         for args in self.assert_args:

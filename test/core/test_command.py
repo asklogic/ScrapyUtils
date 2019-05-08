@@ -6,6 +6,7 @@ import logging
 
 from base import core
 import time
+from base.command import get_command, trigger,sys_exit
 
 
 class MockInitCommand(Command):
@@ -116,28 +117,39 @@ class TestCommand(TestCase):
 
         # cmd = core.get_command(cmd_name)
 
-        # mock thread
+        # mock command
         thread = MockTestThreadCommand()
 
         kw = {
-            'target': 'TestMock',
-
+            'target': 'TestMockThread',
         }
+
+        # sys register signal function
+
+        # cmd build
         thread.build(**kw)
 
-    def test_command_check(self):
-        # todo to trigger
-        check = TestCheckCommand()
-        kw = {
-            'target': 'TestMockCustom'
-        }
-        check.build(**kw)
 
-        # check.run()
+        try:
+            thread.run()
+        # exception from singal callback
+        except Exception as e:
+            pass
+
+        finally:
+        # cmd exit
+            thread.exit()
+
+
+        # sys exit
+
+
+
+
+    def test_command_check(self):
+        trigger('check', target='TestMockThread')
 
     def test_core_get_command(self):
-        from base.command import get_command
-
         # command_name = 'check'
         #
         # try:

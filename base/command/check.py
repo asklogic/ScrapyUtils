@@ -46,3 +46,11 @@ class Check(Command):
         end = time.time()
 
         self.log('spend %.2f second(s) in' % float(end - start))
+
+
+        # remain = 5
+        #
+        # while remain>0:
+        #     remain = remain-1
+        #     print('loop')
+        #     time.sleep(1)

@@ -35,6 +35,11 @@ class Command(object):
         self.exitcode = -1
 
     def build(self, **kwargs):
+        '''
+        kw from click command class
+        :param kwargs:
+        :return:
+        '''
         if self.require_target:
             assert kwargs.get('target'), 'no target'
 
@@ -48,6 +53,10 @@ class Command(object):
         pass
 
     def exit(self):
+        '''
+        block in exit v
+        :return:
+        '''
         pass
 
 
@@ -70,10 +79,13 @@ def sys_exit(exitcode: int):
 
 def trigger(command_name: str, **kwargs):
     command = get_command(command_name)
+
+
     command.build(**kwargs)
     command.run()
 
     command.exit()
+
 
     sys_exit(command.exitcode)
 

@@ -11,7 +11,6 @@ class TestMockThreadPrepare(Prepare):
         # TestMockThreadAction,
         'TestPageAction',
         # TestMockThreadParse,
-        Mapping,
     ]
 
     # ProcessorList = []

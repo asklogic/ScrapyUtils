@@ -12,7 +12,6 @@ class TestMockCustomPrepare(Prepare):
         'TestAction',
         TestMockCustomParse,
     ]
-
     Block = 0.4
 
     ProxyURL = 'https://docs.python.org/3/library/urllib.request.html#module-urllib.request'

@@ -63,14 +63,14 @@ class Prepare(BasePrepare, BaseSetting):
             if isinstance(scraper, Scraper):
                 return scraper
             else:
-                warnings.warn('scraper_prepared must return a Scraper Instance. start default RequestScraper ')
+                warnings.warn('scraper_prepared must return a Scraper Instance. use default RequestScraper ')
                 r = RequestScraper()
                 r.set_timeout(5)
                 return r
 
         # TODO
         except Exception as e:
-            warnings.warn('failed in scraper_prepared. start default RequestScraper ')
+            warnings.warn('failed in scraper_prepared. use default RequestScraper ')
             r = RequestScraper()
             r.set_timeout(5)
             return r

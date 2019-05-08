@@ -4,7 +4,7 @@ from base.components.model import ModelManager
 from base.components.scheme import Parse
 from .model import *
 
-from base.common import DefaultXpathParse
+from base.common import XpathMappingParse
 
 
 class TestMockThreadParse(Parse):
@@ -16,6 +16,4 @@ class TestMockThreadParse(Parse):
         yield m
 
 
-class Mapping(DefaultXpathParse):
-    mapper_model = TestMockThreadModel
-    auto_yield = True
+

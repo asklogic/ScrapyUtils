@@ -168,6 +168,7 @@ def _load_component(module, component: type) -> List[type]:
     return res
 
 
+
 def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
     try:
         scraper = prepare.get_scraper()

@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase,skip
 
 from base.command.Command import Command
 from logging import INFO
@@ -62,6 +62,36 @@ class MockTestThreadCommand(Command):
 
     def syntax(self):
         return '[MockTestThread]'
+
+    def run(self):
+        # log out
+        pass
+
+        setting = self.setting
+        # build
+        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
+        schemes = core.build_schemes(setting.CurrentSchemeList)
+
+        sys_hub, dump_hub = core.build_hub(setting=setting)
+
+        sys_hub.activate()
+        dump_hub.activate()
+
+        return
+        thread_List = []
+        for i in range(setting.Thread):
+            t = core.ScrapyThread(sys_hub, dump_hub, schemes, scrapers[i], setting)
+            thread_List.append(t)
+            t.setDaemon(True)
+            t.start()
+
+        [t.join() for t in thread_List]
+        sys_hub.stop(True)
+        dump_hub.stop(True)
+
+
+
+
 
 
 class TestCommand(TestCase):
@@ -132,7 +162,7 @@ class TestCommand(TestCase):
 
         try:
             thread.run()
-        # exception from singal callback
+        # exception from signal callback
         except Exception as e:
             pass
 
@@ -145,9 +175,12 @@ class TestCommand(TestCase):
 
 
 
-
+    @skip
     def test_command_check(self):
         trigger('check', target='TestMockThread')
+
+    def test_command_thread(self):
+        pass
 
     def test_core_get_command(self):
         # command_name = 'check'

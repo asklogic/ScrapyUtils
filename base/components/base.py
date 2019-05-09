@@ -6,7 +6,7 @@ class ComponentMeta(type):
         attrs["_name"] = name
 
         if attrs.get("_active") is None:
-            attrs["_active"] = True
+            attrs["_active"] = False
 
         return type.__new__(mcs, name, bases, attrs)
 
@@ -22,3 +22,7 @@ class Component(object, metaclass=ComponentMeta):
     def get_name(self):
         return self._name
 
+
+def active(component_class: type(Component)):
+    component_class._active = True
+    return component_class

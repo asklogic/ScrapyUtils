@@ -19,6 +19,15 @@ class TestSetting(unittest.TestCase):
     def tearDown(self) -> None:
         super().tearDown()
 
+    # test function
+    def components_type(self, setting: Setting):
+        self.assertTrue(issubclass(setting.CurrentPrepare, Prepare))
+
+        [self.assertTrue(issubclass(x, Scheme)) for x in setting.CurrentSchemeList]
+        [self.assertTrue(issubclass(x, Model)) for x in setting.CurrentModels]
+        [self.assertTrue(issubclass(x, Processor)) for x in setting.CurrentProcessorsList]
+
+
     def test_init(self):
         # init
         setting = Setting()
@@ -28,6 +37,7 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(setting.Thread, 5)
         self.assertEqual(setting.Block, 0.5)
 
+    # function
     def test_build_demo(self):
         target = 'TestMock'
 
@@ -52,12 +62,6 @@ class TestSetting(unittest.TestCase):
         # assert type
         self.components_type(setting)
 
-    def components_type(self, setting: Setting):
-        self.assertTrue(issubclass(setting.CurrentPrepare, Prepare))
-
-        [self.assertTrue(issubclass(x, Scheme)) for x in setting.CurrentSchemeList]
-        [self.assertTrue(issubclass(x, Model)) for x in setting.CurrentModels]
-        [self.assertTrue(issubclass(x, Processor)) for x in setting.CurrentProcessorsList]
 
     def test_load_prepare(self):
         setting = Setting()

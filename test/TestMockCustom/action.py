@@ -1,4 +1,4 @@
-from base.components.scheme import Action
+from base.components import Action, active
 from base.libs.scraper import Scraper
 from base.common import Task
 
@@ -14,4 +14,9 @@ class TestAction(Action):
     _active = True
 
     def scraping(self, task: Task, scraper: Scraper) -> str:
+        pass
+
+
+class TestDecoratorAction(Action):
+    def scraping(self, task: Task, scraper: Scraper):
         pass

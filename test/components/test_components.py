@@ -30,6 +30,16 @@ class MockAction(Prepare):
     pass
 
 
+def active(component_class: type(Component)):
+    component_class._active = True
+    return component_class
+
+
+@active
+class MockTestDecoratorAction(Action):
+    pass
+
+
 class TestComponents(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -41,6 +51,11 @@ class TestComponents(unittest.TestCase):
         super().tearDownClass()
 
     def test_init(self):
+        '''
+        components init
+        这里为Processor
+        :return:
+        '''
         mock_processor = MockProcessor()
 
         self.assertTrue(hasattr(mock_processor, '_name'))
@@ -52,6 +67,10 @@ class TestComponents(unittest.TestCase):
         pass
 
     def test_prepare(self):
+        '''
+        prepare init
+        :return:
+        '''
         mock_prepare = MockPrepare()
 
         self.assertTrue(hasattr(mock_prepare, '_name'))
@@ -61,6 +80,6 @@ class TestComponents(unittest.TestCase):
         self.assertTrue(issubclass(mock_prepare.__class__, Component))
         self.assertTrue(issubclass(mock_prepare.__class__, Prepare))
 
-
     def test_demo(self):
-        pass
+        self.assertEqual(MockAction._active, False)
+        self.assertEqual(MockTestDecoratorAction._active, True)

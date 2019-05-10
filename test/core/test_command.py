@@ -6,6 +6,7 @@ import logging
 
 from base import core
 import time
+import threading
 from base.command import get_command, trigger, sys_exit
 
 
@@ -23,7 +24,16 @@ class MockInitCommand(Command):
     def syntax(self):
         return '[MockCMD]'
 
+    def options(self, **kw):
+        pass
+
     def run(self, **kw):
+        count = 0
+        while count > 0:
+            count = count - 1
+            time.sleep(1)
+            self.log('loop')
+
         self.log('some message')
 
 
@@ -114,7 +124,7 @@ class TestCommand(TestCase):
         self.assertEqual(cmd.setting, None)
 
         # exit code
-        self.assertEqual(cmd.exitcode, -1)
+        self.assertEqual(cmd.exitcode, 0)
 
         # default require_target
         self.assertEqual(cmd.require_target, False)
@@ -134,7 +144,7 @@ class TestCommand(TestCase):
     def test_build(self):
         # require_target = false
         cmd = MockInitCommand()
-        cmd.build()
+        cmd.build_setting()
         self.assertTrue(cmd.setting is None)
 
         # require_target = true
@@ -143,11 +153,11 @@ class TestCommand(TestCase):
         # build. init setting
         # no kw, arise assert error
         with self.assertRaises(AssertionError) as ae:
-            thread.build()
+            thread.build_setting()
         self.assertIn('no target', str(ae.exception))
 
         # target=TestMock in kw
-        thread.build(target='TestMock')
+        thread.build_setting(target='TestMock')
         # init setting property
         from base.libs.setting import Setting
         self.assertIsInstance(thread.setting, Setting)
@@ -166,21 +176,32 @@ class TestCommand(TestCase):
         }
 
         # sys register signal function
+        import signal
+        signal.signal(signal.SIGINT, thread.signal_callback)
 
-        # cmd build
-        thread.build(**kw)
-
+        # build command
+        thread.build_setting(kw.get('target'))
         try:
-            thread.run(**kw)
+            thread.options(**kw)
+        except AssertionError as ae:
+            import logging
+            thread.log(level=logging.ERROR, msg='' + str(ae))
+
+        # run
+        try:
+            thread.run()
         # exception from signal callback
         except Exception as e:
+            thread.failed()
             pass
 
         finally:
             # cmd exit
+
             thread.exit()
 
-        # sys exit
+        # import sys
+        # sys.exit(1)
 
     @skip
     def test_command_check(self):

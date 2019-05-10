@@ -66,11 +66,8 @@ class TestComponents(unittest.TestCase):
         mock_processor.check()
         pass
 
+    #   prepare init
     def test_prepare(self):
-        '''
-        prepare init
-        :return:
-        '''
         mock_prepare = MockPrepare()
 
         self.assertTrue(hasattr(mock_prepare, '_name'))

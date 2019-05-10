@@ -22,3 +22,8 @@ class ConfigureException(Exception):
 class SchemeException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
+
+class CommandInterruptedException(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)

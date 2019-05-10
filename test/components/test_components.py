@@ -80,6 +80,10 @@ class TestComponents(unittest.TestCase):
         self.assertTrue(issubclass(mock_prepare.__class__, Component))
         self.assertTrue(issubclass(mock_prepare.__class__, Prepare))
 
-    def test_demo(self):
+    # components _active
+    # 默认为false 通过@active装饰器来控制components是否启用
+    def test_active(self):
+        # default
         self.assertEqual(MockAction._active, False)
+        # add active decorator
         self.assertEqual(MockTestDecoratorAction._active, True)

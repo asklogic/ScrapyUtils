@@ -49,7 +49,10 @@ class Command(object):
             self.setting = setting
 
     @abstractmethod
-    def run(self):
+    def run(self, **kw):
+        pass
+
+    def failed(self):
         pass
 
     def exit(self):
@@ -80,12 +83,10 @@ def sys_exit(exitcode: int):
 def trigger(command_name: str, **kwargs):
     command = get_command(command_name)
 
-
     command.build(**kwargs)
     command.run()
 
     command.exit()
-
 
     sys_exit(command.exitcode)
 

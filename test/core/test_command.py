@@ -1,4 +1,4 @@
-from unittest import TestCase,skip
+from unittest import TestCase, skip
 
 from base.command.Command import Command
 from logging import INFO
@@ -6,7 +6,16 @@ import logging
 
 from base import core
 import time
-from base.command import get_command, trigger,sys_exit
+from base.command import get_command, trigger, sys_exit
+
+
+class TestMockEmptyCommand(Command):
+
+    def syntax(self):
+        return '[MockEmpty]'
+
+    def run(self, **kw):
+        pass
 
 
 class MockInitCommand(Command):
@@ -14,7 +23,7 @@ class MockInitCommand(Command):
     def syntax(self):
         return '[MockCMD]'
 
-    def run(self):
+    def run(self, **kw):
         self.log('some message')
 
 
@@ -24,7 +33,7 @@ class TestCheckCommand(Command):
     def syntax(self):
         return '[Check]'
 
-    def run(self):
+    def run(self, **kw):
         setting = self.setting
 
         schemes = [str(x) for x in setting.SchemeList]
@@ -57,13 +66,13 @@ class TestCheckCommand(Command):
         self.log('spend %.2f second(s) in' % float(end - start))
 
 
-class MockTestThreadCommand(Command):
+class TestMockThreadCommand(Command):
     require_target = True
 
     def syntax(self):
         return '[MockTestThread]'
 
-    def run(self):
+    def run(self, **kw):
         # log out
         pass
 
@@ -90,10 +99,6 @@ class MockTestThreadCommand(Command):
         dump_hub.stop(True)
 
 
-
-
-
-
 class TestCommand(TestCase):
 
     def setUp(self) -> None:
@@ -102,7 +107,7 @@ class TestCommand(TestCase):
         self.demo_execute = cmd
 
     def test_init(self):
-        cmd = MockInitCommand()
+        cmd = TestMockEmptyCommand()
 
         # property
         # setting:
@@ -114,6 +119,7 @@ class TestCommand(TestCase):
         # default require_target
         self.assertEqual(cmd.require_target, False)
 
+    # log in command
     def test_log(self):
         # TODO
         cmd = MockInitCommand()
@@ -123,6 +129,8 @@ class TestCommand(TestCase):
         cmd.log('log test INFO', level=logging.INFO)
         cmd.log('log test WARN', level=logging.WARN)
 
+    # step build
+    # according to require_target property. to init Setting property
     def test_build(self):
         # require_target = false
         cmd = MockInitCommand()
@@ -130,14 +138,17 @@ class TestCommand(TestCase):
         self.assertTrue(cmd.setting is None)
 
         # require_target = true
-        thread = MockTestThreadCommand()
-        # build
+        thread = TestMockThreadCommand()
+
+        # build. init setting
         # no kw, arise assert error
         with self.assertRaises(AssertionError) as ae:
             thread.build()
         self.assertIn('no target', str(ae.exception))
 
+        # target=TestMock in kw
         thread.build(target='TestMock')
+        # init setting property
         from base.libs.setting import Setting
         self.assertIsInstance(thread.setting, Setting)
 
@@ -148,7 +159,7 @@ class TestCommand(TestCase):
         # cmd = core.get_command(cmd_name)
 
         # mock command
-        thread = MockTestThreadCommand()
+        thread = MockInitCommand()
 
         kw = {
             'target': 'TestMockThread',
@@ -159,28 +170,28 @@ class TestCommand(TestCase):
         # cmd build
         thread.build(**kw)
 
-
         try:
-            thread.run()
+            thread.run(**kw)
         # exception from signal callback
         except Exception as e:
             pass
 
         finally:
-        # cmd exit
+            # cmd exit
             thread.exit()
 
-
         # sys exit
-
-
 
     @skip
     def test_command_check(self):
         trigger('check', target='TestMockThread')
 
+    @skip
     def test_command_thread(self):
-        pass
+        trigger('thread', target='TestMockThread')
+
+    def test_command_generate(self):
+        trigger('generate')
 
     def test_core_get_command(self):
         # command_name = 'check'

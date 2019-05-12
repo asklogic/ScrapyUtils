@@ -116,6 +116,31 @@ class TestCommand(TestCase):
 
         self.demo_execute = cmd
 
+    def tearDown(self) -> None:
+        pass
+
+
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        print('delete target TestGenerateTarget')
+        cls.remove('TestGenerateTarget')
+
+    @classmethod
+    def remove(cls, target):
+        import os
+        if os.path.exists(os.path.join(os.getcwd(), target)):
+
+            for file in list(os.walk(target))[0][2]:
+                file_path = os.path.join(os.getcwd(), target, file)
+                os.remove(file_path)
+
+            for folder in list(os.walk(target))[0][1]:
+                folder_path = os.path.join(os.getcwd(), target, folder)
+                os.rmdir(folder_path)
+
+            os.rmdir(os.path.join(os.getcwd(), target))
+
     def test_init(self):
         cmd = TestMockEmptyCommand()
 
@@ -162,6 +187,10 @@ class TestCommand(TestCase):
         from base.libs.setting import Setting
         self.assertIsInstance(thread.setting, Setting)
 
+        # TODO no target folder / components
+        todo
+
+
     def test_trigger(self):
         # TODO
         # cmd_name = 'MockTest'
@@ -202,17 +231,6 @@ class TestCommand(TestCase):
 
         # import sys
         # sys.exit(1)
-
-    @skip
-    def test_command_check(self):
-        trigger('check', target='TestMockThread')
-
-    @skip
-    def test_command_thread(self):
-        trigger('thread', target='TestMockThread')
-
-    def test_command_generate(self):
-        trigger('generate')
 
     def test_core_get_command(self):
         # command_name = 'check'

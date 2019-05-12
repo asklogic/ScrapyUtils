@@ -24,6 +24,7 @@ class SchemeException(Exception):
         super().__init__(*args)
 
 
-class CommandInterruptedException(Exception):
+class CmdRunException(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+

@@ -3,13 +3,13 @@
 
 # action
 
-action_template = """from base.components.scheme import Action
+action_template = """from base.components import Action, active
 from base.libs.scraper import Scraper
 from base.common import Task
 
 
+@active
 class ${class_name}Action(Action):
-    _active = True
 
     def scraping(self, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
@@ -20,15 +20,15 @@ class ${class_name}Action(Action):
 parse_template = """from typing import Generator
 
 from base.components.model import ModelManager
-from base.components.scheme import Parse
+from base.components import Parse, active
 from .model import *
 
-from base.common import DefaultXpathParse, HiddenInputParse
-from base.tool import xpathParse, xpathParseList 
+from base.common import HiddenInputParse
+from base.tool import xpathParse, xpathParseList
 
 
+@active
 class ${class_name}Parse(Parse):
-    _active = True
 
     def parsing(self, content: str) -> Model or Generator[Model]:
         m = ModelManager.model('${class_name}Model')
@@ -38,12 +38,11 @@ class ${class_name}Parse(Parse):
 
 # model
 
-model_template = """from base.components.model import Field, Model
+model_template = """from base.components import Field, Model, active
 
 
+@active
 class ${class_name}Model(Model):
-    _active = True
-    
     filed = Field()
 
 
@@ -53,15 +52,14 @@ class ${class_name}Model(Model):
 
 process_template = """from typing import Any
 
-from base.components.proceesor import Processor
+from base.components import Processor, active
 from base.common import DumpInPeeweeProcessor, DuplicateProcessor, JsonFileProcessor
-
 
 from .model import *
 
 
+@active
 class ${class_name}Process(Processor):
-    _active = True
 
     def process_item(self, model: Model) -> Any:
         print(model.pure_data())
@@ -72,18 +70,16 @@ class ${class_name}Process(Processor):
 
 prepare_template = """from typing import List
 
-from base.components.prepare import Prepare
+from base.components import Prepare, active
 from base.libs.task import Task
-from base.libs.scraper import BaseScraper,RequestScraper,FireFoxScraper
-
+from base.libs.scraper import BaseScraper, RequestScraper, FireFoxScraper
 
 from .action import *
 from .parse import *
 from .process import *
 
-
+@active
 class ${class_name}Prepare(Prepare):
-    _active = True
     # SchemeList = [
     #     ${class_name}Action,
     #     ${class_name}Parse,

@@ -9,6 +9,7 @@ from base.components.model import Field
 from base.components.base import Component
 
 from base.libs.setting import Setting
+from base import core
 
 
 class MockProcessor(Processor):
@@ -84,3 +85,10 @@ class TestComponents(unittest.TestCase):
         self.assertEqual(MockAction._active, False)
         # add active decorator
         self.assertEqual(MockTestDecoratorAction._active, True)
+
+    def test_decorator_in_target(self):
+        setting: Setting = core.build_setting('TestActiveDecorator')
+
+        self.assertEqual(len(setting.CurrentSchemeList), 1)
+        self.assertEqual(len(setting.SchemeList), 0)
+

@@ -4,6 +4,8 @@ import threading
 import queue
 import time
 import warnings
+import copy
+import os
 
 from base.log import act, status
 from base.libs.setting import Setting
@@ -18,10 +20,9 @@ from base.common import ProxyProcessor, ProxyModel
 from base.hub.hub import Hub
 from base.libs.scraper import Scraper
 
-import copy
 
 ModelManager.add_model(TaskModel)
-
+PROJECT_PATH = os.getcwd()
 
 def load_files(target_name: str) -> List[ModuleType]:
     target_modules: List[ModuleType] = []

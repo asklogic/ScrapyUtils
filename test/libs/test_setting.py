@@ -27,7 +27,6 @@ class TestSetting(unittest.TestCase):
         [self.assertTrue(issubclass(x, Model)) for x in setting.CurrentModels]
         [self.assertTrue(issubclass(x, Processor)) for x in setting.CurrentProcessorsList]
 
-
     def test_init(self):
         # init
         setting = Setting()
@@ -61,7 +60,11 @@ class TestSetting(unittest.TestCase):
 
         # assert type
         self.components_type(setting)
+    def test_build_setting(self):
+        target = 'TestMock'
+        setting: Setting = core.build_setting(target)
 
+        self.assertIsInstance(setting, Setting)
 
     def test_load_prepare(self):
         setting = Setting()
@@ -75,11 +78,7 @@ class TestSetting(unittest.TestCase):
         # custom
         self.assertEqual(setting.Block, 1)
 
-    def test_build_setting(self):
-        target = 'TestMock'
-        setting: Setting = core.build_setting(target)
 
-        self.assertIsInstance(setting, Setting)
 
     def test_load_config(self):
         setting = Setting()

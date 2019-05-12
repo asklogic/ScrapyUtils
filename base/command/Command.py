@@ -7,7 +7,7 @@ from base import core
 import click, time
 import threading
 from base.generate.generator import generate as gen
-
+from base.exception import CmdRunException
 from base.libs.setting import Setting
 from base.log import act
 
@@ -44,6 +44,7 @@ class Command(object):
             assert target, 'no target'
             setting = core.build_setting(target)
             self.setting = setting
+            self.target = target
 
     @abstractmethod
     def options(self, **kw):
@@ -66,6 +67,7 @@ class Command(object):
         '''
         pass
 
+    @abstractmethod
     def exit(self):
         '''
         default exit. always run in command finish
@@ -101,21 +103,24 @@ def trigger(command_name: str, **kwargs):
 
     try:
         command.options(**kwargs)
+
+        command.run()
+
     except AssertionError as ae:
         import logging
         command.log(level=logging.ERROR, msg='' + str(ae))
 
+    except CmdRunException as cmd_run:
+        command.log(msg='Interrupted! ' + str(cmd_run))
 
-    try:
-        command.run()
     except Exception as e:
-        print('exception in run', e, e.__class__)
+        command.log(msg='Other Exception. ' + str(e) + ' ' + str(e.__class__))
         command.failed()
 
-        pass
     finally:
         command.exit()
-    print('exit')
+
+
     sys_exit(command.exitcode)
 
 

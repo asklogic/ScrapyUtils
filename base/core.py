@@ -106,6 +106,7 @@ def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     return schemes
 
 
+
 def load_context(task: Task, schemes: List[Scheme]):
     if task.param and type(task.param) is dict:
         for key, item in task.param.items():

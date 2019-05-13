@@ -17,6 +17,7 @@ PROJECT_PATH = os.path.dirname(os.getcwd())
 class Command(object):
     require_target = False
     setting: Setting
+    target : str
 
     exitcode: int
     interrupt: bool = False
@@ -32,7 +33,7 @@ class Command(object):
         # message = ' '.join((x for x in (self.syntax(), step, msg) if x))
         act.log(level=level, msg=message)
 
-    def signal_callback(signum, frame, self):
+    def signal_callback(self, signum, frame):
         pass
 
     def __init__(self):
@@ -119,7 +120,6 @@ def trigger(command_name: str, **kwargs):
 
     finally:
         command.exit()
-
 
     sys_exit(command.exitcode)
 

@@ -1,7 +1,14 @@
 from unittest import TestCase, skip
 from base.command import Command, get_command
 
+from base import core
+from base.hub import Hub
+from base.components import *
+from base.libs import *
+from typing import *
 
+
+# from types import *
 class Thread(Command):
     require_target = True
 
@@ -10,21 +17,43 @@ class Thread(Command):
 
     def __init__(self):
         super().__init__()
+        self.sys_hub: Hub = None
+        self.dump_hub: Hub = None
+
+        self.schemes: List[List[Scheme]] = []
+        self.scrapers: List[Scraper] = []
+
+        self.tasks : List = []
 
     def signal_callback(signum, frame, self):
         super().signal_callback(frame, self)
 
     def options(self, **kw):
-        pass
+        # require_target
+        setting = self.setting
+
+        self.sys_hub, self.dump_hub = core.build_hub(setting=setting)
+        self.schemes = core.build_schemes(setting.CurrentSchemeList)
+
+        self.scrapers, self.tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
 
     def run(self, **kw):
+        # preview
+
+        # log thread setting info
+
+        # thread List
         pass
 
     def failed(self):
         pass
 
     def exit(self):
-        pass
+        self.sys_hub.stop(True)
+        self.dump_hub.stop(True)
+
+        for scraper in self.scrapers:
+            scraper.quit()
 
 
 class TestCommandThread(TestCase):

@@ -6,6 +6,11 @@ from base.hub import Hub
 from base.components import *
 from base.libs import *
 from typing import *
+from base.command import get_command, trigger
+
+import multiprocessing
+import threading
+from queue import Empty
 
 
 # from types import *
@@ -23,7 +28,7 @@ class Thread(Command):
         self.schemes: List[List[Scheme]] = []
         self.scrapers: List[Scraper] = []
 
-        self.tasks : List = []
+        self.tasks: List = []
 
     def signal_callback(signum, frame, self):
         super().signal_callback(frame, self)
@@ -43,6 +48,7 @@ class Thread(Command):
         # log thread setting info
 
         # thread List
+
         pass
 
     def failed(self):
@@ -56,6 +62,37 @@ class Thread(Command):
             scraper.quit()
 
 
+class ScrapyThread(threading.Thread):
+
+    def __init__(self, sys_hub: Hub, dump_hub: Hub, schemes: List[Scheme], scraper: Scraper, setting: Setting):
+        threading.Thread.__init__(self)
+
+        self.sys: Hub = sys_hub
+        self.dump: Hub = dump_hub
+        self.schemes: List[Scheme] = schemes
+        self.scraper: Scraper = scraper
+
+        self.setting: Setting = setting
+
+    def run(self) -> None:
+        task = None
+        while 'cmd_signal' and (task = self.get_task()):
+            pass
+        pass
+
+    def get_task(self):
+        task = None
+        try:
+            task = self.sys.pop('TaskModel')
+        except Empty as e:
+            pass
+        finally:
+            return task
+
+
+
+
+
 class TestCommandThread(TestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -66,6 +103,11 @@ class TestCommandThread(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.cmd = Thread()
+        kw = {
+            'target': 'TestEmptyThread'
+        }
+        cls.cmd.build_setting(**kw)
+
         super().setUpClass()
 
     @classmethod
@@ -80,4 +122,17 @@ class TestCommandThread(TestCase):
         cmd.build_setting(**kw)
 
     def test_option(self):
+        cmd = self.cmd
+
+        cmd.options()
+
+    # @skip
+    def test_run(self):
+        cmd = self.cmd
+
+        cmd.options()
+        cmd.run()
+        cmd.exit()
+
+    def test_trigger(self):
         pass

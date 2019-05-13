@@ -8,20 +8,27 @@ from .action import *
 from .parse import *
 from .process import *
 
+
 @active
 class TestemptythreadPrepare(Prepare):
     # SchemeList = [
     #     TestemptythreadAction,
     #     TestemptythreadParse,
     # ]
-    
+
     # ProcessorList = [
     #     TestemptythreadProcess,
     # ]
-    
+
     @classmethod
     def task_prepared(cls):
-        task = Task()
-        task.url = "about:blank"
-        
-        yield task
+        for i in range(50):
+            task = Task()
+            task.url = "about:blank"
+
+            yield task
+
+    @classmethod
+    def scraper_prepared(cls) -> Scraper:
+        r = RequestScraper()
+        return r

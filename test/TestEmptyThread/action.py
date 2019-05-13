@@ -7,4 +7,6 @@ from base.common import Task
 class TestemptythreadAction(Action):
 
     def scraping(self, task: Task, scraper: Scraper) -> str:
-        return scraper.get(url=task.url)
+        import time
+        time.sleep(1)
+        return 'content'

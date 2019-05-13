@@ -341,3 +341,5 @@ class ScrapyThread(threading.Thread):
         # fixme
         for scheme in self.schemes:
             scheme.context.clear()
+
+

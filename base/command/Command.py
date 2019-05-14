@@ -132,8 +132,9 @@ def cli():
 @click.command()
 @click.argument('target')
 def thread(target: str):
-    thread_run(target)
-    pass
+    trigger('thread', target=target)
+    # thread_run(target)
+    # pass
 
 
 @click.command()

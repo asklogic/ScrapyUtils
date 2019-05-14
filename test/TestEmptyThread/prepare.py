@@ -20,9 +20,11 @@ class TestemptythreadPrepare(Prepare):
     #     TestemptythreadProcess,
     # ]
 
+    Thread = 2
+
     @classmethod
     def task_prepared(cls):
-        for i in range(50):
+        for i in range(20):
             task = Task()
             task.url = "about:blank"
 

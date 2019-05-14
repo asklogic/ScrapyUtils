@@ -213,7 +213,7 @@ def build_hub(setting: Setting):
 
 
 def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub):
-    content = ""
+    content = ''
     gather_models: List[Model] = []
     try:
         for scheme in scheme_list:
@@ -244,6 +244,11 @@ def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dum
         while current.tb_next is not None:
             current = current.tb_next
         code = current.tb_frame.f_code
+        # code_content = []
+        # for i in range(3):
+        #     code_content.append('line {0}: '.format(current.tb_lineno + i - 1)+linecache.getline(code.co_filename, current.tb_lineno + i - 1, current.tb_frame.f_globals).strip())
+        # error_info.extend(('\n' + '\n'.join(code_content),))
+
         code_content = linecache.getline(code.co_filename, current.tb_lineno, current.tb_frame.f_globals).strip()
         error_info.extend(('\ncode: ' + code_content,))
 

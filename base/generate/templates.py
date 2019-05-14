@@ -10,7 +10,6 @@ from base.common import Task
 
 @active
 class ${class_name}Action(Action):
-
     def scraping(self, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
 """
@@ -29,7 +28,6 @@ from base.tool import xpathParse, xpathParseList
 
 @active
 class ${class_name}Parse(Parse):
-
     def parsing(self, content: str) -> Model or Generator[Model]:
         m = ModelManager.model('${class_name}Model')
         m.filed = "filed content"

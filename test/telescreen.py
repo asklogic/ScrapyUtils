@@ -162,6 +162,7 @@ def watch(target: str):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        print('except KeyboardInterrupt')
         loop_signal = False
         observer.stop()
 

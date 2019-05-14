@@ -7,6 +7,7 @@ from base.common import Task
 class TestemptythreadAction(Action):
 
     def scraping(self, task: Task, scraper: Scraper) -> str:
+        # print('id ', id(scraper))
         import time
-        time.sleep(1)
+        time.sleep(0.3)
         return 'content'

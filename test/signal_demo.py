@@ -35,18 +35,19 @@ def signal_handler(signum, stack):
 
 
 signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGBREAK, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+# signal.signal(signal.SIGUSR1, signal_handler)
+# signal.signal(signal.SIGQUIT, signal_handler)
 
 if __name__ == '__main__':
 
-    t = threading.Thread(target=test_thread, args=(1,))
-    # t.setDaemon(True)
+    # t = threading.Thread(target=test_thread, args=(1,))
+    # t.start()
 
-    t.start()
-    # t.join()
-
-    print('end?')
-    # remain = 5
-    # while remain:
-    #     remain = remain - 1
-    #     print('Waiting...try kill using signal 2(SIGINT)')
-    #     time.sleep(0.5)
+    # print('end?')
+    remain = 5
+    while remain:
+        remain = remain - 1
+        print('Waiting...try kill using signal 2(SIGINT)')
+        time.sleep(0.5)

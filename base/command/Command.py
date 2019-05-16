@@ -99,6 +99,7 @@ def trigger(command_name: str, **kwargs):
 
     import signal
     signal.signal(signal.SIGINT, command.signal_callback)
+    signal.signal(signal.SIGTERM, command.signal_callback)
 
     command.build_setting(kwargs.get('target'))
 

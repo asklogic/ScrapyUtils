@@ -6,18 +6,18 @@ from base.engine import thread_run, single_run
 from base import core
 import click, time
 import threading
+import sys
 from base.generate.generator import generate as gen
 from base.exception import CmdRunException
 from base.libs.setting import Setting
 from base.log import act
 
-PROJECT_PATH = os.path.dirname(os.getcwd())
 
 
 class Command(object):
     require_target = False
     setting: Setting
-    target : str
+    target: str
 
     exitcode: int
     interrupt: bool = False
@@ -78,16 +78,29 @@ class Command(object):
 
 
 def get_command(command_name: str) -> Command:
-    try:
-        module = __import__('base.command.' + command_name, fromlist=['base', 'command'])
+    # try:
+    #     module = __import__('base.command.' + command_name, fromlist=['base', 'command'])
+    #
+    #     command_class = getattr(module, command_name.capitalize())
+    #
+    #     command = command_class()
+    # except ModuleNotFoundError as error:
+    #     raise ModuleNotFoundError('can not found registered Command %s' % command_name
 
-        command_class = getattr(module, command_name.capitalize())
+    from base.command import registered
 
-        command = command_class()
-    except ModuleNotFoundError as error:
-        raise ModuleNotFoundError('can not found Command %s' % command_name)
+    select_command = None
+    for command in registered:
+        if command_name in str(command):
+            command_class = getattr(command, command_name.capitalize())
+            select_command = command_class()
+            break
 
-    return command
+    if not select_command:
+        act.error('can not found registered Command %s' % command_name)
+        sys.exit(0)
+
+    return select_command
 
 
 def sys_exit(exitcode: int):
@@ -162,3 +175,5 @@ cli.add_command(thread)
 cli.add_command(single)
 cli.add_command(generate)
 cli.add_command(check)
+# /html/body/div[2]/div[4]/div[4]/p/span/a
+# /html/body/div[2]/div[4]/div[5]/p/span/a

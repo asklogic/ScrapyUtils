@@ -4,11 +4,15 @@ import typing
 from urllib3.exceptions import InsecureRequestWarning
 
 from selenium.webdriver import Firefox, FirefoxOptions
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 
 import requests
+import time
 
 requests.adapters.DEFAULT_RETRIES = 5
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 
 class BaseScraper(object):
     pass
@@ -240,3 +244,38 @@ class FireFoxScraper(Scraper):
     def quit(self):
         if self.firefox:
             self.firefox.quit()
+
+    def block_mark(self, id: str, timeout: int = 5):
+        mark = str(int(time.time()))[-4:]
+
+        js = "document.getElementById('{}').innerText = '{}'".format(id, mark)
+        self.getDriver().execute_script(js)
+
+        while timeout > 0:
+            try:
+                if mark != self.getDriver().find_element_by_id(id).text:
+                    return True
+
+                time.sleep(0.2)
+                timeout = timeout - 0.2
+            except NoSuchElementException as e:
+                pass
+        raise Exception('block timeout')
+
+
+def block_mark(id: str, driver: Firefox, timeout: int = 5):
+    mark = str(int(time.time()))[-4:]
+
+    js = "document.getElementById('{}').innerText = '{}'".format(id, mark)
+    driver.execute_script(js)
+
+    while timeout > 0:
+        try:
+            if mark != driver.find_element_by_id(id).text:
+                return True
+
+            time.sleep(0.2)
+            timeout = timeout - 0.2
+        except NoSuchElementException as e:
+            pass
+    raise Exception('block timeout')

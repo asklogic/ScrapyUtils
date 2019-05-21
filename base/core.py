@@ -20,9 +20,14 @@ from base.common import ProxyProcessor, ProxyModel
 from base.hub.hub import Hub
 from base.libs.scraper import Scraper
 
-
 ModelManager.add_model(TaskModel)
 PROJECT_PATH = os.getcwd()
+print('PROJECT_PATH: ' + PROJECT_PATH)
+
+import sys
+
+sys.path.append(PROJECT_PATH)
+
 
 def load_files(target_name: str) -> List[ModuleType]:
     target_modules: List[ModuleType] = []
@@ -75,6 +80,7 @@ def build_setting(target: str) -> Setting:
     # 1. Setting object
     # default setting in Setting class property
     setting = Setting()
+    setting.Target = target
 
     # 2. load config.py
 
@@ -104,7 +110,6 @@ def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     for scheme in schemes:
         scheme.context = context
     return schemes
-
 
 
 def load_context(task: Task, schemes: List[Scheme]):
@@ -168,7 +173,6 @@ def _load_component(module, component: type) -> List[type]:
             # print(f)
             res.append(f)
     return res
-
 
 
 def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
@@ -273,78 +277,7 @@ def do_parse(scheme: Parse, content):
         return list(current_models)
 
 
-barrier = None
-lock = threading.Lock()
-
-
-class ScrapyThread(threading.Thread):
-    def __init__(self, sys_hub: Hub, dump_hub: Hub, schemes: List[Scheme], scraper: Scraper, setting: Setting):
-        threading.Thread.__init__(self)
-
-        self.sys: Hub = sys_hub
-        self.dump: Hub = dump_hub
-        self.schemes: List[Scheme] = schemes
-        self.scraper: Scraper = scraper
-
-        self.setting: Setting = setting
-
-    def run(self):
-        # load and init scraper
-
-        # reset
-        self.reset()
-
-        # wait
-        # barrier.wait()
-
-        # python trigger.py thread ScjstBase
-        # loop
-        try:
-            while True:
-                self.sync(self.setting.Block)
-                task: Task = self.sys.pop("TaskModel")
-
-                load_context(task, self.schemes)
-
-                res = scrapy(self.schemes, self.scraper, task, self.dump, self.sys)
-                if res:
-                    status.info("success. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
-                elif task.count < self.setting.FailedRetry:
-                    # reset
-                    self.reset()
-
-                    # sleep
-                    time.sleep(self.setting.FailedBlock)
-                    # status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
-
-                    # back to sys
-                    task.count = task.count + 1
-                    self.sys.save(task)
-                else:
-                    time.sleep(self.setting.FailedBlock)
-                    status.info("failed. Task url:{} param {} count - {}".format(task.url, task.param, task.count))
-
-        except queue.Empty as qe:
-            status.info("finish")
-
-        self.scraper.quit()
-
-    def sync(self, delay: int = 0):
-        lock.acquire()
-        if delay:
-            time.sleep(delay)
-        else:
-            time.sleep(0.5)
-        lock.release()
-
-    def reset(self):
-        self.scraper.clear_session()
-        if self.setting.ProxyAble:
-            proxy_model: ProxyModel = self.sys.pop("ProxyModel")
-            self.scraper.set_proxy((proxy_model.ip, proxy_model.port))
-
-        # fixme
-        for scheme in self.schemes:
-            scheme.context.clear()
-
-
+def components_detail(components: List[Component], head: str = 'components'):
+    head = 'Activated {}:  {}\n'.format(head, len(components))
+    content = '\n'.join(['\t{}) {}'.format(components.index(x), x.get_name()) for x in components])
+    return head + content

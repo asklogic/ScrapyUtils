@@ -5,13 +5,39 @@ from .Command import Command
 from base import core
 
 
+def _detail_info(setting) -> str:
+    prepare = 'Selected Prepare: {} - {}'.format(setting.CurrentPrepare.get_name(), str(setting.CurrentPrepare))
+    model = core.components_detail(setting.CurrentModels, 'Model')
+    scheme = core.components_detail(setting.CurrentSchemeList, 'Scheme')
+    processor = core.components_detail(setting.CurrentProcessorsList, 'Processor')
+    return '\n'.join([model, scheme, processor])
+
+
+def _base_info(setting) -> str:
+    target = 'target name: {}'.format(setting.Target)
+    thread = 'thread: {}'.format(setting.Thread)
+
+    ProxyAble = setting.ProxyAble
+    ProxyURL = setting.ProxyURL
+    proxy_able = 'proxy able: {}'.format(ProxyAble)
+    proxy_url = 'proxy from: {}'.format(ProxyURL)
+
+    block = 'process task block: {}'.format(setting.Block)
+    failed_block = 'process task failed block: {}'.format(setting.FailedBlock)
+    dump_limit = 'dump limit: {}'.format(setting.DumpLimit)
+
+    proxy = proxy_able if not setting.ProxyAble else '\n'.join([proxy_able, proxy_url])
+
+    return (target, thread, proxy, block, failed_block, dump_limit)
+
+
 class Check(Command):
     require_target = True
 
     def syntax(self):
         return '[Check]'
 
-    def run(self):
+    def _run(self):
         setting = self.setting
 
         time.sleep(1)
@@ -47,10 +73,21 @@ class Check(Command):
 
         self.log('spend %.2f second(s) in' % float(end - start))
 
+    def run(self):
+        setting = self.setting
 
-        # remain = 5
-        #
-        # while remain>0:
-        #     remain = remain-1
-        #     print('loop')
-        #     time.sleep(1)
+        # self.log('Target: {}'.format(self.target))
+        # self.log('Thread: {}'.format(self.setting.Thread))
+        # self.log('ProxyAble: {}\n'.format(self.setting.ProxyAble))
+        time.sleep(0.5)
+        # self.log('Target base info:')
+        [self.log(x) for x in _base_info(setting)]
+        time.sleep(1.2)
+
+        self.log('Activated Components:\n' + _detail_info(setting))
+        start = time.time()
+        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
+
+        self.log('spend %.2f second(s) in' % float(time.time() - start))
+
+        [scraper.quit() for scraper in scrapers]

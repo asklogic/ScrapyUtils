@@ -1,12 +1,9 @@
 import unittest
-
+from typing import *
 from base import core
 from base.libs.setting import BaseSetting, Setting
 
-from base.components.prepare import Prepare
-from base.components.scheme import Action, Parse, Scheme
-from base.components.model import Model
-from base.components.proceesor import Processor
+from base.components import Prepare, Scheme, Model, Processor, Action, Parse, Component
 
 
 class TestSetting(unittest.TestCase):
@@ -14,7 +11,7 @@ class TestSetting(unittest.TestCase):
     def setUp(self) -> None:
         self.prepare: Prepare = core.load_components('TestMock')[0]
 
-        super().setUp()
+        self.setting = core.build_setting('TestEmptyThread')
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -60,6 +57,7 @@ class TestSetting(unittest.TestCase):
 
         # assert type
         self.components_type(setting)
+
     def test_build_setting(self):
         target = 'TestMock'
         setting: Setting = core.build_setting(target)
@@ -77,8 +75,6 @@ class TestSetting(unittest.TestCase):
         self.assertEqual(setting.Thread, 5)
         # custom
         self.assertEqual(setting.Block, 1)
-
-
 
     def test_load_config(self):
         setting = Setting()
@@ -183,5 +179,45 @@ class TestSetting(unittest.TestCase):
             # mapper 为空
             [self.assertEqual(bool(x._mapper), False) for x in mapping.models]
 
+    def test_setting_detail(self):
+        setting = self.setting
 
+        def components_detail(components: List[Component], head: str = 'components'):
+            head = 'Activated {}:  {}\n'.format(head, len(components))
+            content = '\n'.join(['\t{}) {}'.format(components.index(x), x.get_name()) for x in components])
+            return head + content
 
+        def detail(setting: Setting):
+            res = []
+
+            prepare: Prepare = setting.CurrentPrepare
+            schemes: List[Scheme] = setting.CurrentSchemeList
+            models: List[Model] = setting.CurrentModels
+            processors: List[Processor] = setting.CurrentProcessorsList
+
+            prepare_detail = 'Selected Prepare: {} - {}'.format(prepare.get_name(), str(prepare))
+
+            schemes_head = 'Activated Model: {}\n'.format(len(models))
+            schemes_list = '\n'.join(['\t{}) {}'.format(models.index(model) + 1, model.get_name()) for model in models])
+
+            processor_head = 'Activated Processor: {}\n'.format(len(processors))
+            processor_list = '\n'.join(['\t{}) {}'.format(processors.index(x) + 1, x.get_name()) for x in processors])
+
+            scheme_head = 'Activated Scheme: {}\n'.format(len(schemes))
+            scheme_list = '\n'.join(['\t{}) {}'.format(schemes.index(x) + 1, x.get_name()) for x in schemes])
+
+            res.append(prepare_detail)
+            res.append(schemes_head + schemes_list)
+            res.append(scheme_head + scheme_list)
+            # res.append(processor_head + processor_list)
+            res.append(components_detail(processors, 'Processor'))
+            return res
+
+        detail_info = detail(setting)
+
+        self.assertIsInstance(detail_info, list)
+
+        print(detail_info[0])
+        print(detail_info[1])
+        print(detail_info[2])
+        print(detail_info[3])

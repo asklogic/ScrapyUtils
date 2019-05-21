@@ -4,9 +4,10 @@ from types import ModuleType
 from typing import List, ClassVar, Callable
 
 
+
 class BaseSetting(object):
     # common
-    Thread: int = None
+    Thread: int = None  
     Block: int = None
     FailedBlock: int = None
     FailedRetry: int = None

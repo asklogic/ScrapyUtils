@@ -154,8 +154,7 @@ def thread(target: str):
 @click.command()
 @click.argument('target')
 def single(target: str):
-    single_run('target')
-    pass
+    trigger('single', target=target)
 
 
 @click.command()
@@ -175,5 +174,3 @@ cli.add_command(thread)
 cli.add_command(single)
 cli.add_command(generate)
 cli.add_command(check)
-# /html/body/div[2]/div[4]/div[4]/p/span/a
-# /html/body/div[2]/div[4]/div[5]/p/span/a

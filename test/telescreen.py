@@ -15,6 +15,7 @@ test_path = os.path.abspath(os.path.dirname(os.getcwd()))
 # test_args = ['-v', '-b', '-c']
 test_args = ['-v', '-c']
 
+
 # init
 environ = os.environ
 environ["PYTHONPATH"] = test_path
@@ -51,6 +52,9 @@ class baseEvnetHandler(RegexMatchingEventHandler):
         current_info = os.path.basename(event.src_path)
         if current_info not in modified_info:
             modified_info.append(current_info)
+
+
+
 
 
 def check_thread(target: str):

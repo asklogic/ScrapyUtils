@@ -64,7 +64,7 @@ def hello_world():
 
 @app.route('/mock/get')
 def normal_get():
-    return render_template(r'MockTemplate.html')
+    return render_template(r'MockTemplate.html', info='success info')
 
 
 def newspeak():

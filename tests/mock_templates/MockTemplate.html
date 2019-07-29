@@ -9,6 +9,11 @@
 
 <div class="content">
     <p class="pclass"></p>
+    {% if not success %}
+    <h2 attr="success failed"> 200 but failed </h2>
+    {% else %}
+    <h2 attr="correct page"> 200 and success. </h2>
+    {% endif %}
     <table>
         <thead>
         <tr>
@@ -18,7 +23,7 @@
 
         <tr>
             <td>mock 2.1</td>
-            <td>mock 2.2</td>
+            <td>{{ info }}</td>
         </tr>
         <tr>
             <td>mock 3.1</td>

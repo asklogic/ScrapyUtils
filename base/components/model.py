@@ -83,6 +83,7 @@ class Model(object, metaclass=ModelMeta):
     def get_name(cls):
         return cls._name
 
+
 # ModelManager
 
 

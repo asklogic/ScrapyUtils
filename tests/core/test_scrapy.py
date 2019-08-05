@@ -61,7 +61,7 @@ class TestScrapy(TestCase):
 
     def setUp(self) -> None:
         r = RequestScraper()
-        r.activate()
+        r.scraper_activate()
         self.scraper = r
 
         task = Task()

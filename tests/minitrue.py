@@ -7,6 +7,7 @@ import os
 
 import flask
 from flask import render_template
+from flask import request
 
 # suite = unittest.TestSuite()
 # suite.addTest(test_scraping.TestScraping('test_core_scraping'))
@@ -67,5 +68,37 @@ def normal_get():
     return render_template(r'MockTemplate.html', info='success info')
 
 
+from flask import make_response
+
+
+@app.route('/mock/error')
+def failed_403():
+    return make_response(render_template(r'MockFailed.html', msg='403 failed'), 403)
+
+
+@app.route('/mock/failed')
+def failed_503():
+    return make_response(render_template(r'MockFailed.html', msg='503 failed'), 503)
+
+
+import json
+
+
+@app.route('/mock/header')
+def header():
+    header_str = json.dumps(dict(request.headers))
+    # return make_response(render_template(r'MockMessage.html', message=header_str), 200)
+    return header_str
+
+
+@app.route('/mock/data')
+def data():
+    data_str = json.dumps(dict(request.data))
+    return data_str
+
+    # return make_response(render_template(r'MockMessage.html', message=data_str), 200)
+
+
+
 def newspeak():
-    app.run(port=8090)
+    app.run(port=8090, use_reloader=False)

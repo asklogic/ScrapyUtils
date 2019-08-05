@@ -32,7 +32,7 @@ class Field(object):
 
 class ModelMeta(type):
 
-    def __new__(cls, name, bases, attrs) -> Any:
+    def __new__(mcs, name, bases, attrs) -> Any:
         attrs["_name"] = name
         _pure_data = {}
         _converts = {}
@@ -56,7 +56,7 @@ class ModelMeta(type):
         attrs['_pure_data'] = _pure_data
         attrs['_converts'] = _converts
 
-        return super().__new__(cls, name, bases, attrs)
+        return super().__new__(mcs, name, bases, attrs)
 
 
 class Model(metaclass=ModelMeta):

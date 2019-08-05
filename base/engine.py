@@ -30,8 +30,8 @@ def single_run(target_name):
     # step 3.4: build hub
     sys_hub, dump_hub = core.build_hub(models, processors, prepare.setting)
 
-    sys_hub.activate()
-    dump_hub.activate()
+    sys_hub.scraper_activate()
+    dump_hub.scraper_activate()
 
     # step 4: Scrapy
     core.scrapy(schemes, scraper, current_task, dump_hub, sys_hub)
@@ -60,8 +60,8 @@ def thread_run(target_name: str):
     act.info("Detect Task number : " + str(len(tasks)))
     act.info("Build Scraper finish. Thread number: " + str(setting.Thread))
 
-    sys_hub.activate()
-    dump_hub.activate()
+    sys_hub.scraper_activate()
+    dump_hub.scraper_activate()
 
     for task in tasks:
         sys_hub.save(task)

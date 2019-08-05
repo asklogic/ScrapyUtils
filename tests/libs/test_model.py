@@ -49,8 +49,6 @@ class TestModel(unittest.TestCase):
 
         self.assertEqual(m1.pure_data, {'age': 12, 'name': 'Auir'})
 
-        pass
-
     def test_field_default(self):
         """
         default and set/get
@@ -101,23 +99,14 @@ class TestModel(unittest.TestCase):
         self.assertEqual(m1.attr_int, 30)
         self.assertEqual(m1.age, '50')
 
-    def test_field_xpath(self):
-        self.fail('TODO')
+    # def test_field_xpath(self):
+    #     self.fail('TODO')
 
-    def test_init_func(self):
-        self.fail('TODO')
+    # def test_init_func(self):
+    #     self.fail('TODO')
 
     def test_task_model(self):
-        # class TaskModel(Model):
-        #     url = Field(convert=str)
-        #     param = Field()
-        #     count = Field(default=0, convert=int)
-        #
-        # class Task(object):
-        #     def __new__(cls, *args, **kwargs):
-        #         return TaskModel()
-
-        from base.libs.task import Task
+        from base.libs import Task
 
         def mock_test_task():
             for i in range(2, 20):
@@ -126,3 +115,19 @@ class TestModel(unittest.TestCase):
                 yield t
 
         # [print(t.url) for t in mock_test_task()]
+        [self.assertIn('https://www.kuaidaili.com/free/inha', t.url) for t in mock_test_task()]
+
+    def test_proxy_model(self):
+        from base.libs import Proxy
+
+        def mock_test_proxy():
+            for i in range(2, 20):
+                p = Proxy()
+                p.ip = '127.0.0.1'
+                p.port = '8090'
+                yield p
+
+        [self.assertEqual('8090', t.port) for t in mock_test_proxy()]
+        [self.assertEqual('127.0.0.1', t.ip) for t in mock_test_proxy()]
+
+

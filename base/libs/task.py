@@ -1,4 +1,4 @@
-from base.libs import Model, Field
+from .model import Model, Field
 
 
 class TaskModel(Model):
@@ -8,8 +8,6 @@ class TaskModel(Model):
 
 
 class Task(object):
-
-
     def __new__(cls, *args, **kwargs):
         return TaskModel()
 

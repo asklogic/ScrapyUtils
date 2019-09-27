@@ -12,7 +12,8 @@ class TestModel(unittest.TestCase):
         super().setUp()
 
     def test_init(self):
-        # must be inheritance
+        # must be extends
+
         with self.assertRaises(Exception) as e:
             m = Model()
 
@@ -80,9 +81,9 @@ class TestModel(unittest.TestCase):
         self.assertEqual(m1.defence, None)
 
     def test_field_type(self):
-        # """
-        # force convert
-        # """
+        """
+        force convert
+        """
 
         class TestTypeModel(Model):
             attr_int = Field(default='12', convert=int)
@@ -129,5 +130,3 @@ class TestModel(unittest.TestCase):
 
         [self.assertEqual('8090', t.port) for t in mock_test_proxy()]
         [self.assertEqual('127.0.0.1', t.ip) for t in mock_test_proxy()]
-
-

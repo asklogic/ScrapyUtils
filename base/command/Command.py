@@ -11,7 +11,7 @@ from base.generate.generator import generate as gen
 from base.exception import CmdRunException
 from base.libs.setting import Setting
 from base.log import act
-
+import logging
 
 
 class Command(object):
@@ -49,31 +49,31 @@ class Command(object):
 
     @abstractmethod
     def options(self, **kw):
-        '''
+        """
         init command property.
-        :param kw:
-        :return:
-        '''
+        """
         pass
 
     @abstractmethod
     def run(self, **kw):
+        """
+        command main method
+        """
         pass
 
     @abstractmethod
     def failed(self):
-        '''
-        process command's property when some thing error
-        :return:
-        '''
+        """
+        run on fail in run(kw) method
+        """
         pass
 
     @abstractmethod
     def exit(self):
-        '''
+        """
         default exit. always run in command finish
         :return:
-        '''
+        """
         time.sleep(1)
 
 
@@ -122,7 +122,6 @@ def trigger(command_name: str, **kwargs):
         command.run()
 
     except AssertionError as ae:
-        import logging
         command.log(level=logging.ERROR, msg='' + str(ae))
 
     except CmdRunException as cmd_run:

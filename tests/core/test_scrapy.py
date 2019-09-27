@@ -52,7 +52,6 @@ class SingleModelParse(Parse):
 
 def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub,
            log: callable):
-
     for scheme in scheme_list:
         pass
 
@@ -86,6 +85,15 @@ class TestScrapy(TestCase):
         schemes = core.build_schemes(scheme_list)
 
         scrapy(schemes, self.scraper, self.task, self.dump, self.sys, self.log)
+
+        # scheme_suit scraper task
+        # suit.scrapy(task)
+        # suit.save(dump)
+        # suit.append(sys)
+
+        # scrapy in suit
+
+        # suit.scrapy(task)
 
     def test_refact_scrapy(self):
         self.assertEqual(self.sys.get_number('MockModel'), 0)

@@ -20,12 +20,15 @@ class TestScraping(TestCase):
         t = Task()
         t.url = 'http://127.0.0.1:/mock/get'
 
-        core.do_action()
+        # core.do_action()
+        self.fail()
 
         pass
 
     def test_init_scraper(self):
-        self.fail()
+        print('stdout')
+        pass
+        # self.fail()
 
 
 if __name__ == '__main__':

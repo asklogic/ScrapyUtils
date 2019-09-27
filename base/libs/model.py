@@ -108,5 +108,6 @@ class Model(metaclass=ModelMeta):
         self._pure_data = value
 
 
+
 if __name__ == '__main__':
     Model()

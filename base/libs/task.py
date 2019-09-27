@@ -8,6 +8,10 @@ class TaskModel(Model):
 
 
 class Task(object):
+    url: str
+    param: dict
+    count: int
+
     def __new__(cls, *args, **kwargs):
         return TaskModel()
 

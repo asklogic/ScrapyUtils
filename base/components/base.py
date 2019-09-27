@@ -14,14 +14,16 @@ class ComponentMeta(type):
 class Component(object, metaclass=ComponentMeta):
     _name: str
 
-    @abstractmethod
-    def check(self) -> bool:
-        pass
+    # @abstractmethod
+    # def check(self) -> bool:
+    #     pass
 
     @classmethod
     def get_name(self):
         return self._name
 
+class Active(object):
+    pass
 
 def active(component_class: type(Component)):
     component_class._active = True

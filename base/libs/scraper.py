@@ -63,8 +63,8 @@ class Scraper(object, metaclass=ScraperMeta):
     def get(self, url: str, **kw) -> str:
         return self._http('get', url, **kw)
 
-    def post(self, url: str, data, **kw):
-        return self._http('get', url, **kw)
+    def post(self, url: str, **kw):
+        return self._http('post', url, **kw)
 
     @must_activated
     def _http(self, scheme: str, url: str, **kw) -> str:
@@ -116,7 +116,6 @@ class Scraper(object, metaclass=ScraperMeta):
 
     # other methods
     def restart(self):
-
         self.safe_quit()
         self.scraper_activate()
 
@@ -154,7 +153,7 @@ class RequestScraper(Scraper):
     current: requests.Response = None
 
     # setting
-    schemes = ['get']
+    schemes = ['get', 'post']
 
     def __init__(self):
         super().__init__()
@@ -167,7 +166,7 @@ class RequestScraper(Scraper):
     # scraper property
     @property
     def proxy(self) -> dict:
-        if self._proxy and self._proxy[0]:
+        if self._proxy:
             return {
                 "http": r"http://{0}".format(":".join(self._proxy)),
                 "https": r"http://{0}".format(":".join(self._proxy)),
@@ -233,8 +232,8 @@ class RequestScraper(Scraper):
         """
         http - GET
         :param url: str
-        :param status:  status_code's range.
-        :return:
+        :param status: int - status_code's range.
+        :return: content : str
         """
         params = kwargs.get('params', {})
         status = kwargs.get('status', 300)
@@ -244,10 +243,29 @@ class RequestScraper(Scraper):
         self.current = response
 
         if response.status_code / 100 > status / 100:
-            raise Exception('RequestScraper http status failed')
+            raise Exception('RequestScraper http status failed. status: ' + str(response.status_code))
 
-        return response.content.decode("utf-8")
+        return response.text
 
+    def _post(self, url, **kwargs):
+
+        params = kwargs.get('params', {})
+        status = kwargs.get('status', 300)
+        timeout = kwargs.get('timeout', self.timeout)
+        data = kwargs.get('data', {})
+        json = kwargs.get('json', {})
+
+        response = self.req.post(url=url, data=data, json=json, timeout=timeout, headers=self.headers,
+                                 proxies=self.proxy, params=params, stream=False, verify=False)
+
+        self.current = response
+
+        if response.status_code / 100 > status / 100:
+            raise Exception('RequestScraper http status failed. status: ' + str(response.status_code))
+
+        return response.text
+
+        # self.req.post(url=url, json=json)
 
 # class RequestScraper(Scraper):
 #     schemes = ['get']
@@ -325,11 +343,13 @@ class FireFoxScraper(Scraper):
     firefox: Firefox = None
     options: FirefoxOptions = None
 
+    schemes = ['get']
+
     def __init__(self, image=False, headless=True):
         super().__init__()
         self.options = FirefoxOptions()
 
-        # 缓存页面
+        # firefox cache
         # 重要 disk.enable 磁盘缓存 默认为过期再删除
         self.options.set_preference('browser.sessionhistory.max_total_viewers', 1)
         self.options.set_preference('network.http.use-cache', 'false')
@@ -340,7 +360,7 @@ class FireFoxScraper(Scraper):
         self.options.set_preference("Content.notify.interval", 750000)
         self.options.set_preference("content.notify.backoffcount", 3)
 
-        # 默认为无图模式 无头模式
+        # default no image, headless
         self.image = image
         self.headless = headless
 
@@ -421,6 +441,12 @@ class FireFoxScraper(Scraper):
     # firefox function
     def get_driver(self) -> Firefox:
         return self.firefox
+
+    def _get(self, url, **kwargs):
+
+        self.firefox.get(url)
+
+        return self.firefox.page_source
 
 
 # class FireFoxScraper(Scraper):

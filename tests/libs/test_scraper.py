@@ -6,18 +6,6 @@ import requests
 import json
 
 
-# class RequestScraper(object):
-#
-#     def __init__(self):
-#         self._req = requests.Session()
-#         pass
-#
-#     def get(self):
-#         pass
-#
-#     pass
-
-
 class TestScraper(TestCase):
 
     def setUp(self) -> None:
@@ -50,6 +38,8 @@ class TestScraper(TestCase):
         t.alive = True
         self.assertEqual(t.do(), 1)
 
+    # RequestScraper test case
+
     # property
     def test_init(self):
         r = RequestScraper()
@@ -64,27 +54,17 @@ class TestScraper(TestCase):
         r.scraper_activate()
         self.assertEqual(r.activated, True)
 
-        r.get('http://127.0.0.1:8090/mock/get')
+        content = r.get('http://127.0.0.1:8090/mock/get')
+        assert 'success info' in content
 
-        pass
-
-    # feature
-    def test_400_page(self):
-        '''
-        http state: 400
-        '''
-        r = RequestScraper()
-        r.scraper_activate()
-        with self.assertRaises(Exception) as e:
-            # TODO custom exception
-            r.get('http://127.0.0.1:8090/mock/error')
-
-        r.get('http://127.0.0.1:8090/mock/error', status=500)
-
+    # custom header
     def test_request_header(self):
+        """
+        RequestScraper custom headers
+        """
         r = self.r
 
-        # header update
+        # update headers
         r.headers = {'custom': 'custom value'}
         content = r.get('http://127.0.0.1:8090/mock/header')
         header = json.loads(content)
@@ -97,11 +77,64 @@ class TestScraper(TestCase):
         header = json.loads(content)
         self.assertEqual(header['Connection'], 'close')
 
-    def test_request_post(self):
-        # TODO
-        pass
+    # http status
+    def test_400_response(self):
+        """
+        http state: 400
+        raise Exception if http response status greater than status code in get method
+        default status is 300
+        """
+        r = self.r
 
+        with self.assertRaises(Exception) as e:
+            r.get('http://127.0.0.1:8090/mock/error')
+
+        # TODO custom exception
+        assert 'RequestScraper http status failed' in str(e.exception)
+        assert '403' in str(e.exception)
+
+        content = r.get('http://127.0.0.1:8090/mock/error', status=500)
+        assert '403 failed' in content
+
+    def test_500_response(self):
+        r = self.r
+
+        with self.assertRaises(Exception) as e:
+            r.get('http://127.0.0.1:8090/mock/failed')
+
+        assert 'RequestScraper http status failed' in str(e.exception)
+        assert '503' in str(e.exception)
+
+        content = r.get('http://127.0.0.1:8090/mock/failed', status=600)
+        assert '503 failed' in content
+
+    # @skip
+    def test_request_post(self):
+        r = self.r
+        data = {'post_data': 'the post data'}
+
+        with self.assertRaises(Exception) as e:
+            r.post('http://127.0.0.1:8090/mock/get', data=data)
+        assert '405' in str(e.exception)
+
+        # FIXME: request session's data
+        content = r.post('http://127.0.0.1:8090/mock/post/data', data=data)
+
+        assert 'the post data' in content
+
+    # FireFoxScraper test case
+
+    # TODO : block or await
     def test_firefox_init(self):
         f = FireFoxScraper()
-        # f.scraper_activate()
-        pass
+        # f.headless = False
+
+        with self.assertRaises(Exception) as e:
+            self.assertIn("hasn't activated", str(e.exception))
+            f.get('http://127.0.0.1:8090/mock/get')
+
+        f.scraper_activate()
+        self.assertEqual(f.activated, True)
+
+        content = f.get('http://127.0.0.1:8090/mock/get')
+        assert 'success info' in content

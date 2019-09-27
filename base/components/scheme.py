@@ -7,6 +7,8 @@ from base.components.base import Component, ComponentMeta
 from base.libs.task import Task
 
 from base.exception import HTTPStatusException
+
+
 class SchemeMeta(ComponentMeta):
 
     def __new__(cls, name, bases, attrs: dict):
@@ -21,8 +23,8 @@ class Scheme(Component):
     # priority: int
     context: dict
 
-    def scrapy_check(self):
-        pass
+    # def scrapy_check(self):
+    #     pass
 
 
 class Action(Scheme, metaclass=SchemeMeta):

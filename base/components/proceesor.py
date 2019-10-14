@@ -23,25 +23,20 @@ class Processor(Component, metaclass=ProcessorMeta):
 
     def __init__(self, setting: Setting = Setting()):
         self.count: int = 0
-        self.next: Processor = None
         self.data = []
 
         self.setting = setting
 
+        self.on_start()
+
+
+
     @abstractmethod
-    def start_task(self, setting: Setting):
+    def on_start(self):
         pass
 
     @abstractmethod
-    def start_process(self, number: int, model: str = "Model"):
-        pass
-
-    @abstractmethod
-    def end_process(self):
-        pass
-
-    @abstractmethod
-    def end_task(self):
+    def on_exit(self):
         pass
 
     @abstractmethod

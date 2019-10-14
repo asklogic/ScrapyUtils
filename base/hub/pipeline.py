@@ -22,7 +22,7 @@ class Pipeline(object):
 
         for process in processor_list:
             current_process: Processor = process(setting)
-            current_process.start_task(setting)
+            current_process.on_start(setting)
             self.add_process(current_process)
 
     def add_process(self, processor: Processor):
@@ -152,4 +152,4 @@ class Pipeline(object):
         关闭process
         :return:
         """
-        list(map(lambda x: x.end_task(), self.processor_list))
+        list(map(lambda x: x.on_exit(), self.processor_list))

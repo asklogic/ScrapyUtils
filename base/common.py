@@ -218,7 +218,7 @@ class JsonFileProcessor(Processor):
         while len(self.data) >= self.limit:
             self.dump_to_file()
 
-    def end_task(self):
+    def on_exit(self):
         act.info("<<JsonFile>> end task! last len:" + str(len(self.data)))
         if self.data:
             self.dump_to_file()
@@ -230,7 +230,7 @@ class JsonFileProcessor(Processor):
 
 class DumpProcessor(Processor):
 
-    def start_task(self, settings: dict):
+    def on_start(self, settings: dict):
         self.data = []
 
     def start_process(self, number: int, model: str = "Model"):
@@ -246,7 +246,7 @@ class DumpProcessor(Processor):
 class DumpInPeeweeProcessor(Processor):
     table: peewee.Model = None
 
-    def start_task(self, setting: Setting):
+    def on_start(self, setting: Setting):
         assert bool(self.table)
 
     def process_item(self, model: Model) -> Any:
@@ -275,7 +275,7 @@ class ProxyProcessor(Processor):
         'Cache-Control': 'max-age=0',
     }
 
-    def start_task(self, setting: Setting):
+    def on_start(self, setting: Setting):
         if not setting.ProxyFunc and setting.ProxyURL is '':
             raise Exception("didn't set proxy info. check setting")
 
@@ -338,7 +338,7 @@ class DuplicateProcessor(Processor):
     baseList: List[str] = []
     modelKey: str = ''
 
-    def start_task(self, setting: Setting):
+    def on_start(self, setting: Setting):
         assert bool(self.modelKey)
 
         duplication_setting = setting.Duplication

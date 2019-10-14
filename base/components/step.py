@@ -91,7 +91,7 @@ class StepSuit(object):
         # assert
         assert isinstance(scraper, Scraper)
         for step in steps:
-            assert issubclass(step, Step)
+            assert issubclass(step, Step), 'Step class'
 
         # init step objects
         self.steps = [x(self) for x in steps]

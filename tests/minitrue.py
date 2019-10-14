@@ -4,6 +4,9 @@ from imp import reload
 import traceback
 import linecache
 import os
+import faker
+
+f = faker.Faker(locale='zh_CN')
 
 import flask
 from flask import render_template
@@ -21,6 +24,7 @@ def hello_world():
 @app.route('/mock/get', methods=['GET'])
 def normal_get():
     return render_template(r'MockTemplate.html', info='success info')
+
 
 @app.route('/mock/failed', methods=['GET'])
 def failed_get():
@@ -47,6 +51,20 @@ def violation():
         return make_response(render_template(r'MockTemplate.html', info='success info'), 200)
     else:
         return make_response(render_template(r'MockFailed.html', msg='503 failed'), 503)
+
+
+@app.route('/mock/random/dynamic')
+def dynamic():
+    import random
+
+    persons = []
+    for i in range(random.randint(1, 10)):
+        persons.append(f.name())
+    if len(persons) < 5:
+        persons.clear()
+
+    # persons.clear()
+    return make_response(render_template(r'MockTemplate.html', info='success info', persons=persons), 200)
 
 
 # api

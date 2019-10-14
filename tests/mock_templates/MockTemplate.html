@@ -29,6 +29,12 @@
             <td>mock 3.1</td>
             <td><a href="3.2's uri">3.1</a></td>
         </tr>
+
+        {% for person in persons %}
+        <tr>
+            <td class="person">{{ person }}</td>
+        </tr>
+        {% endfor %}
         </thead>
     </table>
 </div>

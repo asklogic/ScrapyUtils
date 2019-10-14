@@ -2,6 +2,21 @@ from abc import abstractmethod
 
 
 class ComponentMeta(type):
+
+    def __init__(cls, *args, **kwargs):
+
+        attr = args[2]
+        cls._name = attr['_name']
+        cls._active = attr['_active']
+
+    @property
+    def name(cls):
+        return cls._name
+
+    @property
+    def active(cls):
+        return cls._active
+
     def __new__(mcs, name, bases, attrs: dict):
         attrs["_name"] = name
 
@@ -13,17 +28,8 @@ class ComponentMeta(type):
 
 class Component(object, metaclass=ComponentMeta):
     _name: str
+    _active: bool
 
-    # @abstractmethod
-    # def check(self) -> bool:
-    #     pass
-
-    @classmethod
-    def get_name(self):
-        return self._name
-
-class Active(object):
-    pass
 
 def active(component_class: type(Component)):
     component_class._active = True

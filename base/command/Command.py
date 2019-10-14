@@ -108,12 +108,16 @@ def sys_exit(exitcode: int):
 
 
 def trigger(command_name: str, **kwargs):
+    # get command class
     command = get_command(command_name)
 
+    # register signal
+    # TODO: windows and linux
     import signal
     signal.signal(signal.SIGINT, command.signal_callback)
     signal.signal(signal.SIGTERM, command.signal_callback)
 
+    # collect
     command.build_setting(kwargs.get('target'))
 
     try:

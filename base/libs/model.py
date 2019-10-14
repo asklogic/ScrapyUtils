@@ -2,7 +2,6 @@ from typing import *
 from abc import ABC, ABCMeta
 
 
-
 class Field(object):
 
     def __init__(self, default=None, convert=None) -> None:
@@ -62,16 +61,22 @@ class ModelMeta(type):
 class Model(metaclass=ModelMeta):
     _name: str
 
-    def __new__(cls) -> Any:
+    def __new__(cls, **kwargs) -> Any:
+        """
+        Model must be extended
+        """
         if cls.__name__ is 'Model':
-            raise Exception('Model must inheritance')
+            raise Exception('Model must be extended')
         return super().__new__(cls)
 
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         """
-        pure_data must init
-        converts and fields bind as cls
+        init pure_data dict
+        set value from constructor
         """
+        for key in kwargs.keys():
+            setattr(self, key, kwargs[key])
+
         self.pure_data = self.__class__._pure_data.copy()
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -79,6 +84,7 @@ class Model(metaclass=ModelMeta):
         in fields: save in pure_data
         not in field: save as attr
         """
+        # TODO
         if name in self._fields:
             if self._converts[name] is type(None):
                 self.pure_data[name] = value
@@ -93,10 +99,10 @@ class Model(metaclass=ModelMeta):
         """
         if item in self._fields:
             return self.pure_data[item]
-        raise KeyError("Model {0} has no Field named {1}".format(self.name(), item))
+        raise KeyError("Model {0} has no Field named {1}".format(self.get_name(), item))
 
     @classmethod
-    def name(cls):
+    def get_name(cls):
         return cls._name
 
     @property
@@ -106,7 +112,6 @@ class Model(metaclass=ModelMeta):
     @pure_data.setter
     def pure_data(self, value):
         self._pure_data = value
-
 
 
 if __name__ == '__main__':

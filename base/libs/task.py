@@ -1,4 +1,4 @@
-from .model import Model, Field
+from base.libs.model import Model, Field
 
 
 class TaskModel(Model):
@@ -7,13 +7,15 @@ class TaskModel(Model):
     count = Field(default=0, convert=int)
 
 
-class Task(object):
-    url: str
-    param: dict
-    count: int
+Task = TaskModel
 
-    def __new__(cls, *args, **kwargs):
-        return TaskModel()
+# class Task(object):
+#     url: str
+#     param: dict
+#     count: int
+#
+#     def __new__(cls, *args, **kwargs):
+#         return TaskModel()
 
 # class TaskModel(Model):
 #     url = Field()

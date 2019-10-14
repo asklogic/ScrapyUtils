@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Dict, Generator
 
-from base.components.model import Model
-from base.libs.scraper import Scraper
+from base.libs import Scraper, Task, Model, Field
+# from base.libs.task import Task
+# from base.libs.scraper import Scraper
 from base.components.base import Component, ComponentMeta
-from base.libs.task import Task
 
 from base.exception import HTTPStatusException
 

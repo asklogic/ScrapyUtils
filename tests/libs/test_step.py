@@ -1,4 +1,5 @@
 import unittest
+from typing import List
 
 from base.components.step import Step, StepSuit, ActionStep, ParseStep
 from base.libs import RequestScraper, Task
@@ -149,6 +150,39 @@ class MyTestCase(unittest.TestCase):
         suit.scrapy(t)
 
         assert suit.content == ''
+
+    def test_dynamic_content(self):
+        """
+        case 3
+        content uncertain
+        """
+
+        class PersonModel(Model):
+            name = Field()
+
+        class MockPersonParse(ParseStep):
+
+            def parsing(self):
+                names = xpathParse(self.content, r'//*[@class="person"]')
+
+                m = PersonModel()
+
+                for name in names:
+                    m.name = name
+                    yield m
+
+            def check(self, models: List[Model]):
+                pass
+
+        t = Task()
+        t.url = 'http://127.0.0.1:8090/mock/random/dynamic'
+
+        suit = StepSuit([SingleAction, MockPersonParse], self.r)
+        suit.scrapy(t)
+
+        assert len(suit.models) > 5
+
+
 
 
 if __name__ == '__main__':

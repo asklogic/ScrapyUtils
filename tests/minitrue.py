@@ -58,10 +58,12 @@ def dynamic():
     import random
 
     persons = []
-    for i in range(random.randint(1, 10)):
+    for i in range(random.randint(4, 10)):
         persons.append(f.name())
-    if len(persons) < 5:
-        persons.clear()
+
+    # !
+    # if len(persons) < 5:
+    #     persons.clear()
 
     # persons.clear()
     return make_response(render_template(r'MockTemplate.html', info='success info', persons=persons), 200)

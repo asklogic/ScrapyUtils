@@ -2,8 +2,7 @@ import unittest
 from typing import List
 
 from base.components.step import Step, StepSuit, ActionStep, ParseStep
-from base.libs import RequestScraper, Task
-from base.components import Model, Field
+from base.libs import RequestScraper, Task, Model, Field
 
 from base.tool import xpathParse
 
@@ -93,6 +92,9 @@ class MyTestCase(unittest.TestCase):
         for step in normal_suit.steps:
             assert id(step.scraper) == p
 
+    def test_failed_step(self):
+        pass
+
     @unittest.skip
     def test_scrapy_ip(self):
         """
@@ -106,8 +108,6 @@ class MyTestCase(unittest.TestCase):
         suit.scrapy(t)
 
         assert len(suit.models) == 15
-        # [print(x.ip) for x in suit.models]
-        # self.fail()
 
     def test_instable_page(self):
         """
@@ -164,15 +164,10 @@ class MyTestCase(unittest.TestCase):
 
             def parsing(self):
                 names = xpathParse(self.content, r'//*[@class="person"]')
-
                 m = PersonModel()
-
                 for name in names:
                     m.name = name
                     yield m
-
-            def check(self, models: List[Model]):
-                pass
 
         t = Task()
         t.url = 'http://127.0.0.1:8090/mock/random/dynamic'
@@ -182,7 +177,13 @@ class MyTestCase(unittest.TestCase):
 
         assert len(suit.models) > 5
 
+    def test_failed(self):
+        # TODO
+        pass
 
+    def test_check(self):
+        # TODO:
+        pass
 
 
 if __name__ == '__main__':

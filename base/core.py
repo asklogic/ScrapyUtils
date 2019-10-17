@@ -12,7 +12,7 @@ from base.libs.setting import Setting
 from base.components.base import Component, ComponentMeta
 from base.libs.task import Task, TaskModel
 from base.components.prepare import Prepare
-from base.components.model import ModelMeta, Model, ModelManager
+from base.libs import Model
 from base.components.scheme import Action, Parse, Scheme
 from base.hub.pipeline import Pipeline
 from base.components.proceesor import Processor
@@ -20,11 +20,15 @@ from base.common import ProxyProcessor, ProxyModel
 from base.hub.hub import Hub
 from base.libs.scraper import Scraper
 
-ModelManager.add_model(TaskModel)
+from base.components import *
+from base.components.step import Step, ActionStep, ParseStep
+
 PROJECT_PATH = os.getcwd()
 print('PROJECT_PATH: ' + PROJECT_PATH)
 
 import sys
+
+import importlib
 
 sys.path.append(PROJECT_PATH)
 
@@ -281,3 +285,57 @@ def components_detail(components: List[Component], head: str = 'components'):
     head = 'Activated {}:  {}\n'.format(head, len(components))
     content = '\n'.join(['\t{}) {}'.format(components.index(x), x.get_name()) for x in components])
     return head + content
+
+
+def collect(scheme_path: str, file_name: str, component: Type) -> List[Component]:
+    module = _load_file(scheme_path, file_name)
+    components = _load_components(module, component)
+
+    return components
+
+
+def _load_file(scheme_path: str, file_name: str) -> ModuleType:
+    assert os.path.exists(scheme_path), scheme_path
+    assert os.path.isdir(scheme_path), scheme_path
+    file_path = os.path.join(scheme_path, file_name)
+
+    assert os.path.exists(file_path), file_path
+    assert os.path.isfile(file_path), file_path
+
+    scheme = os.path.basename(scheme_path)
+
+    # TODO: imp
+    module = importlib.import_module(scheme + '.' + file_name.split('.')[0])
+    return module
+
+
+def _load_components(module: ModuleType, component: Type):
+    components: List[Component] = []
+    for attr in dir(module):
+        attribute = getattr(module, attr)
+        # 短路判断类
+        if isinstance(attribute, type) and issubclass(attribute, component) and attribute is not component:
+            components.append(attribute)
+    return components
+
+
+def collect_steps(scheme_path) -> List[Step]:
+    actions = collect(scheme_path, 'action.py', ActionStep)
+    parses = collect(scheme_path, 'parse.py', ParseStep)
+
+    # remove deactive
+    steps = [x for x in actions + parses if x.active]
+
+    # sort
+    steps.sort(key=lambda x: x.priority, reverse=True)
+    return steps
+
+
+def collect_processors(scheme_path) -> List[Processor]:
+    origin_processors = collect(scheme_path, 'processor.py', Processor)
+    # remove deactive
+    processors = [x for x in origin_processors if x.active]
+
+    # sort
+    processors.sort(key=lambda x: x.priority, reverse=True)
+    return processors

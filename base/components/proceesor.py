@@ -29,8 +29,6 @@ class Processor(Component, metaclass=ProcessorMeta):
 
         self.on_start()
 
-
-
     @abstractmethod
     def on_start(self):
         pass

@@ -3,10 +3,9 @@ from unittest import TestCase
 from base import core
 
 from base.components.prepare import Prepare
-from base.components.model import Model
 from base.components.scheme import Scheme
 from base.components.proceesor import Processor
-from base.libs.scraper import Scraper, RequestScraper
+from base.libs.scraper import Scraper, RequestScraper, Model
 
 
 class TestBuild(TestCase):
@@ -92,4 +91,3 @@ class TestBuild(TestCase):
         schemes = core.build_schemes(setting.CurrentSchemeList)
 
         sys_hub, dump_hub = core.build_hub(setting=setting)
-

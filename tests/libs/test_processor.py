@@ -16,202 +16,11 @@ import time
 import os
 import json
 
-
-class BaseThreading(threading.Thread):
-
-    def __init__(self, event: Event = threading.Event()):
-
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self._stopped_event = threading.Event()
-
-    def run(self) -> None:
-        """
-        demo
-        :return:
-        """
-        while True:
-            self.wait()
-            time.sleep(1)
-            print('run')
-
-    @property
-    def event(self):
-        return self._stopped_event
-
-    def wait(self):
-        self.event.wait()
-
-    def stop(self):
-        self._stopped_event.clear()
-
-    def start(self):
-        if self.isAlive():
-            self._stopped_event.set()
-        else:
-            threading.Thread.start(self)
-            self._stopped_event.set()
-
-
 project_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 temp = os.path.join(project_path, 'tests', 'temp_dir')
 
-class ProcessorSuit(object):
-    _processors: List[Processor]
-
-    def __init__(self, processors: List[type(Processor)]):
-        assert isinstance(processors, Iterable)
-        for processor in processors:
-            # assert isinstance(processor, Processor), 'Processor must be init'
-            assert issubclass(processor, Processor), 'Processor class'
-
-        self._processors = []
-        # init
-        for processor in processors:
-            try:
-                current = processor()
-                self._processors.append(current)
-            except Exception as e:
-                pass
-                # TODO : log out
-            finally:
-                pass
-                # TODO : log out
-
-    @property
-    def processors(self):
-        return self._processors
-
-    def process(self, model):
-        current = model
-        next = None
-        # FIXME: linked?
-        for processor in self.processors:
-            if not isinstance(current, processor.target):
-                continue
-
-            next = processor.process_item(current)
-
-            if next is False:
-                break
-            elif next is None:
-                continue
-            else:
-                current = next
-
-
-class PipelineConsumer(BaseThreading):
-    _queue: Queue
-    _failed: set
-    _suit: ProcessorSuit
-
-    _exit: bool = False
-
-    def __init__(self, queue: Queue, failed: set, suit: ProcessorSuit):
-        super(PipelineConsumer, self).__init__()
-
-        self._queue = queue
-        self._failed = failed
-
-        self._suit = suit
-
-    @property
-    def queue(self):
-        return self._queue
-
-    def run(self) -> None:
-        while not self._exit:
-            # FIXME: loop or decorator?
-            try:
-                model = self.queue.get(block=True, timeout=1)
-            except Empty as em:
-                continue
-
-            try:
-                self._process(model=model)
-            except Exception as e:
-                # other exception in process_item method
-                self._failed.add(model)
-
-                # TODO: necessary process
-                # failed in process. break down all process
-                break
-
-    def _process(self, model):
-        self._suit.process(model)
-
-    def exit(self):
-        self.stop()
-        self._exit = True
-
-
-class Pipeline(object):
-    _queue: Queue
-    _failed: set
-
-    _suit: ProcessorSuit
-    consumer: PipelineConsumer
-
-    def __init__(self, processors: List[type(Processor)]) -> None:
-        # processor
-        for processor in processors:
-            assert issubclass(processor, Processor)
-
-        self._queue = Queue()
-        self._failed = set()
-
-        # init processor (processor's on_start method)
-        suit = ProcessorSuit(processors)
-        # TODO: log out
-        self._suit = suit
-
-        # consumer
-        self.consumer = PipelineConsumer(self.queue, self.failed, suit)
-        self.consumer.start()
-
-    def _start_processor(self):
-        """
-        in processor suit
-        """
-        pass
-
-    def _exit_processor(self):
-        pass
-
-    @property
-    def queue(self):
-        return self._queue
-
-    @property
-    def failed(self):
-        return self._failed
-
-    @property
-    def suit(self):
-        return self._suit
-
-    def push(self, obj):
-        self.queue.put_nowait(obj)
-
-    def size(self) -> int:
-        return self.queue.qsize()
-
-    def pop(self) -> object:
-        return self.queue.get_nowait()
-
-    def process(self, model: Model):
-        pass
-
-    def exit(self):
-        # exit consumer
-        self.consumer.exit()
-
-        #
-        for processor in self._suit.processors:
-            processor.on_exit()
-
-        while self.queue.qsize() > 0:
-            self.failed.add(self.queue.get())
+from base.components.proceesor import Processor
+from base.libs.pipeline import BaseThreading, Pipeline, ProcessorSuit
 
 
 class Person(Model):
@@ -277,8 +86,8 @@ class Test_processor(unittest.TestCase):
 
         assert pipeline.size() == 0
         pipeline.exit()
-        assert pipeline.consumer._exit is True
-
+        # event: False. consumer stop
+        assert pipeline.consumer.event.is_set() is False
 
         p = Pipeline([AdultCount])
         [p.push(x) for x in self.faker_persons]
@@ -323,17 +132,19 @@ class Test_processor(unittest.TestCase):
 
     def test_file_processor(self):
 
-
         class FileProcessor(Processor):
             path: str
-            name: str
+            file_name: str
             index: int
 
             def on_start(self):
                 # init
                 self.index = 0
-                self.name = str(int(time.time()))[3:]
+                self.file_name = str(int(time.time()))[3:]
                 self.path = temp
+
+                # TODO: Temp
+                os.mkdir(self.path)
 
                 # check file permission
                 assert os.path.exists(self.path)
@@ -343,8 +154,9 @@ class Test_processor(unittest.TestCase):
                 # check exist file and load data
                 pass
 
-                # temp:
-                self.name = 'mock_data'
+                # TODO: Temp
+
+                self.file_name = 'mock_data'
 
             def process_item(self, model: Model) -> Any:
                 self._append(model)
@@ -355,7 +167,7 @@ class Test_processor(unittest.TestCase):
                 self.data.append(model.pure_data)
 
             def dump(self):
-                name = os.path.join(self.path, ''.join([self.name, '-', str(self.index), '.json']))
+                name = os.path.join(self.path, ''.join([self.file_name, '-', str(self.index), '.json']))
                 with open(name, 'w') as f:
                     json.dump(self.data, f)
                 self.data.clear()
@@ -407,7 +219,7 @@ class Test_processor(unittest.TestCase):
 
             def process_item(self, model: Model) -> Any:
                 self.count += 1
-                raise Exception()
+                raise Exception('error in process item')
 
         class TargetProcessor(Processor):
             count = 0
@@ -452,7 +264,17 @@ class Test_processor(unittest.TestCase):
         suit4.process(t)
         assert suit4.processors[0].count == 1
         assert suit4.processors[1].count == 0
-        assert suit4.processors[1].count == 0
+        assert suit4.processors[2].count == 0
+
+        suit5 = ProcessorSuit([blank, error, normal])
+
+        with self.assertRaises(Exception) as e:
+            suit5.process(t)
+        assert 'error in process item' in str(e.exception)
+
+        assert suit5.processors[0].count == 1
+        assert suit5.processors[1].count == 1
+        assert suit5.processors[2].count == 0
 
 
 if __name__ == '__main__':

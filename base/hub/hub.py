@@ -4,7 +4,7 @@ from multiprocessing.dummy import Process, Queue
 import time
 import warnings
 
-from base.components.model import Model, ModelManager
+from base.libs import Model
 from base.hub.pipeline import Pipeline
 from base.log import act
 from base.libs.setting import Setting

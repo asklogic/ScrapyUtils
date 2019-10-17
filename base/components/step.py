@@ -2,8 +2,7 @@ from abc import abstractmethod
 from typing import *
 
 from base.components.base import Component, ComponentMeta
-from base.components import Model
-from base.libs import Scraper, Task
+from base.libs import Scraper, Task, Model
 
 
 class StepMeta(ComponentMeta):
@@ -59,6 +58,7 @@ class Step(Component, metaclass=StepMeta):
 
 
 class ActionStep(Step):
+    priority = 600
     @abstractmethod
     def scraping(self, task: Task):
         pass
@@ -69,6 +69,8 @@ class ActionStep(Step):
 
 
 class ParseStep(Step):
+    priority = 400
+
     @abstractmethod
     def parsing(self):
         pass

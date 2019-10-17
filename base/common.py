@@ -8,7 +8,7 @@ import redis
 import peewee
 from urllib.parse import ParseResult
 
-from base.components.model import Model, ModelManager, Field
+from base.libs import Model, Field
 from base.components.proceesor import Processor
 from base.libs.scraper import Scraper
 from base.libs.setting import Setting
@@ -21,7 +21,7 @@ from base.tool import xpathParse
 
 
 class DefaultAction(Action):
-    def scraping(self, task:Task, scraper: Scraper) -> str:
+    def scraping(self, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
 
 

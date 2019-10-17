@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from base.components.model import Model, ModelManager
+from base.libs import Model
 from base.components.proceesor import Processor
 from base.libs.setting import Setting
 from base.log import act

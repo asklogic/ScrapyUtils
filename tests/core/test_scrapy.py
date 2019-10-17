@@ -6,54 +6,60 @@ from types import *
 
 from base import core
 
-from base.components.prepare import Prepare
-from base.components.model import Model, Field, ModelManager
-from base.components.scheme import Scheme, Action, Parse
+from base.libs import Model, Field
 from base.components.proceesor import Processor
 from base.libs.scraper import Scraper, RequestScraper
+from base.components.step import StepSuit, ActionStep, ParseStep
 
-from base.command import Command
-
-from base.hub.hub import Hub
 from base.libs.scraper import RequestScraper
 from base.libs.task import Task
 
-
-class TestCommand(Command):
-
-    def syntax(self):
-        return '[Test]'
-
-
-class ErrorAction(Action):
-
-    def scraping(self, task: Task, scraper: Scraper) -> str:
-        raise Exception('custom error action')
-
-
-class HTTPErrorAction(Action):
-    def scraping(self, task: Task, scraper: Scraper) -> str:
-        return scraper.get("http://wocao.wocao")
+from base.libs.pipeline import Pipeline
 
 
 class MockModel(Model):
     name = Field()
 
 
-ModelManager.add_model(MockModel)
+from base.tool import xpathParse
 
 
-class SingleModelParse(Parse):
-
-    def parsing(self, content: str) -> Model or Generator[Model]:
-        model = ModelManager.model('MockModel')
-        return model
+class PersonModel(Model):
+    name = Field()
 
 
-def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub,
-           log: callable):
-    for scheme in scheme_list:
-        pass
+count = 0
+
+
+class MockPersonParse(ParseStep):
+
+    def parsing(self):
+        names = xpathParse(self.content, r'//*[@class="person"]')
+
+        for name in names:
+            m = PersonModel()
+            m.name = name
+            global count
+            count += 1
+            yield m
+
+
+class SingleAction(ActionStep):
+    def scraping(self, task: Task):
+        return self.scraper.get(task.url)
+
+
+class Count(Processor):
+    count = 0
+
+    def process_item(self, model: Model) -> Any:
+        self.count += 1
+
+
+# def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub,
+#            log: callable):
+#     for scheme in scheme_list:
+#         pass
 
 
 class TestScrapy(TestCase):
@@ -68,44 +74,32 @@ class TestScrapy(TestCase):
         task.param = {'key': 'key value'}
         self.task = task
 
-        self.sys = Hub()
-        self.dump = Hub()
-
-        self.log = TestCommand().log
-
     def tearDown(self) -> None:
         super().tearDown()
 
-    def scraping(self, scheme_list):
-        schemes = core.build_schemes(scheme_list)
+    def test_scrapy(self):
+        #
+        suit = StepSuit([SingleAction, MockPersonParse], self.scraper)
 
-        return core.scrapy(schemes, self.scraper, self.task, self.dump, self.sys)
+        tasks = [Task(url='http://127.0.0.1:8090/mock/random/dynamic') for i in range(10)]
 
-    def refact_scrapy(self, scheme_list):
-        schemes = core.build_schemes(scheme_list)
+        pipeline = Pipeline([Count])
 
-        scrapy(schemes, self.scraper, self.task, self.dump, self.sys, self.log)
+        def scrapy(suit: StepSuit, task: Task, pipeline: Pipeline):
+            suit.scrapy(task)
 
-        # scheme_suit scraper task
-        # suit.scrapy(task)
-        # suit.save(dump)
-        # suit.append(sys)
+            # TODO refact models deque
+            for model in suit.models:
+                pipeline.push(model)
 
-        # scrapy in suit
+            suit.models.clear()
 
-        # suit.scrapy(task)
+        for task in tasks:
+            scrapy(suit, task, pipeline)
 
-    def test_refact_scrapy(self):
-        self.assertEqual(self.sys.get_number('MockModel'), 0)
+        pipeline.exit()
 
-        self.refact_scrapy([SingleModelParse])
+        failed = len(pipeline.failed)
+        processed = pipeline.suit.processors[0].count
 
-        self.assertEqual(self.sys.get_number('MockModel'), 1)
-
-    @skip
-    def test_demo(self):
-        self.scraping([ErrorAction])
-
-    @unittest.skip
-    def test_http_error(self):
-        self.scraping([HTTPErrorAction])
+        assert (failed + processed) == count

@@ -52,7 +52,6 @@ class theLog(object):
     def msg(self, message=None):
         StatusLog.info(msg=message)
 
-
 if __name__ == '__main__':
     print('logger test!')
     StatusLog.info('info')

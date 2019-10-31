@@ -1,7 +1,7 @@
 from typing import List
-import os
-from logging import DEBUG, WARN, ERROR, INFO
 from abc import abstractmethod
+
+from logging import DEBUG, WARN, ERROR, INFO
 from base import core
 import click, time
 import sys
@@ -9,83 +9,145 @@ from base.exception import CmdRunException
 from base.libs.setting import Setting
 from base.log import act
 import logging
+import signal
+from os.path import basename
+import linecache
 
 
 class Command(object):
-    require_target = False
-    setting: Setting
-    target: str
-
-    exitcode: int
+    do_collect: bool = True
+    exitcode: int = 0
     interrupt: bool = False
 
-    def syntax(self):
+    def syntax(self) -> str:
         return '[Command]'
 
-    def log(self, msg, level=INFO, step=''):
-        # TODO Level
+    def __init__(self):
+        self.exitcode: int = 0
+        self.interrupt: bool = False
 
-        step = '<%s>' % step if step else step
-        message = ' '.join((self.syntax(), step, msg))
-        # message = ' '.join((x for x in (self.syntax(), step, msg) if x))
-        act.log(level=level, msg=message)
+    @property
+    def log(self, **kwargs):
+        # TODO: move to log.py
+        class inner_log:
+            @classmethod
+            def info(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.info(message)
 
+            @classmethod
+            def warning(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.warning(message)
+
+            @classmethod
+            def error(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.error(message)
+
+            @classmethod
+            def debug(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.debug(message)
+
+            @classmethod
+            def exception(cls, component_name: str, exception: Exception):
+                exception_name = exception.__class__.__name__
+                component_name = '<{}>'.format(component_name)
+                message = ' '.join([self.syntax(), component_name, 'Except Exception:', exception_name])
+                act.error(message)
+
+                current = exception.__traceback__
+
+                # TODO: refact
+                current_code = current.tb_frame.f_code
+
+                while not basename(current_code.co_filename) in ('action.py', 'parse.py') and current.tb_next:
+                    current = current.tb_next
+                    current_code = current.tb_frame.f_code
+                lines = [linecache.getline(current_code.co_filename, current.tb_lineno + x,
+                                           current.tb_frame.f_globals).replace('\n', '')
+                         for x in
+                         (-2, -1, 0)]
+
+                for line in (-2, -1, 0):
+                    if not lines[2 + line].strip():
+                        continue
+                    msg = ''.join(('Line: ', str(current.tb_lineno + line), ' |', lines[2 + line]))
+                    act.debug(msg)
+
+        return inner_log
+
+    @abstractmethod
     def signal_callback(self, signum, frame):
         pass
 
-    def __init__(self):
-        self.setting = None
-        self.exitcode = 0
-
-    def build_setting(self, target: str = None):
-        if self.require_target:
-            assert target, 'no target'
-            setting = core.build_setting(target)
-            self.setting = setting
-            self.target = target
-
-    @abstractmethod
-    def options(self, **kw):
-        """
-        init command property.
-        """
+    def collect(self, scheme_name: str):
+        # TODO
         pass
 
     @abstractmethod
-    def run(self, **kw):
-        """
-        command main method
-        """
+    def options(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def run(self):
         pass
 
     @abstractmethod
     def failed(self):
-        """
-        run on fail in run(kw) method
-        """
         pass
 
     @abstractmethod
     def exit(self):
-        """
-        default exit. always run in command finish
-        :return:
-        """
-        time.sleep(1)
+        pass
+
+
+
+
+def sys_exit(exitcode: int):
+    pass
+
+
+def trigger(command_name: str, **kwargs):
+    # get command class
+    command: Command = get_command(command_name)
+
+    # register signal
+    # TODO: windows and linux
+    signal.signal(signal.SIGINT, command.signal_callback)
+    signal.signal(signal.SIGTERM, command.signal_callback)
+
+    # collect
+    # command.collect(kwargs.get('target'))
+
+    try:
+        command.options(**kwargs)
+
+        command.run()
+
+    except Exception as e:
+        command.failed()
+        command.log.exception('Command', e)
+
+    finally:
+        command.exit()
+
+    sys_exit(command.exitcode)
 
 
 def get_command(command_name: str) -> Command:
-    # try:
-    #     module = __import__('base.command.' + command_name, fromlist=['base', 'command'])
-    #
-    #     command_class = getattr(module, command_name.capitalize())
-    #
-    #     command = command_class()
-    # except ModuleNotFoundError as error:
-    #     raise ModuleNotFoundError('can not found registered Command %s' % command_name
-
     from base.command import registered
 
+    # TODO: WTF?
     select_command = None
     for command in registered:
         if command_name in str(command):
@@ -98,44 +160,6 @@ def get_command(command_name: str) -> Command:
         sys.exit(0)
 
     return select_command
-
-
-def sys_exit(exitcode: int):
-    pass
-
-
-def trigger(command_name: str, **kwargs):
-    # get command class
-    command = get_command(command_name)
-
-    # register signal
-    # TODO: windows and linux
-    import signal
-    signal.signal(signal.SIGINT, command.signal_callback)
-    signal.signal(signal.SIGTERM, command.signal_callback)
-
-    # collect
-    command.build_setting(kwargs.get('target'))
-
-    try:
-        command.options(**kwargs)
-
-        command.run()
-
-    except AssertionError as ae:
-        command.log(level=logging.ERROR, msg='' + str(ae))
-
-    except CmdRunException as cmd_run:
-        command.log(msg='Interrupted! ' + str(cmd_run))
-
-    except Exception as e:
-        command.log(msg='Other Exception. ' + str(e) + ' ' + str(e.__class__))
-        command.failed()
-
-    finally:
-        command.exit()
-
-    sys_exit(command.exitcode)
 
 
 @click.group()

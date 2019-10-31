@@ -1,11 +1,14 @@
 import unittest
-import logging
 import signal
 import os
+import time
+from os.path import basename
 
 from abc import abstractmethod
 from base.log import act
-from typing import List, Any
+from typing import Any
+
+import linecache
 
 
 class Command(object):
@@ -17,11 +20,68 @@ class Command(object):
         return '[Command]'
 
     def __init__(self):
-        pass
+        self.exitcode: int = 0
+        self.interrupt: bool = False
 
-    def log(self):
-        # TODO
-        return act
+    @property
+    def log(self, **kwargs):
+        # TODO: move to log.py
+        class inner_log:
+            @classmethod
+            def info(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.info(message)
+
+            @classmethod
+            def warning(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.warning(message)
+
+            @classmethod
+            def error(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.error(message)
+
+            @classmethod
+            def debug(cls, msg: str, *args):
+                component = ' - '.join(args)
+                component_msg = ''.join(['<', component, '>']) if component else ''
+                message = ' '.join([self.syntax(), component_msg, msg])
+                act.debug(message)
+
+            @classmethod
+            def exception(cls, component_name: str, exception: Exception):
+                exception_name = exception.__class__.__name__
+                component_name = '<{}>'.format(component_name)
+                message = ' '.join([self.syntax(), component_name, 'Except Exception:', exception_name])
+                act.error(message)
+
+                current = exception.__traceback__
+
+                # TODO: refact
+                current_code = current.tb_frame.f_code
+
+                while not basename(current_code.co_filename) in ('action.py', 'parse.py') and current.tb_next:
+                    current = current.tb_next
+                    current_code = current.tb_frame.f_code
+                lines = [linecache.getline(current_code.co_filename, current.tb_lineno + x,
+                                           current.tb_frame.f_globals).replace('\n', '')
+                         for x in
+                         (-2, -1, 0)]
+
+                for line in (-2, -1, 0):
+                    if not lines[2 + line].strip():
+                        continue
+                    msg = ''.join(('Line: ', str(current.tb_lineno + line), ' |', lines[2 + line]))
+                    act.debug(msg)
+
+        return inner_log
 
     @abstractmethod
     def signal_callback(self, signum, frame):
@@ -48,110 +108,26 @@ class Command(object):
         pass
 
 
-from base.core import collect
+from base.core import collect_profile
 from tests.telescreen import tests_path
+
+from base.libs import RequestScraper, Model
+from base.components import Processor
+from base.components.pipeline import Pipeline
+from base.core import collect_steps, collect_processors
 
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
-from base.libs import RequestScraper, Task, Scraper, Model
-from base.components.step import Step, StepSuit
-from base.components import Processor
+from base.command import sys_exit
+from base.command.thread import Thread, ScrapyThread
 
-from tests.core.test_scrapy import SingleAction, MockPersonParse
-from base.libs.pipeline import BaseThreading, Pipeline, Consumer
-from queue import Queue
-
-count = 0
+from unittest import mock
 
 
-class GlobleCount(Processor):
-
-    def process_item(self, model: Model) -> Any:
-        global count
-        count += 1
-
-
-class ScrapyThread(Consumer):
-    def __init__(self, task_queue: Queue, steps: List[Step], scraper: Scraper, pipeline: Pipeline):
-        super(ScrapyThread, self).__init__(task_queue)
-
-        self.suit = StepSuit(steps, scraper)
-        self.pipeline = pipeline
-
-    def consuming(self, current: Task):
-        self.suit.scrapy(current)
-        # TODO refact models deque
-        for model in self.suit.models:
-            self.pipeline.push(model)
-        self.suit.models.clear()
-
-
-from base.core import collect, collect_steps, collect_processors
-
-
-class CommandTest(Command):
-    pipeline: Pipeline = None
-    steps: List[Step] = None
-
-    task_queue: Queue = None
-
-    def syntax(self) -> str:
-        return '[TEST]'
-
-    def options(self, **kwargs):
-        atom = os.path.join(schemes_path, 'atom')
-
-        # TODO: default step
-        steps = collect_steps(atom)
-
-        # TODO: default processor
-        processors = collect_processors(atom)
-
-        # test parse
-        # processors.append(GlobleCount)
-
-        pipeline = Pipeline(processors)
-
-        self.steps = steps
-        self.pipeline = pipeline
-
-        # TODO: resume tasks
-        self.task_queue = Queue()
-
-        tasks = [Task(url='http://127.0.0.1:8090/mock/random/dynamic') for i in range(10)]
-        for task in tasks:
-            self.task_queue.put(task)
-
-    def run(self):
-        # profile
-
-        # task and active scraper
-
-        scraper = RequestScraper
-
-        # init ScrapyThread
-        scrapy_threads = []
-        for i in range(3):
-            scraper = RequestScraper()
-            scraper.scraper_activate()
-            scrapy_threads.append(ScrapyThread(self.task_queue, self.steps, scraper, self.pipeline))
-
-        for thread in scrapy_threads:
-            thread.start()
-
-
-def get_command(obj) -> Command:
-    # mock
-    return obj
-
-
-def sys_exit(exitcode: int):
-    pass
-
-
-def trigger(command_name: str, **kwargs):
+# mock
+def mock_trigger(command, **kwargs):
     # get command class
-    command: Command = get_command(command_name)
+    command: Command = command
 
     # register signal
     # TODO: windows and linux
@@ -167,9 +143,8 @@ def trigger(command_name: str, **kwargs):
         command.run()
 
     except Exception as e:
-        # command.log.error('Other Exception')
         command.failed()
-        raise e
+        command.log.exception('Command', e)
 
     finally:
         command.exit()
@@ -180,16 +155,50 @@ def trigger(command_name: str, **kwargs):
 class TestCommand(unittest.TestCase):
 
     def test_atom(self):
-        command = CommandTest()
-        trigger(command, **{'scheme': 'atom'})
+        params = {
+            'scheme': 'atom',
+            'path': os.path.join(schemes_path, 'atom')
+        }
 
-        import time
-        time.sleep(0.2)
+        command = Thread()
+        mock_trigger(command, **params)
+
+        # block here
 
         failed = len(command.pipeline.failed)
+        assert command.pipeline.suit.processors[0].name == 'Duplication'
+        assert command.pipeline.suit.processors[1].name == 'Count'
         count = command.pipeline.suit.processors[1].count
 
-        assert count + failed > 6 * 10
+        assert count + failed > 5 * 10
+
+    def test_log(self):
+        command = Thread()
+
+        command.log.info('wtf!', 'Pipeline', 'Count')
+        command.log.info('wtf!', 'Scrapy')
+        command.log.info('wtf!', 'Core')
+        command.log.info('wtf!', )
+
+    def test_thread_consumer(self):
+        atom = os.path.join(schemes_path, 'atom')
+
+        steps = collect_steps(atom)
+        task_queue = collect_profile(atom)['task_queue']
+        pipeline = Pipeline(collect_processors(atom))
+        scraper = RequestScraper()
+        scraper.scraper_activate()
+
+        consumer = ScrapyThread(task_queue, steps, scraper, pipeline)
+        consumer.start()
+
+        time.sleep(1)
+
+        consumer.stop()
+
+    @unittest.skip
+    def test_kuaidaili(self):
+        pass
 
 
 if __name__ == '__main__':

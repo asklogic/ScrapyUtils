@@ -1,20 +1,15 @@
-import unittest
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from typing import *
-from types import *
-
-from base import core
 
 from base.libs import Model, Field
 from base.components.proceesor import Processor
-from base.libs.scraper import Scraper, RequestScraper
 from base.components.step import StepSuit, ActionStep, ParseStep
 
 from base.libs.scraper import RequestScraper
 from base.libs.task import Task
 
-from base.libs.pipeline import Pipeline
+from base.components.pipeline import Pipeline
 
 
 class MockModel(Model):
@@ -56,10 +51,14 @@ class Count(Processor):
         self.count += 1
 
 
-# def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub,
-#            log: callable):
-#     for scheme in scheme_list:
-#         pass
+def scrapy(suit: StepSuit, task: Task, pipeline: Pipeline):
+    suit.scrapy(task)
+
+    # TODO refact models deque
+    for model in suit.models:
+        pipeline.push(model)
+
+    suit.models.clear()
 
 
 class TestScrapy(TestCase):
@@ -85,15 +84,6 @@ class TestScrapy(TestCase):
 
         pipeline = Pipeline([Count])
 
-        def scrapy(suit: StepSuit, task: Task, pipeline: Pipeline):
-            suit.scrapy(task)
-
-            # TODO refact models deque
-            for model in suit.models:
-                pipeline.push(model)
-
-            suit.models.clear()
-
         for task in tasks:
             scrapy(suit, task, pipeline)
 
@@ -103,3 +93,6 @@ class TestScrapy(TestCase):
         processed = pipeline.suit.processors[0].count
 
         assert (failed + processed) == count
+
+    def test_log(self):
+        pass

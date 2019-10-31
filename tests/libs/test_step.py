@@ -5,8 +5,10 @@ from base.components.step import Step, StepSuit, ActionStep, ParseStep
 from base.libs import RequestScraper, Task, Model, Field
 
 from base.tool import xpathParse
+from tests.core.test_command import Command
 
 
+# test demo
 class ItemTest(Model):
     name = Field()
 
@@ -17,7 +19,6 @@ class SimpleAction(ActionStep):
         return 'info'
 
 
-# Scrapy www.kuaidaili.com
 class SimpleParse(ParseStep):
     def parsing(self):
         for i in range(5):
@@ -27,6 +28,7 @@ class SimpleParse(ParseStep):
             yield item
 
 
+# test scrapy www.kuaidaili.com
 class IpModel(Model):
     ip = Field()
 
@@ -45,7 +47,19 @@ class ParseIp(ParseStep):
             yield m
 
 
-class MyTestCase(unittest.TestCase):
+# Test Step
+
+# setup:
+# common RequestScraper: r
+# default task : t. url = 'http://ip.cn'
+# command's log : syntax:  '[TEST_STEP]'
+
+# case:
+# test_demo : Step and StepSuit's demo
+# test_init: property and init step
+# test_failed_init:
+
+class TestStep(unittest.TestCase):
     def setUp(self) -> None:
         r = RequestScraper()
         r.scraper_activate()
@@ -55,15 +69,16 @@ class MyTestCase(unittest.TestCase):
         t.url = 'http://ip.cn'
         self.t = t
 
-    def test_init(self):
-        """
-        step and step suit with some useful case
-        """
+        class TestStepCommand(Command):
+            def syntax(self):
+                return '[TEST_STEP]'
 
+        self.log = TestStepCommand().log
+
+    def test_demo(self):
         # simple action
         # change suit.content
         simple_action_suit = StepSuit([SimpleAction], self.r)
-
         simple_action_suit.scrapy(self.t)
 
         assert simple_action_suit.content == 'info'
@@ -71,17 +86,16 @@ class MyTestCase(unittest.TestCase):
 
         # simple parse
         # add model in suit.model
-
         simple_parse_suit = StepSuit([SimpleParse], self.r)
 
+        assert len(simple_parse_suit.models) == 0
         simple_parse_suit.scrapy(self.t)
-
         assert len(simple_parse_suit.models) == 5
+
         for model in simple_parse_suit.models:
             assert isinstance(model, ItemTest)
 
-        # property
-
+        # suit's property
         normal_suit = StepSuit([SimpleAction, SimpleParse], self.r)
 
         p = id(normal_suit.steps[0].context)
@@ -92,8 +106,64 @@ class MyTestCase(unittest.TestCase):
         for step in normal_suit.steps:
             assert id(step.scraper) == p
 
-    def test_failed_step(self):
-        pass
+    def test_init(self):
+
+        suit = StepSuit([SimpleAction], self.r, self.log)
+
+        # default property
+        assert suit.context == {}
+        assert suit.log == self.log
+        assert suit.content == ''
+        assert suit.models == []
+        assert isinstance(suit.steps[0], SimpleAction)
+
+    def test_failed_init(self):
+
+        # step class
+        with self.assertRaises(AssertionError) as ae:
+            StepSuit([SimpleAction()], self.r)
+        assert 'StepSuit need Step class.' in str(ae.exception)
+
+        # scraper activated.
+        # with self.assertRaises(AssertionError) as ae:
+        #     pass
+
+    def test_failed_scarping(self):
+        class FailedAction(ActionStep):
+            def scraping(self, task: Task):
+                raise Exception('action failed')
+
+        suit = StepSuit([FailedAction, SimpleParse], self.r, self.log)
+
+        suit.scrapy(self.t)
+
+        assert len(suit.models) == 0
+        assert suit.content == ''
+
+    def test_failed_check(self):
+        class FailedCheckAction(ActionStep):
+
+            def check(self, content):
+                assert False
+
+        suit = StepSuit([FailedCheckAction, SimpleParse], self.r, self.log)
+
+        suit.scrapy(self.t)
+
+        assert len(suit.models) == 0
+        assert suit.content == ''
+
+    def test_failed_parsing(self):
+        class FailedParsing(ParseStep):
+
+            def parsing(self):
+                raise Exception('parse failed')
+
+        suit = StepSuit([SimpleAction, FailedParsing], self.r, self.log)
+        suit.scrapy(self.t)
+
+        assert suit.content == 'info'
+        assert len(suit.models) == 0
 
     @unittest.skip
     def test_scrapy_ip(self):
@@ -108,6 +178,8 @@ class MyTestCase(unittest.TestCase):
         suit.scrapy(t)
 
         assert len(suit.models) == 15
+        for m in suit.models:
+            print(m.ip)
 
     def test_instable_page(self):
         """
@@ -116,15 +188,20 @@ class MyTestCase(unittest.TestCase):
         """
 
         task_list = []
-        for i in range(10):
+        for i in range(5):
             t = Task()
             t.url = r'http://127.0.0.1:8090/mock/random/violation'
             task_list.append(t)
 
-        suit = StepSuit([SingleAction], self.r)
+        suit = StepSuit([SingleAction, SimpleParse], self.r, self.log)
 
+        sum = []
         for t in task_list:
             suit.scrapy(t)
+
+            sum.extend(suit.models)
+
+        assert len(sum) < 5 * 5
 
     def test_dynamic_page(self):
         """
@@ -145,11 +222,12 @@ class MyTestCase(unittest.TestCase):
         t = Task()
         t.url = 'http://127.0.0.1:8090/mock/failed'
 
-        suit = StepSuit([CheckedAction], self.r)
+        suit = StepSuit([CheckedAction, SimpleParse], self.r)
 
         suit.scrapy(t)
 
         assert suit.content == ''
+        assert len(suit.models) == 0
 
     def test_dynamic_content(self):
         """
@@ -164,8 +242,8 @@ class MyTestCase(unittest.TestCase):
 
             def parsing(self):
                 names = xpathParse(self.content, r'//*[@class="person"]')
-                m = PersonModel()
                 for name in names:
+                    m = PersonModel()
                     m.name = name
                     yield m
 
@@ -175,7 +253,7 @@ class MyTestCase(unittest.TestCase):
         suit = StepSuit([SingleAction, MockPersonParse], self.r)
         suit.scrapy(t)
 
-        assert len(suit.models) > 5
+        assert len(suit.models) >= 4
 
     def test_failed(self):
         # TODO
@@ -184,6 +262,20 @@ class MyTestCase(unittest.TestCase):
     def test_check(self):
         # TODO:
         pass
+
+    def test_log(self):
+
+        from tests.core.test_command import Command
+
+        class TestStepCommand(Command):
+            def syntax(self):
+                return '[TEST_STEP]'
+
+        log = TestStepCommand().log
+        log.info('test_info')
+
+        simple_action_suit = StepSuit([SimpleAction], self.r, log)
+        simple_action_suit.scrapy(self.t)
 
 
 if __name__ == '__main__':

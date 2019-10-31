@@ -3,6 +3,7 @@ from typing import *
 
 from base.components.base import Component, ComponentMeta
 from base.libs import Scraper, Task, Model
+from base.log import act
 
 
 class StepMeta(ComponentMeta):
@@ -33,6 +34,10 @@ class Step(Component, metaclass=StepMeta):
     def content(self):
         return self._suit.content
 
+    @property
+    def log(self):
+        return self._suit.log
+
     @abstractmethod
     def check(self, content):
         pass
@@ -44,21 +49,38 @@ class Step(Component, metaclass=StepMeta):
                 self.check(content)
 
                 self._suit.content = content
+                return True
             except Exception as e:
                 # TODO: log out
-                pass
+                self.log.exception(self.name, e)
+                # self.log.error('error', self.name)
+                return False
         elif isinstance(self, ParseStep):
             try:
-                models = list(self.parsing())
+                # TODO: deque instead list
+                models = []
+                # FIXME: crit!
+
+                parsed = self.parsing()
+                if not parsed:
+                    return True
+                for model in parsed:
+                    models.append(model)
+                # models = list(self.parsing())
                 self.check(models)
 
                 self._suit.models.extend(models)
+                return True
+
             except Exception as e:
-                pass
+                self.log.exception(self.name, e)
+
+                return False
 
 
 class ActionStep(Step):
     priority = 600
+
     @abstractmethod
     def scraping(self, task: Task):
         pass
@@ -88,22 +110,39 @@ class StepSuit(object):
     context: dict
     models: List[Model]
     scraper: Scraper
+    log: act
 
-    def __init__(self, steps: List[type(Step)], scraper: Scraper):
+    def __init__(self, steps: List[type(Step)], scraper: Scraper, log=act):
         # assert
-        assert isinstance(scraper, Scraper)
         for step in steps:
-            assert issubclass(step, Step), 'Step class'
+            assert isinstance(step, type), 'StepSuit need Step class.'
+            assert issubclass(step, Step), 'StepSuit need Step class.'
 
-        # init step objects
-        self.steps = [x(self) for x in steps]
+        assert scraper and isinstance(scraper, Scraper)
 
         # init property
         self.content = ''
         self.context = {}
         self.scraper = scraper
         self.models = []
+        self.log = log
+
+        # init step objects
+        self.steps = [x(self) for x in steps]
+
+        # scraper active
+        assert scraper.activated is True, 'Scraper must be activated.'
 
     def scrapy(self, task: Task):
+        self.models.clear()
+        self.content = ''
+
         for step in self.steps:
-            step.do(task)
+            # TODO: refact
+            if not step.do(task):
+                self.log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
+                return
+        self.log.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
+
+    def log(self):
+        pass

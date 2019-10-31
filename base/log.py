@@ -54,6 +54,8 @@ class theLog(object):
 
 if __name__ == '__main__':
     print('logger test!')
+
+
     StatusLog.info('info')
     StatusLog.warning('warning')
     StatusLog.debug('debug')

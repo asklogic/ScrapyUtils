@@ -1,17 +1,9 @@
 import unittest
 
-from threading import Event
 from typing import *
 
-from base.components import Processor
 from base.libs import Task, Model, Field
-from queue import Queue, Empty
-from collections import deque
-from threading import Thread
-import threading
-import time
 
-import threading
 import time
 import os
 import json
@@ -20,7 +12,8 @@ project_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 temp = os.path.join(project_path, 'tests', 'temp_dir')
 
 from base.components.proceesor import Processor
-from base.libs.pipeline import BaseThreading, Pipeline, ProcessorSuit
+from base.components.pipeline import Pipeline, ProcessorSuit
+from base.libs.thread import BaseThreading
 
 
 class Person(Model):

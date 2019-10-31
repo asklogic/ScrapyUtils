@@ -1,72 +1,9 @@
-import threading
-import time
 from typing import *
-from queue import Queue, Empty
-from abc import abstractmethod
+from queue import Queue
 
-from base.components import Processor
-from .model import Model
-
-
-class BaseThreading(threading.Thread):
-
-    def __init__(self, event: threading.Event = threading.Event()):
-
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self._stopped_event = threading.Event()
-
-    def run(self) -> None:
-        """
-        demo
-        :return:
-        """
-        while True:
-            self.wait()
-            time.sleep(1)
-            print('run')
-
-    @property
-    def event(self):
-        return self._stopped_event
-
-    def wait(self):
-        self.event.wait()
-
-    def stop(self):
-        self._stopped_event.clear()
-
-    def start(self):
-        if self.isAlive():
-            self._stopped_event.set()
-        else:
-            threading.Thread.start(self)
-            self._stopped_event.set()
-
-
-class Consumer(BaseThreading):
-
-    def __init__(self, queue: Queue = Queue(), **kwargs):
-        super(Consumer, self).__init__(**kwargs)
-
-        self._queue = queue
-
-    @property
-    def queue(self):
-        return self._queue
-
-    @abstractmethod
-    def consuming(self, obj):
-        pass
-
-    def run(self):
-        while True:
-            self.wait()
-            try:
-                obj = self._queue.get(block=True, timeout=0.1)
-                self.consuming(obj)
-            except Empty as e:
-                continue
+from base.libs.thread import Consumer
+from . import Processor
+from base.libs.model import Model
 
 
 class ProcessorSuit(object):
@@ -207,10 +144,7 @@ class Pipeline(object):
         for processor in self._suit.processors:
             processor.on_exit()
 
-        queue = self.queue.qsize()
-        failed = len(self.failed)
-        print('queue', queue)
-        print('failed', failed)
+
 
         while self.queue.qsize() > 0:
             model = self.queue.get()

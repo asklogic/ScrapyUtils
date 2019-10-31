@@ -7,12 +7,13 @@ import warnings
 import copy
 import os
 
+from queue import Queue
 from base.log import act, status
 from base.libs.setting import Setting
 from base.components.base import Component, ComponentMeta
 from base.libs.task import Task, TaskModel
 from base.components.prepare import Prepare
-from base.libs import Model
+from base.libs import Model, Scraper, RequestScraper
 from base.components.scheme import Action, Parse, Scheme
 from base.hub.pipeline import Pipeline
 from base.components.proceesor import Processor
@@ -339,3 +340,60 @@ def collect_processors(scheme_path) -> List[Processor]:
     # sort
     processors.sort(key=lambda x: x.priority, reverse=True)
     return processors
+
+
+def _load_profile(scheme_path, profile_name: str = 'profile.py'):
+    assert os.path.exists(scheme_path)
+    assert os.path.isdir(scheme_path)
+
+    profile: str = os.path.join(scheme_path, profile_name)
+
+    scheme = os.path.basename(scheme_path)
+
+    # TODO: imp
+    module = importlib.import_module(scheme + '.' + profile_name.split('.')[0])
+    return module
+
+
+def _invoke_scraper():
+    pass
+
+
+def collect_profile(scheme_path, profile_name: str = 'profile.py'):
+    module = _load_profile(scheme_path, profile_name)
+    config = {}
+
+    # common setting(
+    config['thread'] = getattr(module, 'THREAD', 5)
+    config['timeout'] = getattr(module, 'TIMEOUT', 1.5)
+
+    # Task
+    task = getattr(module, 'generate_tasks')
+
+    task_queue = Queue()
+    for t in list(task()):
+        task_queue.put(t)
+    config['task_queue'] = task_queue
+
+    # TODO: step setting
+    # TODO: processor setting
+
+    # scraper
+    scraper_callable = getattr(module, 'generate_scraper')
+
+    scrapers: List[Scraper] = []
+
+    # TODO: refact thread.
+    for i in range(config['thread']):
+        try:
+            scraper = scraper_callable()
+            assert isinstance(scraper, Scraper)
+            scrapers.append(scraper)
+        except Exception as e:
+            scraper = RequestScraper()
+            scraper.scraper_activate()
+            scrapers.append(scraper)
+
+    config['scrapers'] = scrapers
+
+    return config

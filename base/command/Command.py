@@ -1,23 +1,18 @@
 from typing import List
 from abc import abstractmethod
 
-from logging import DEBUG, WARN, ERROR, INFO
-from base import core
 import click, time
 import sys
-from base.exception import CmdRunException
-from base.libs.setting import Setting
-from base.log import act
-import logging
+import os
+from base.log import logger, Wrapper
 import signal
-from os.path import basename
-import linecache
 
 
 class Command(object):
-    do_collect: bool = True
     exitcode: int = 0
     interrupt: bool = False
+
+    do_collect: bool = True
 
     def syntax(self) -> str:
         return '[Command]'
@@ -28,63 +23,12 @@ class Command(object):
 
     @property
     def log(self, **kwargs):
-        # TODO: move to log.py
-        class inner_log:
+        class ThreadLogger(Wrapper):
             @classmethod
-            def info(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.info(message)
+            def syntax(self):
+                return '[Thread]'
 
-            @classmethod
-            def warning(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.warning(message)
-
-            @classmethod
-            def error(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.error(message)
-
-            @classmethod
-            def debug(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.debug(message)
-
-            @classmethod
-            def exception(cls, component_name: str, exception: Exception):
-                exception_name = exception.__class__.__name__
-                component_name = '<{}>'.format(component_name)
-                message = ' '.join([self.syntax(), component_name, 'Except Exception:', exception_name])
-                act.error(message)
-
-                current = exception.__traceback__
-
-                # TODO: refact
-                current_code = current.tb_frame.f_code
-
-                while not basename(current_code.co_filename) in ('action.py', 'parse.py') and current.tb_next:
-                    current = current.tb_next
-                    current_code = current.tb_frame.f_code
-                lines = [linecache.getline(current_code.co_filename, current.tb_lineno + x,
-                                           current.tb_frame.f_globals).replace('\n', '')
-                         for x in
-                         (-2, -1, 0)]
-
-                for line in (-2, -1, 0):
-                    if not lines[2 + line].strip():
-                        continue
-                    msg = ''.join(('Line: ', str(current.tb_lineno + line), ' |', lines[2 + line]))
-                    act.debug(msg)
-
-        return inner_log
+        return ThreadLogger
 
     @abstractmethod
     def signal_callback(self, signum, frame):
@@ -111,8 +55,6 @@ class Command(object):
         pass
 
 
-
-
 def sys_exit(exitcode: int):
     pass
 
@@ -123,8 +65,8 @@ def trigger(command_name: str, **kwargs):
 
     # register signal
     # TODO: windows and linux
-    signal.signal(signal.SIGINT, command.signal_callback)
     signal.signal(signal.SIGTERM, command.signal_callback)
+    signal.signal(signal.SIGINT, command.signal_callback)
 
     # collect
     # command.collect(kwargs.get('target'))
@@ -156,7 +98,7 @@ def get_command(command_name: str) -> Command:
             break
 
     if not select_command:
-        act.error('can not found registered Command %s' % command_name)
+        logger.error('can not found registered Command %s' % command_name)
         sys.exit(0)
 
     return select_command
@@ -168,9 +110,11 @@ def cli():
 
 
 @click.command()
-@click.argument('target')
-def thread(target: str):
-    trigger('thread', target=target)
+@click.argument('scheme')
+@click.option('path', '--path', default=os.getcwd(), type=click.Path())
+def thread(scheme: str, path):
+    trigger('thread', scheme=scheme, path=path)
+
     # thread_run(target)
     # pass
 
@@ -182,10 +126,9 @@ def single(target: str):
 
 
 @click.command()
-@click.argument('target')
-def generate(target: str):
-    # gen(target)
-    trigger('generate', target=target)
+@click.argument('scheme')
+def generate(scheme: str):
+    trigger('generate', scheme=scheme)
 
 
 @click.command()

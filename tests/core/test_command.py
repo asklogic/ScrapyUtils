@@ -5,108 +5,9 @@ import time
 from os.path import basename
 
 from abc import abstractmethod
-from base.log import act
 from typing import Any
 
 import linecache
-
-
-class Command(object):
-    do_collect: bool = True
-    exitcode: int = 0
-    interrupt: bool = False
-
-    def syntax(self) -> str:
-        return '[Command]'
-
-    def __init__(self):
-        self.exitcode: int = 0
-        self.interrupt: bool = False
-
-    @property
-    def log(self, **kwargs):
-        # TODO: move to log.py
-        class inner_log:
-            @classmethod
-            def info(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.info(message)
-
-            @classmethod
-            def warning(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.warning(message)
-
-            @classmethod
-            def error(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.error(message)
-
-            @classmethod
-            def debug(cls, msg: str, *args):
-                component = ' - '.join(args)
-                component_msg = ''.join(['<', component, '>']) if component else ''
-                message = ' '.join([self.syntax(), component_msg, msg])
-                act.debug(message)
-
-            @classmethod
-            def exception(cls, component_name: str, exception: Exception):
-                exception_name = exception.__class__.__name__
-                component_name = '<{}>'.format(component_name)
-                message = ' '.join([self.syntax(), component_name, 'Except Exception:', exception_name])
-                act.error(message)
-
-                current = exception.__traceback__
-
-                # TODO: refact
-                current_code = current.tb_frame.f_code
-
-                while not basename(current_code.co_filename) in ('action.py', 'parse.py') and current.tb_next:
-                    current = current.tb_next
-                    current_code = current.tb_frame.f_code
-                lines = [linecache.getline(current_code.co_filename, current.tb_lineno + x,
-                                           current.tb_frame.f_globals).replace('\n', '')
-                         for x in
-                         (-2, -1, 0)]
-
-                for line in (-2, -1, 0):
-                    if not lines[2 + line].strip():
-                        continue
-                    msg = ''.join(('Line: ', str(current.tb_lineno + line), ' |', lines[2 + line]))
-                    act.debug(msg)
-
-        return inner_log
-
-    @abstractmethod
-    def signal_callback(self, signum, frame):
-        pass
-
-    def collect(self, scheme_name: str):
-        # TODO
-        pass
-
-    @abstractmethod
-    def options(self, **kwargs):
-        pass
-
-    @abstractmethod
-    def run(self):
-        pass
-
-    @abstractmethod
-    def failed(self):
-        pass
-
-    @abstractmethod
-    def exit(self):
-        pass
-
 
 from base.core import collect_profile
 from tests.telescreen import tests_path
@@ -120,8 +21,11 @@ schemes_path = os.path.join(tests_path, 'mock_schemes')
 
 from base.command import sys_exit
 from base.command.thread import Thread, ScrapyThread
-
+from base.command.generate import Generate
 from unittest import mock
+from base.command import Command
+
+from click.testing import CliRunner
 
 
 # mock
@@ -154,10 +58,15 @@ def mock_trigger(command, **kwargs):
 
 class TestCommand(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        import shutil
+        shutil.rmtree(os.path.join(schemes_path, 'generate'))
+
     def test_atom(self):
         params = {
             'scheme': 'atom',
-            'path': os.path.join(schemes_path, 'atom')
+            'path': schemes_path
         }
 
         command = Thread()
@@ -172,6 +81,13 @@ class TestCommand(unittest.TestCase):
 
         assert count + failed > 5 * 10
 
+    def test_atom_runner(self):
+        runner = CliRunner()
+        from base.command.Command import thread
+        result = runner.invoke(thread, ['atom', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
+
+        print(result.output)
+
     def test_log(self):
         command = Thread()
 
@@ -181,20 +97,40 @@ class TestCommand(unittest.TestCase):
         command.log.info('wtf!', )
 
     def test_thread_consumer(self):
+        from base.command import Command
+
         atom = os.path.join(schemes_path, 'atom')
 
         steps = collect_steps(atom)
         task_queue = collect_profile(atom)['task_queue']
-        pipeline = Pipeline(collect_processors(atom))
+
+        # don't print out
+        # pipeline = Pipeline(collect_processors(atom))
+        pipeline = Pipeline([])
+
         scraper = RequestScraper()
         scraper.scraper_activate()
+        scraper.timeout = 1
 
-        consumer = ScrapyThread(task_queue, steps, scraper, pipeline)
+        consumer = ScrapyThread(task_queue, steps, scraper, pipeline, Command().log)
         consumer.start()
 
-        time.sleep(1)
+        # TODO
+        # time.sleep(1)
+
+        consumer.join(10)
 
         consumer.stop()
+
+    # @unittest.skip
+    def test_generate(self):
+        params = {
+            'scheme': 'generate',
+            'path': schemes_path
+        }
+
+        command = Generate()
+        mock_trigger(command, **params)
 
     @unittest.skip
     def test_kuaidaili(self):

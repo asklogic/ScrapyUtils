@@ -1,115 +1,45 @@
 import os
-from os import path
-from base.log import act
 
 from base.generate import templates
 from string import Template
 
-from base.core import PROJECT_PATH
-
-generator_list = [
-    "action.py",
-    "parse.py",
-    "process.py",
-    "model.py",
-    "prepare.py",
-]
-
 generator_mapper = {
     "action.py": "action_template",
     "parse.py": "parse_template",
-    "process.py": "process_template",
+    "processor.py": "process_template",
     "model.py": "model_template",
-    "prepare.py": "prepare_template",
+    # "prepare.py": "prepare_template",
+    "profile.py": "profile_template"
+
 }
 
 
-def dir_generator(job_name: str):
-    target_path = os.path.join(PROJECT_PATH, job_name)
-
-    # create target folder and __init__.py file
-    if not os.path.isdir(target_path):
-        # folder
-        os.makedirs(target_path)
-
-        # init file
-        with open(os.path.join(target_path, "__init__.py"), "w") as f:
-            pass
-
-    # create data folder
-    target_data_path = os.path.join(target_path, 'data')
-    if not os.path.isdir(target_data_path):
-        os.makedirs(target_data_path)
-
-
-def component_generate(job_name: str):
-    target_path = os.path.join(PROJECT_PATH, job_name)
-
-    for component in generator_mapper:
-        component_path = os.path.join(target_path, component)
-        if not os.path.isfile(component_path):
-            with open(os.path.join(target_path, component), "w") as f:
-                template = Template(getattr(templates, generator_mapper[component]))
-                code = template.substitute(class_name="".join([job_name[0:1].upper(), job_name[1:]]))
-                f.writelines(code)
-
-
-def overwrite(job_name):
-    target_path = os.path.join(PROJECT_PATH, job_name)
-
-    for component in generator_mapper:
-        component_path = os.path.join(target_path, component)
-        if os.path.isfile(component_path):
-            with open(os.path.join(target_path, component), "w") as f:
-                template = Template(getattr(templates, generator_mapper[component]))
-
-                code = template.substitute(class_name="".join([job_name[0:1].upper(), job_name[1:]]))
-                f.writelines(code)
-
-
-def generate(target: str):
-    dir_generator(target)
-    component_generate(target)
-
-
-# refact
-
-def create_folder(target: str, data: bool = True) -> bool:
+def create_folder(path: str):
     """
     create target folder and __init__.py file
 
-    :param target:
-    :return: if exist target folder,return False.
+    :param target: target name
     """
-    target_path = os.path.join(PROJECT_PATH, target)
 
-    if not os.path.isdir(target_path):
-        # folder
-        os.makedirs(target_path)
+    # create data folder
+    target_data_path = os.path.join(path, 'data')
+    if not os.path.isdir(target_data_path):
+        os.makedirs(target_data_path)
 
-        # create data folder
-        if data:
-            target_data_path = os.path.join(target_path, 'data')
-            if not os.path.isdir(target_data_path):
-                os.makedirs(target_data_path)
-
-        # init file
-        with open(os.path.join(target_path, "__init__.py"), "w") as f:
-            pass
-
-        return True
-    return False
+    # init file
+    with open(os.path.join(path, "__init__.py"), "w") as f:
+        pass
 
 
-def create_components(target: str):
-    target_path = os.path.join(PROJECT_PATH, target)
-
+def create_components(path: str):
+    target = os.path.basename(path)
     for component in generator_mapper:
-        component_path = os.path.join(target_path, component)
+        component_path = os.path.join(path, component)
+
         if not os.path.isfile(component_path):
-            with open(os.path.join(target_path, component), "w") as f:
+            with open(os.path.join(path, component), "w") as f:
                 template = Template(getattr(templates, generator_mapper[component]))
-                # code = template.substitute(class_name="".join([target[0:1].upper(), target[1:]]))
+
                 code = template.substitute(class_name=target.capitalize())
                 f.writelines(code)
 
@@ -133,5 +63,5 @@ def remove(target):
 
 if __name__ == '__main__':
     target = "ProxyKuai"
-    dir_generator(target)
-    component_generate(target)
+    # dir_generator(target)
+    # component_generate(target)

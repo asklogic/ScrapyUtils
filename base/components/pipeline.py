@@ -53,8 +53,8 @@ class ProcessorSuit(object):
 class PipelineConsumer(Consumer):
 
     def __init__(self, queue: Queue, failed: set, suit: ProcessorSuit, **kwargs):
-        kwargs['queue'] = queue
-        super(PipelineConsumer, self).__init__(**kwargs)
+        # super(PipelineConsumer, self).__init__(queue, 0, **kwargs)
+        Consumer.__init__(self, queue, 0, **kwargs)
 
         self._failed = failed
         self._suit = suit

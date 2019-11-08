@@ -13,7 +13,7 @@ from base.components.proceesor import Processor
 from base.libs.scraper import Scraper
 from base.libs.setting import Setting
 from base.libs.task import TaskModel
-from base.log import act
+from base.log import logger
 from base.components.scheme import Action, Parse
 from base.libs.task import Task
 from scrapy_config import Project_Path
@@ -186,11 +186,11 @@ class JsonFileProcessor(Processor):
             with open(file_path) as f:
                 data = json.load(f)
             self.data.extend(data)
-            act.info("<<JsonFile>> load exist data. exist file: " + file_path)
+            logger.info("<<JsonFile>> load exist data. exist file: " + file_path)
 
     def detect_save(self):
         temp_file = path.join(self.dir_path, self.name + "JsonFileTest.json")
-        act.info("<<JsonFile>> Json File path: " + path.join(self.dir_path))
+        logger.info("<<JsonFile>> Json File path: " + path.join(self.dir_path))
         try:
             if not os.path.exists(self.dir_path):
                 os.mkdir(self.dir_path)
@@ -210,7 +210,7 @@ class JsonFileProcessor(Processor):
         file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
         with open(file_path, "w") as f:
             json.dump(self.data[:self.limit], f)
-            act.info("<<JsonFile>> success dump file. " + file_path)
+            logger.info("<<JsonFile>> success dump file. " + file_path)
         self.part += 1
         self.data = self.data[self.limit:]
 
@@ -219,7 +219,7 @@ class JsonFileProcessor(Processor):
             self.dump_to_file()
 
     def on_exit(self):
-        act.info("<<JsonFile>> end task! last len:" + str(len(self.data)))
+        logger.info("<<JsonFile>> end task! last len:" + str(len(self.data)))
         if self.data:
             self.dump_to_file()
 

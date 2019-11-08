@@ -1,7 +1,7 @@
 import time
 import threading
 
-from base.log import act
+from base.log import logger
 from base import core
 
 
@@ -10,12 +10,12 @@ def single_run(target_name):
 
     prepare, schemes, models, processors = components
 
-    act.info("single run")
-    act.info("Target Job: " + target_name)
-    act.info("Target Prepare: " + prepare._name + str(prepare))
-    act.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
-    act.info("Target Models: " + str([x._name for x in models]))
-    act.info("Target Process: " + str([x._name for x in processors]))
+    logger.info("single run")
+    logger.info("Target Job: " + target_name)
+    logger.info("Target Prepare: " + prepare._name + str(prepare))
+    logger.info("Target Schemes list: " + str([x._name for x in prepare.schemeList]))
+    logger.info("Target Models: " + str([x._name for x in models]))
+    logger.info("Target Process: " + str([x._name for x in processors]))
 
     # step 3.1: build single scraper
     scraper, tasks = core.build_prepare(prepare)
@@ -50,15 +50,15 @@ def thread_run(target_name: str):
 
     sys_hub, dump_hub = core.build_hub(setting=setting)
 
-    act.info("thread run")
-    act.info("Target Job: " + target_name)
-    act.info("Target Prepare: " + setting.CurrentPrepare._name + str(setting.CurrentPrepare))
-    act.info("Target Schemes list: " + str([x._name for x in setting.CurrentSchemeList]))
-    act.info("Target Models: " + str([x._name for x in setting.CurrentModels]))
-    act.info("Target Process: " + str([x._name for x in setting.CurrentProcessorsList]))
+    logger.info("thread run")
+    logger.info("Target Job: " + target_name)
+    logger.info("Target Prepare: " + setting.CurrentPrepare._name + str(setting.CurrentPrepare))
+    logger.info("Target Schemes list: " + str([x._name for x in setting.CurrentSchemeList]))
+    logger.info("Target Models: " + str([x._name for x in setting.CurrentModels]))
+    logger.info("Target Process: " + str([x._name for x in setting.CurrentProcessorsList]))
 
-    act.info("Detect Task number : " + str(len(tasks)))
-    act.info("Build Scraper finish. Thread number: " + str(setting.Thread))
+    logger.info("Detect Task number : " + str(len(tasks)))
+    logger.info("Build Scraper finish. Thread number: " + str(setting.Thread))
 
     sys_hub.scraper_activate()
     dump_hub.scraper_activate()

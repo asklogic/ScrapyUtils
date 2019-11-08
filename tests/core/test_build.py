@@ -28,8 +28,8 @@ class TestBuild(TestCase):
         # self.failed = core.load_components('TestMockErrorFile')
         self.failed_setting = core.build_setting('TestMockFailed')
 
-        from base.log import act
-        act.disabled = True
+        from base.log import logger
+        logger.disabled = True
 
     def test_build_components(self):
         current_target = 'TestMock'

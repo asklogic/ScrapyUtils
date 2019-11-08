@@ -3,7 +3,7 @@ from typing import *
 
 from base.components.base import Component, ComponentMeta
 from base.libs import Scraper, Task, Model
-from base.log import act
+from base.log import logger
 
 
 class StepMeta(ComponentMeta):
@@ -110,9 +110,9 @@ class StepSuit(object):
     context: dict
     models: List[Model]
     scraper: Scraper
-    log: act
+    log: logger
 
-    def __init__(self, steps: List[type(Step)], scraper: Scraper, log=act):
+    def __init__(self, steps: List[type(Step)], scraper: Scraper, log=logger):
         # assert
         for step in steps:
             assert isinstance(step, type), 'StepSuit need Step class.'

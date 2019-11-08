@@ -6,31 +6,25 @@ import time
 import warnings
 import copy
 import os
-
+import sys
+import importlib
 from queue import Queue
-from base.log import act, status
+
+from base.log import logger
 from base.libs.setting import Setting
 from base.components.base import Component, ComponentMeta
 from base.libs.task import Task, TaskModel
 from base.components.prepare import Prepare
 from base.libs import Model, Scraper, RequestScraper
 from base.components.scheme import Action, Parse, Scheme
-from base.hub.pipeline import Pipeline
 from base.components.proceesor import Processor
 from base.common import ProxyProcessor, ProxyModel
-from base.hub.hub import Hub
 from base.libs.scraper import Scraper
-
 from base.components import *
 from base.components.step import Step, ActionStep, ParseStep
 
 PROJECT_PATH = os.getcwd()
 print('PROJECT_PATH: ' + PROJECT_PATH)
-
-import sys
-
-import importlib
-
 sys.path.append(PROJECT_PATH)
 
 
@@ -49,8 +43,8 @@ def load_files(target_name: str) -> List[ModuleType]:
             target_modules.append(module)
         except ModuleNotFoundError as me:
             # TODO
-            act.error("project must set a {}.py".format(file_names))
-            act.critical("failed in load_files")
+            logger.error("project must set a {}.py".format(file_names))
+            logger.critical("failed in load_files")
             raise me
 
     return target_modules
@@ -185,7 +179,7 @@ def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
         scraper = prepare.get_scraper()
         tasks = prepare.get_tasks()
     except Exception as e:
-        act.exception(e)
+        logger.exception(e)
         raise Exception('build_prepare failed')
     return scraper, tasks
 
@@ -194,77 +188,12 @@ def generate_task(prepare: Prepare) -> List[Task]:
     task = prepare.get_tasks()
 
     if not task:
-        act.warning("[Config] prepare must yield tasks")
+        logger.warning("[Config] prepare must yield tasks")
         raise TypeError("[Config] build_prepare error")
     return task
 
 
-def build_hub(setting: Setting):
-    models = setting.CurrentModels
-    processors = setting.CurrentProcessorsList
 
-    for model in models:
-        assert issubclass(model, Model)
-        ModelManager.add_model(model)
-
-    ModelManager.add_model(ProxyModel)
-    ModelManager.add_model(TaskModel)
-
-    sys_hub = Hub([ProxyModel, TaskModel], setting=setting)
-
-    if setting.ProxyAble:
-        sys_hub.add_feed_pipeline('ProxyModel', Pipeline([ProxyProcessor], setting=setting))
-
-    dump_hub = Hub(setting=setting)
-    dump_hub.add_dump_pipeline('Model', Pipeline(processors, setting=setting))
-
-    return sys_hub, dump_hub
-
-
-def scrapy(scheme_list: List[Action or Parse], scraper: Scraper, task: Task, dump_hub: Hub, sys_hub: Hub):
-    content = ''
-    gather_models: List[Model] = []
-    try:
-        for scheme in scheme_list:
-            if isinstance(scheme, Action):
-                res = do_action(scheme, task, scraper)
-                if res:
-                    content = res
-            elif isinstance(scheme, Parse):
-                gather_models.extend(do_parse(scheme, content))
-
-        for model in gather_models:
-            if isinstance(model, TaskModel):
-                sys_hub.save(model)
-            else:
-                dump_hub.save(model)
-    except Exception as e:
-        import traceback
-        import linecache
-
-        # TODO refact
-        error_info = []
-        error_info.extend(('Scheme:' + scheme.get_name(),))
-        error_info.extend(('Exception:' + e.__class__.__name__,))
-        # error_info.extend(('msg: ' + ''.join(e.args),))
-
-        current = e.__traceback__
-
-        while current.tb_next is not None:
-            current = current.tb_next
-        code = current.tb_frame.f_code
-        # code_content = []
-        # for i in range(3):
-        #     code_content.append('line {0}: '.format(current.tb_lineno + i - 1)+linecache.getline(code.co_filename, current.tb_lineno + i - 1, current.tb_frame.f_globals).strip())
-        # error_info.extend(('\n' + '\n'.join(code_content),))
-
-        code_content = linecache.getline(code.co_filename, current.tb_lineno, current.tb_frame.f_globals).strip()
-        error_info.extend(('\ncode: ' + code_content,))
-
-        status.error(' | '.join(error_info))
-
-        return False
-    return True
 
 
 def do_action(scheme: Action, task, scraper):

@@ -15,7 +15,7 @@ TIMEOUT = 2
 
 def generate_tasks(**kwargs):
     for i in range(10):
-        t = Task(url='http://127.0.0.1:8090/mock/random/dynamic')
+        t = Task(url='http://yoursite.com')
         yield t
 
 

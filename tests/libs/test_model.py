@@ -1,7 +1,6 @@
 import unittest
 
 from base.libs import Model, Field
-from base.components import active
 
 
 class TestModel(unittest.TestCase):
@@ -163,3 +162,19 @@ class TestModel(unittest.TestCase):
 
         # FIXME: property and data model
         m = CustomModel(notexist='nope')
+
+    def test_nametuple(self):
+        from collections import namedtuple
+        from typing import NamedTuple
+
+        class Model(NamedTuple):
+            pass
+
+    def test_dataclass(self):
+
+        class DataModel():
+            name = 'data_model'
+            pass
+
+        assert DataModel.name == 'data_model'
+

@@ -13,6 +13,15 @@ generator_mapper = {
 
 }
 
+init_template = """from base.core.collect import collect_steps, collect_processors, collect_profile
+
+from . import action, parse, processor, profile
+
+steps = collect_steps(action, parse)
+processors = collect_processors(processor)
+config, tasks_callable, scraper_callable = collect_profile(profile)
+"""
+
 
 def create_folder(path: str):
     """
@@ -28,7 +37,7 @@ def create_folder(path: str):
 
     # init file
     with open(os.path.join(path, "__init__.py"), "w") as f:
-        pass
+        f.writelines(init_template)
 
 
 def create_components(path: str):

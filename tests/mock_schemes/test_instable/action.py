@@ -4,7 +4,7 @@ from base.common import Task
 
 
 @active
-class GenerateAction(ActionStep):
+class Test_instableAction(ActionStep):
     def scraping(self, task: Task):
         scraper: Scraper = self.scraper
         return scraper.get(url=task.url)

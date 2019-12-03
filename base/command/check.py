@@ -90,4 +90,4 @@ class Check(Command):
 
         self.log('spend %.2f second(s) in' % float(time.time() - start))
 
-        [scraper.quit() for scraper in scrapers]
+        [scraper._quit() for scraper in scrapers]

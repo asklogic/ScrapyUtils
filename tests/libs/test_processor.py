@@ -29,8 +29,8 @@ f = faker.Faker(locale='zh_CN')
 
 class Test_processor(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls) -> None:
+    # @classmethod
+    def setUp(cls) -> None:
         super().setUpClass()
 
         faker_persons = set()
@@ -53,6 +53,7 @@ class Test_processor(unittest.TestCase):
         assert True
 
     def test_init(self):
+        # ----------------------------------------------------------------------
         class TestProcessor(Processor):
             def process_item(self, model: Model) -> Any:
                 return model
@@ -65,12 +66,17 @@ class Test_processor(unittest.TestCase):
                     self.count += 1
                 return model
 
+        # ----------------------------------------------------------------------
+
+
         t = Task(url='http://127.0.0.1:8090')
 
         processors = [TestProcessor]
         pipeline = Pipeline(processors)
 
         [pipeline.push(t) for x in range(500)]
+
+        # ----------------------------------------------------------------------
         assert pipeline.size() == 500
 
         # pipeline.pop()

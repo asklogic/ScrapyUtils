@@ -7,4 +7,4 @@ from .task import Task
 from .proxy import Proxy
 
 # TODO: Consumer
-from .thread import BaseThreading, Consumer, ConsumerSuit
+from .thread import BaseThreading, Consumer, ConsumerSuit, ThreadSuit

@@ -12,6 +12,8 @@ class MockPersonParse(ParseStep):
     def parsing(self):
         names = xpathParse(self.content, r'//*[@class="person"]')
 
+
+
         for name in names:
             m = Person()
             m.name = name

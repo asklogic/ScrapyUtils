@@ -8,7 +8,7 @@ generate by Generate command.
 from base.libs import Task
 
 THREAD = 2
-TIMEOUT = 2
+TIMEOUT = 0.1
 
 
 # generator your tasks in here.

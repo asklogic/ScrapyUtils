@@ -46,27 +46,9 @@ for i in range(10):
     q.put(i)
 
 
-def core():
-    t = MockThread(queue=q, delay=0.1)
-    t.start()
-
-    q.join()
 
 
 
-
-
-
-class MockThread(Consumer):
-
-    def __init__(self, **kw):
-        super(MockThread, self).__init__(**kw)
-
-    def consuming(self, obj):
-        delay = random.randint(5, 20) / 50
-
-        print(self.name, 'scraping!', 'delay', delay)
-        time.sleep(delay)
 
 
 if __name__ == '__main__':
@@ -76,14 +58,4 @@ if __name__ == '__main__':
         print('exit! now!')
     except Exception as e:
         print('exit!')
-    # t = threading.Thread(target=block)
-    # t.start()
-    # t.join()
 
-    # number = input('number')
-    # if int(number) > 10:
-    #     # click.prompt("Input")
-    #     cli()
-    #
-    # else:
-    #     click.prompt("Input2")

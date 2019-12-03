@@ -56,7 +56,7 @@ class TestBuild(TestCase):
     def test_build_prepare_default(self):
         with self.assertWarns(Warning) as w:
             scraper, tasks = core.build_prepare(self.normal_setting.CurrentPrepare)
-            scraper.quit()
+            scraper._quit()
         self.assertIn('scraper_prepared must return a Scraper Instance', str(w.warning))
 
     def test_build_prepare_custom(self):
@@ -71,12 +71,12 @@ class TestBuild(TestCase):
 
         ids = [id(x) for x in scrapers]
         self.assertEqual(len(ids), len(set(ids)))
-        [x.quit() for x in scrapers]
+        [x._quit() for x in scrapers]
 
     def test_build_prepare_failed(self):
         with self.assertRaises(Exception) as e:
             scraper, tasks = core.build_prepare(prepare=self.failed_setting.Prepare)
-            scraper.quit()
+            scraper._quit()
         self.assertIn('build_prepare failed', str(e.exception))
 
     def test_build_demo(self):

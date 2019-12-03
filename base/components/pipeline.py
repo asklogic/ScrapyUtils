@@ -1,5 +1,6 @@
 from typing import *
 from queue import Queue
+from threading import Lock
 
 from base.libs.thread import Consumer
 from . import Processor
@@ -52,9 +53,13 @@ class ProcessorSuit(object):
 
 class PipelineConsumer(Consumer):
 
-    def __init__(self, queue: Queue, failed: set, suit: ProcessorSuit, **kwargs):
-        # super(PipelineConsumer, self).__init__(queue, 0, **kwargs)
-        Consumer.__init__(self, queue, 0, **kwargs)
+    def __init__(self, failed: set, suit: ProcessorSuit, **kwargs):
+        Consumer.__init__(self,
+                          kwargs.pop('queue', Queue()),
+                          kwargs.pop('delay', 1),
+                          kwargs.pop('lock', Lock()),
+
+                          **kwargs)
 
         self._failed = failed
         self._suit = suit
@@ -100,7 +105,11 @@ class Pipeline(object):
         self._suit = suit
 
         # consumer
-        self.consumer = PipelineConsumer(self.queue, self.failed, suit)
+        consumer_kwargs = {
+            'queue': self.queue,
+            'delay': 0,
+        }
+        self.consumer = PipelineConsumer(self.failed, suit, **consumer_kwargs)
         self.consumer.start()
 
     def _start_processor(self):
@@ -143,8 +152,6 @@ class Pipeline(object):
         # execute on_exit
         for processor in self._suit.processors:
             processor.on_exit()
-
-
 
         while self.queue.qsize() > 0:
             model = self.queue.get()

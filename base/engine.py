@@ -37,7 +37,7 @@ def single_run(target_name):
     core.scrapy(schemes, scraper, current_task, dump_hub, sys_hub)
 
     # step 5: exit
-    scraper.quit()
+    scraper._quit()
     dump_hub.stop()
     sys_hub.stop()
 
@@ -77,7 +77,7 @@ def thread_run(target_name: str):
     sys_hub.stop(True)
     dump_hub.stop(True)
 
-    [x.quit() for x in scrapers]
+    [x._quit() for x in scrapers]
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ import os
 
 
 class Generate(Command):
+    do_collect = False
     path: str
 
     def syntax(self):

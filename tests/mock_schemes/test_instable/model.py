@@ -1,5 +1,5 @@
 from base.libs import Model, Field
 
 
-class GenerateModel(Model):
+class Test_instableModel(Model):
     filed = Field()

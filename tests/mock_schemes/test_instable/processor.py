@@ -7,8 +7,17 @@ from .model import *
 
 
 @active
-class GenerateProcess(Processor):
+class Test_instableProcess(Processor):
 
     def process_item(self, model: Model) -> Any:
         print(model.pure_data())
-        return model        
+        return model
+
+
+@active
+class Count(Processor):
+    priority = 1000
+    count = 0
+
+    def process_item(self, model: Model) -> Any:
+        self.count += 1

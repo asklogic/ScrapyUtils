@@ -4,9 +4,11 @@ import linecache
 from os.path import basename
 from logging import DEBUG, INFO, WARNING, ERROR
 
-# Scrapy Default logger
+# global
 
+line = 3
 
+# ScrapyUtil Default logger
 sh = logging.StreamHandler()
 sh.setLevel(DEBUG)
 sh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%m/%d %H:%M:%S'))
@@ -47,7 +49,10 @@ class Wrapper:
         cls.log.error(msg=cls._msg(msg, *args), **kwargs)
 
     @classmethod
-    def exception(cls, component_name: str, exception: Exception):
+    def exception(cls, component_name: str, exception: Exception, line: int = None):
+        if not line:
+            line = globals().get('line', 3)
+
         exception_name = exception.__class__.__name__
         component_name = '<{}>'.format(component_name)
         message = ' '.join([cls.syntax(), component_name, 'Except :', exception_name, str(exception)])
@@ -64,13 +69,13 @@ class Wrapper:
         lines = [linecache.getline(current_code.co_filename, current.tb_lineno + x,
                                    current.tb_frame.f_globals).replace('\n', '')
                  for x in
-                 (-2, -1, 0)]
+                 tuple(range(0, line * -1, -1))]
 
-        for line in (-2, -1, 0):
-            if not lines[2 + line].strip():
-                continue
-            msg = ''.join(('Line: ', str(current.tb_lineno + line), ' |', lines[2 + line]))
-            cls.log.debug(msg)
+        for line_index in tuple(range(0, line * -1, -1)):
+            if lines[line_index + line - 1].strip():
+                msg = ''.join(
+                    ('Line: ', str(current.tb_lineno - line_index - line), ' |', lines[line_index + line - 1]))
+                cls.log.debug(msg)
 
 
 class ThreadLog(Wrapper):

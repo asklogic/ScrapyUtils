@@ -1,9 +1,10 @@
 from abc import abstractmethod
 from typing import *
 
+from collections import deque
 from base.components.base import Component, ComponentMeta
 from base.libs import Scraper, Task, Model
-from base.log import logger
+from base.log import Wrapper as logger
 
 
 class StepMeta(ComponentMeta):
@@ -112,8 +113,9 @@ class StepSuit(object):
     scraper: Scraper
     log: logger
 
-    def __init__(self, steps: List[type(Step)], scraper: Scraper, log=logger):
+    def __init__(self, steps: List[type(Step)], scraper: Scraper, log=logger, models=None):
         # assert
+
         for step in steps:
             assert isinstance(step, type), 'StepSuit need Step class.'
             assert issubclass(step, Step), 'StepSuit need Step class.'
@@ -124,16 +126,20 @@ class StepSuit(object):
         self.content = ''
         self.context = {}
         self.scraper = scraper
-        self.models = []
+        self.models = models if models else list()
         self.log = log
 
         # init step objects
         self.steps = [x(self) for x in steps]
 
         # scraper active
-        assert scraper.activated is True, 'Scraper must be activated.'
+        # assert scraper.activated is True, 'Scraper must be activated.'
 
-    def scrapy(self, task: Task):
+    def scrapy(self, task: Task) -> bool:
+        """
+        :param task: current task
+        :return: current status. True means passed.
+        """
         self.models.clear()
         self.content = ''
 
@@ -141,8 +147,9 @@ class StepSuit(object):
             # TODO: refact
             if not step.do(task):
                 self.log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
-                return
+                return False
         self.log.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
+        return True
 
     def log(self):
         pass

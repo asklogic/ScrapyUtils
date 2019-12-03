@@ -142,9 +142,12 @@ class TestStep(unittest.TestCase):
 
     def test_failed_check(self):
         class FailedCheckAction(ActionStep):
-
             def check(self, content):
                 assert False
+
+        from base import log
+
+        log.line = 3
 
         suit = StepSuit([FailedCheckAction, SimpleParse], self.r, self.log)
 

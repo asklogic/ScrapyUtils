@@ -1,11 +1,13 @@
 from typing import List
 from abc import abstractmethod
 
-import click, time
+import click
 import sys
 import os
-from base.log import logger, Wrapper
 import signal
+
+from base.log import logger, Wrapper
+from base.core.collect import collect_scheme
 
 
 class Command(object):
@@ -68,8 +70,9 @@ def trigger(command_name: str, **kwargs):
     signal.signal(signal.SIGTERM, command.signal_callback)
     signal.signal(signal.SIGINT, command.signal_callback)
 
-    # collect
-    # command.collect(kwargs.get('target'))
+    # collect. -> core.collect
+    if command.do_collect:
+        collect_scheme(kwargs.get('scheme'))
 
     try:
         command.options(**kwargs)
@@ -112,17 +115,19 @@ def cli():
 @click.command()
 @click.argument('scheme')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
-def thread(scheme: str, path):
-    trigger('thread', scheme=scheme, path=path)
+@click.option('line', '--line', default=3)
+def thread(scheme: str, path, line):
+    trigger('thread', scheme=scheme, path=path, line=line)
 
     # thread_run(target)
     # pass
 
 
 @click.command()
-@click.argument('target')
-def single(target: str):
-    trigger('single', target=target)
+@click.argument('scheme')
+@click.option('path', '--path', default=os.getcwd(), type=click.Path())
+def single(scheme: str, path):
+    trigger('single', scheme=scheme, path=path)
 
 
 @click.command()

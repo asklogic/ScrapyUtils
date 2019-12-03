@@ -8,10 +8,10 @@ from base.tool import xpathParse, xpathParseList
 
 
 @active
-class GenerateParse(ParseStep):
+class Test_instableParse(ParseStep):
 
     def parsing(self) -> Model or Generator[Model]:
-        m = GenerateModel()
+        m = Test_instableModel()
         m.filed = "filed content"
         yield m
 

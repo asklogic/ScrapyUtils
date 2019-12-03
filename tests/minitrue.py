@@ -1,6 +1,5 @@
 import unittest
 import sys
-from imp import reload
 import traceback
 import linecache
 import os
@@ -47,7 +46,7 @@ def failed_503():
 @app.route('/mock/random/violation')
 def violation():
     import random
-    if random.randint(0, 100) > 60:
+    if random.randint(0, 100) > 20:
         return make_response(render_template(r'MockTemplate.html', info='success info'), 200)
     else:
         return make_response(render_template(r'MockFailed.html', msg='503 failed'), 503)

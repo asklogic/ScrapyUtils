@@ -8,14 +8,14 @@ from abc import abstractmethod
 from typing import Any
 
 import linecache
+import importlib
 
-from base.core import collect_profile
 from tests.telescreen import tests_path
 
 from base.libs import RequestScraper, Model
 from base.components import Processor
 from base.components.pipeline import Pipeline
-from base.core import collect_steps, collect_processors
+from base.core.collect import collect_scheme
 
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
@@ -26,6 +26,8 @@ from unittest import mock
 from base.command import Command
 
 from click.testing import CliRunner
+
+from base.core import collect
 
 
 # mock
@@ -39,7 +41,8 @@ def mock_trigger(command, **kwargs):
     signal.signal(signal.SIGTERM, command.signal_callback)
 
     # collect
-    # command.collect(kwargs.get('target'))
+    if command.do_collect:
+        collect_scheme(kwargs.get('scheme'))
 
     try:
         command.options(**kwargs)
@@ -61,7 +64,7 @@ class TestCommand(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         import shutil
-        shutil.rmtree(os.path.join(schemes_path, 'generate'))
+        # shutil.rmtree(os.path.join(schemes_path, 'generate'))
 
     def test_atom(self):
         params = {
@@ -74,10 +77,11 @@ class TestCommand(unittest.TestCase):
 
         # block here
 
-        failed = len(command.pipeline.failed)
-        assert command.pipeline.suit.processors[0].name == 'Duplication'
-        assert command.pipeline.suit.processors[1].name == 'Count'
-        count = command.pipeline.suit.processors[1].count
+        from base.core.collect import models_pipeline as pipeline
+        failed = len(pipeline.failed)
+        assert pipeline.suit.processors[0].name == 'Duplication'
+        assert pipeline.suit.processors[1].name == 'Count'
+        count = pipeline.suit.processors[1].count
 
         assert count + failed > 5 * 10
 
@@ -88,6 +92,18 @@ class TestCommand(unittest.TestCase):
 
         print(result.output)
 
+    def test_instable(self):
+        runner = CliRunner()
+        from base.command.Command import thread
+        result = runner.invoke(thread, ['test_instable',  '--line', '0'])
+
+        print(result.output)
+
+        from base.core.collect import models_pipeline
+
+        print(models_pipeline.suit.processors[0].count)
+        assert models_pipeline.suit.processors[0].count > 0
+
     def test_log(self):
         command = Thread()
 
@@ -96,33 +112,29 @@ class TestCommand(unittest.TestCase):
         command.log.info('wtf!', 'Core')
         command.log.info('wtf!', )
 
+
     def test_thread_consumer(self):
         from base.command import Command
 
-        atom = os.path.join(schemes_path, 'atom')
+        # collect.collect_scheme('atom')
+        # # importlib.reload(collect)
+        #
+        # # no print out
+        # # pipeline = Pipeline(collect_processors(atom))
+        # pipeline = Pipeline([])
+        #
+        # consumer = ScrapyThread(collect.tasks, collect.steps, collect.scraper, pipeline, Command().log, **{'delay': 0})
+        # # consumer = ScrapyThread(tasks, steps, scraper, pipeline, Command().log, **{'delay': 0})
+        # consumer.start()
+        #
+        # # TODO
+        # # time.sleep(1)
+        #
+        # consumer.join(2)
+        #
+        # consumer.stop()
 
-        steps = collect_steps(atom)
-        task_queue = collect_profile(atom)['task_queue']
-
-        # don't print out
-        # pipeline = Pipeline(collect_processors(atom))
-        pipeline = Pipeline([])
-
-        scraper = RequestScraper()
-        scraper.scraper_activate()
-        scraper.timeout = 1
-
-        consumer = ScrapyThread(task_queue, steps, scraper, pipeline, Command().log)
-        consumer.start()
-
-        # TODO
-        # time.sleep(1)
-
-        consumer.join(10)
-
-        consumer.stop()
-
-    # @unittest.skip
+    @unittest.skip
     def test_generate(self):
         params = {
             'scheme': 'generate',

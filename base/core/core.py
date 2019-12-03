@@ -23,9 +23,6 @@ from base.libs.scraper import Scraper
 from base.components import *
 from base.components.step import Step, ActionStep, ParseStep
 
-PROJECT_PATH = os.getcwd()
-print('PROJECT_PATH: ' + PROJECT_PATH)
-sys.path.append(PROJECT_PATH)
 
 
 def load_files(target_name: str) -> List[ModuleType]:
@@ -263,7 +260,7 @@ def collect_steps(scheme_path) -> List[Step]:
 
 def collect_processors(scheme_path) -> List[Processor]:
     origin_processors = collect(scheme_path, 'processor.py', Processor)
-    # remove deactive
+    # remove active
     processors = [x for x in origin_processors if x.active]
 
     # sort

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any
+from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any, Callable
 import typing
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -20,15 +20,22 @@ class ScraperMeta(ABCMeta):
     def __new__(mcs, name, bases, attrs) -> Any:
         # quit
 
-        # http function
-
         return super().__new__(mcs, name, bases, attrs)
 
 
-def must_activated(func):
+def need_activated(func) -> Callable:
     def wrapper(obj, *args, **kwargs):
         if not obj.activated:
-            raise Exception('Scraper must be activated')
+            raise Exception('Scraper must be activated.')
+        return func(obj, *args, **kwargs)
+
+    return wrapper
+
+
+def need_not_activated(func) -> Callable:
+    def wrapper(obj, *args, **kwargs):
+        if obj.activated:
+            raise Exception('Scraper must be not activated.')
         return func(obj, *args, **kwargs)
 
     return wrapper
@@ -43,30 +50,48 @@ class Scraper(object, metaclass=ScraperMeta):
     # settings
     schemes: List[str] = []
 
+    # ----------------------------------------------------------------------
+    # abstract methods
     @abstractmethod
     def __init__(self):
         pass
 
-    @property
-    def activated(self):
-        return self._activated
-
-    # TODO how to active
-    @activated.setter
-    def activated(self, value):
-        self._activated = value
-
     @abstractmethod
-    def scraper_activate(self):
+    def _activate(self):
         pass
 
-    def get(self, url: str, **kw) -> str:
-        return self._http('get', url, **kw)
+    @abstractmethod
+    def _clear(self):
+        pass
 
-    def post(self, url: str, **kw):
-        return self._http('post', url, **kw)
+    @abstractmethod
+    def _quit(self):
+        pass
 
-    @must_activated
+    # ----------------------------------------------------------------------
+    # scraper method
+
+    @need_not_activated
+    def scraper_activate(self):
+        self._activate()
+
+    @need_activated
+    def scraper_clear(self):
+        self._clear()
+
+    @need_activated
+    def scraper_quit(self):
+        # TODO : need try-except?
+        try:
+            self._quit()
+            self._activated = False
+        except Exception as e:
+            raise Exception('some exception in safe quit', e)
+
+    # ----------------------------------------------------------------------
+    # http methods
+
+    @need_activated
     def _http(self, scheme: str, url: str, **kw) -> str:
         """
 
@@ -77,10 +102,19 @@ class Scraper(object, metaclass=ScraperMeta):
         """
 
         if scheme not in self.schemes:
-            raise Exception('Scraper hasn\'t scheme named {}'.format(scheme))
+            raise Exception("Scraper hasn't scheme named {}".format(scheme))
 
         func = getattr(self, '_' + scheme)
         return func(url, **kw)
+
+    def get(self, url: str, **kw) -> str:
+        return self._http('get', url, **kw)
+
+    def post(self, url: str, **kw):
+        return self._http('post', url, **kw)
+
+    # ----------------------------------------------------------------------
+    # property
 
     @property
     def proxy(self):
@@ -90,46 +124,35 @@ class Scraper(object, metaclass=ScraperMeta):
     def timeout(self):
         return self._timeout
 
+    @property
+    def activated(self):
+        return self._activated
+
+    @activated.setter
+    def activated(self, value):
+        self._activated = bool(value)
+
+    # ----------------------------------------------------------------------
     # abstract property
-    @proxy.setter
-    @abstractmethod
-    def proxy(self, value):
-        pass
 
     @timeout.setter
     @abstractmethod
     def timeout(self, value):
         self._timeout = value
 
-    # abstract methods
+    @proxy.setter
     @abstractmethod
-    def clear_session(self):
-        """
-        Scraper重置 删除所有Session
-        :return:
-        """
-
-    @abstractmethod
-    def quit(self):
-
+    def proxy(self, value: Proxy):
         pass
 
+    # ----------------------------------------------------------------------
     # other methods
     def restart(self):
-        self.safe_quit()
+        self.scraper_quit()
         self.scraper_activate()
 
-    @must_activated
-    def safe_quit(self):
-        try:
-            self.quit()
-            self.activated = False
-        except Exception as e:
-            raise Exception('some exception in safe quit', e)
-
     def __del__(self):
-        if self.activated:
-            self.safe_quit()
+        self.scraper_quit()
 
 
 headers = {
@@ -159,30 +182,48 @@ class RequestScraper(Scraper):
         super().__init__()
 
         self.timeout = 10
-        self.proxy = {}
+        self.headers =  self.headers if  self.headers else headers
 
-        self.headers = headers
+    # ----------------------------------------------------------------------
+    # scraper method
 
-    # scraper property
+    def _activate(self):
+        req = requests.Session()
+        req.keep_alive = self.keep_alive
+        req.headers = self.headers
+        self.req = req
+
+        self._activated = True
+
+    def _clear(self):
+        self.restart()
+
+    def _quit(self):
+        self.req.close()
+
+    # ----------------------------------------------------------------------
+    # requests property
     @property
     def proxy(self) -> dict:
         if self._proxy:
             return {
-                "http": r"http://{0}".format(":".join(self._proxy)),
-                "https": r"http://{0}".format(":".join(self._proxy)),
+                "http": r"http://{0}".format(":".join((self._proxy.ip, self._proxy.port))),
+                "https": r"http://{0}".format(":".join((self._proxy.ip, self._proxy.port))),
             }
         else:
             return {}
 
     @proxy.setter
-    def proxy(self, value):
+    def proxy(self, value: Proxy):
         # TODO
-        pass
+        assert isinstance(value, Proxy)
+        self._proxy = value
 
     @Scraper.timeout.setter
     def timeout(self, value):
-        self._timeout = int(value)
+        self._timeout = value
 
+    # ----------------------------------------------------------------------
     # requests property
     @property
     def headers(self) -> dict:
@@ -201,32 +242,15 @@ class RequestScraper(Scraper):
 
     @keep_alive.setter
     def keep_alive(self, value):
-        headers = self.headers
         if value:
-            headers['Connection'] = 'keep-alive'
+            self.headers['Connection'] = 'keep-alive'
+            self._keep_alive = True
+
         else:
-            headers['Connection'] = 'close'
-        self.headers = headers
+            self.headers['Connection'] = 'close'
+            self._keep_alive = False
 
-    # scraper methods
-    def scraper_activate(self):
-        req = requests.Session()
-        req.keep_alive = self.keep_alive
-        req.headers = self.headers
-        self.req = req
-
-        self.activated = True
-
-    def clear_session(self):
-        self.restart()
-
-    def quit(self):
-        self.req.close()
-
-    # requests methods
-    def get_session_object(self):
-        return self.req
-
+    # ----------------------------------------------------------------------
     # http
     def _get(self, url, **kwargs):
         """
@@ -266,6 +290,13 @@ class RequestScraper(Scraper):
         return response.text
 
         # self.req.post(url=url, json=json)
+
+    # ----------------------------------------------------------------------
+    # request other methods
+
+    def get_requests(self) -> requests.Session:
+        return self.req
+
 
 # class RequestScraper(Scraper):
 #     schemes = ['get']
@@ -364,7 +395,7 @@ class FireFoxScraper(Scraper):
         self.image = image
         self.headless = headless
 
-    def scraper_activate(self):
+    def _activate(self):
 
         self.firefox = Firefox(options=self.options)
         self.firefox.set_script_timeout(self.timeout)
@@ -376,7 +407,7 @@ class FireFoxScraper(Scraper):
         self.firefox.find_element_by_id("warningButton").click()
         self.firefox.get("about:blank")
 
-        self.activated = True
+        self._activated = True
 
     # firefox property
     @property
@@ -431,11 +462,11 @@ class FireFoxScraper(Scraper):
         self.firefox.set_page_load_timeout(self.timeout)
 
     # scraper function
-    def clear_session(self):
+    def _clear(self):
         self.firefox.get("about:blank")
         self.firefox.delete_all_cookies()
 
-    def quit(self):
+    def _quit(self):
         self.firefox.quit()
 
     # firefox function

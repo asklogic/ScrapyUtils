@@ -20,7 +20,7 @@ from base.core.collect import collect_scheme
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
 from base.command import sys_exit
-from base.command.thread import Thread, ScrapyThread
+from base.command.thread import Thread
 from base.command.generate import Generate
 from unittest import mock
 from base.command import Command
@@ -78,10 +78,11 @@ class TestCommand(unittest.TestCase):
         # block here
 
         from base.core.collect import models_pipeline as pipeline
-        failed = len(pipeline.failed)
         assert pipeline.suit.processors[0].name == 'Duplication'
         assert pipeline.suit.processors[1].name == 'Count'
+
         count = pipeline.suit.processors[1].count
+        failed = len(pipeline.failed)
 
         assert count + failed > 5 * 10
 
@@ -92,10 +93,29 @@ class TestCommand(unittest.TestCase):
 
         print(result.output)
 
+    def test_proxy(self):
+        params = {
+            'scheme': 'proxy_test',
+            'path': schemes_path
+        }
+
+        command = Thread()
+        mock_trigger(command, **params)
+
+
+    @unittest.skip
+    def test_proxy_test_runner(self):
+        runner = CliRunner()
+        from base.command.Command import thread
+        result = runner.invoke(thread, ['proxy_test', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
+
+        print(result.output)
+
+
     def test_instable(self):
         runner = CliRunner()
         from base.command.Command import thread
-        result = runner.invoke(thread, ['test_instable',  '--line', '0'])
+        result = runner.invoke(thread, ['test_instable', '--line', '0'])
 
         print(result.output)
 
@@ -113,40 +133,6 @@ class TestCommand(unittest.TestCase):
         command.log.info('wtf!', )
 
 
-    def test_thread_consumer(self):
-        from base.command import Command
-
-        # collect.collect_scheme('atom')
-        # # importlib.reload(collect)
-        #
-        # # no print out
-        # # pipeline = Pipeline(collect_processors(atom))
-        # pipeline = Pipeline([])
-        #
-        # consumer = ScrapyThread(collect.tasks, collect.steps, collect.scraper, pipeline, Command().log, **{'delay': 0})
-        # # consumer = ScrapyThread(tasks, steps, scraper, pipeline, Command().log, **{'delay': 0})
-        # consumer.start()
-        #
-        # # TODO
-        # # time.sleep(1)
-        #
-        # consumer.join(2)
-        #
-        # consumer.stop()
-
-    @unittest.skip
-    def test_generate(self):
-        params = {
-            'scheme': 'generate',
-            'path': schemes_path
-        }
-
-        command = Generate()
-        mock_trigger(command, **params)
-
-    @unittest.skip
-    def test_kuaidaili(self):
-        pass
 
 
 if __name__ == '__main__':

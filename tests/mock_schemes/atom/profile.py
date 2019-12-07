@@ -10,6 +10,9 @@ from base.libs import Task
 THREAD = 2
 TIMEOUT = 0.1
 
+PROXY = False
+PROXY_URL = ''
+
 
 # generator your tasks in here.
 

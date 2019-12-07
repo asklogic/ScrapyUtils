@@ -37,12 +37,14 @@ class MyTestCase(unittest.TestCase):
 
         # scraper
 
-        assert r.proxy == {}
         assert r._proxy is None
         assert r.timeout == 10
         assert r._timeout == 10
         assert r.activated is False
         assert r._activated is False
+
+        # overwrite
+        assert r.proxy == {}
 
         # request
 
@@ -63,6 +65,8 @@ class MyTestCase(unittest.TestCase):
         r.proxy = self.proxy
         assert r.proxy != {}
 
+        # custom proxy dict.
+
     def test_property_header(self):
         r = RequestScraper()
         assert isinstance(r.headers, dict)
@@ -73,6 +77,9 @@ class MyTestCase(unittest.TestCase):
         # default : True
         assert r.keep_alive is True
         assert r.headers.get('Connection') == 'keep-alive'
+
+    def test_property_keep_alive_modify(self):
+        r = RequestScraper()
 
         r.keep_alive = False
 

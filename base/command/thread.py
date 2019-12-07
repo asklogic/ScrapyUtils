@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import time
 import os
@@ -37,7 +37,7 @@ class Thread(Command):
             'queue': collect.tasks,
             'delay': collect.config['timeout'],
             # TODO. stepsuit
-            'suit': StepSuit(collect.steps, collect.scraper()),
+            'suit_param': (collect.steps, collect.scraper_generate, collect.proxy, self.log),
 
             'pipeline': collect.models_pipeline,
         }
@@ -47,6 +47,8 @@ class Thread(Command):
 
         while not collect.tasks.empty():
             time.sleep(0.3)
+
+        suit.stop()
 
     def exit(self):
         print('invoke command exit!')
@@ -58,49 +60,22 @@ class Thread(Command):
         print('invoke command failed!')
 
 
-class ScrapyThread(Consumer):
-    def __init__(self, steps: List[Step], scraper: type(Scraper), pipeline: Pipeline, log, **kwargs):
-        # super(ScrapyThread, self).__init__(task_queue, kwargs.get('delay'), **{})
-        Consumer.__init__(self, queue=kwargs.get('queue'), delay=kwargs.pop('delay', 1), lock=kwargs.get('lock'),
-                          **kwargs)
-
-        #
-        scraper = scraper()
-        scraper.scraper_activate()
-
-        self.suit = StepSuit(steps, scraper, log)
-        self.pipeline = pipeline
-
-    def consuming(self, current: Task):
-        # log in scrapy method
-        if self.suit.scrapy(current):
-            # TODO refact models deque
-            for model in self.suit.models:
-                self.pipeline.push(model)
-        else:
-
-            current.count += 1
-            if current.count <= 3:
-                self.queue.put(current)
-
-        self.suit.models.clear()
-
-
 class ScrapyConsumer(Consumer):
     _suit: StepSuit
     _pipeline: Pipeline
 
-    def __init__(self, suit: StepSuit, pipeline: Pipeline, **kwargs):
+    def __init__(self, suit_param: Tuple, pipeline: Pipeline, **kwargs):
         Consumer.__init__(self, kwargs.pop('queue'), kwargs.pop('delay', 1), kwargs.pop('lock', None), **kwargs)
+
+        # TODO: suit
+        scraper = suit_param[1]()
+        suit = StepSuit(suit_param[0], scraper, suit_param[2], suit_param[3])
 
         assert isinstance(suit, StepSuit), 'ScrapyConsumer need StepSuit.'
         assert isinstance(pipeline, Pipeline), 'ScrapyConsumer need Pipeline.'
 
         self._suit = suit
         self._pipeline = pipeline
-
-        # TODO
-        suit.scraper.scraper_activate()
 
     @property
     def suit(self):
@@ -110,6 +85,18 @@ class ScrapyConsumer(Consumer):
     def pipeline(self):
         return self._pipeline
 
+    def run(self):
+        # TODO : scraper exit
+        self.suit.scraper.scraper_activate()
+
+        self.suit.scraper.proxy = self.suit.pool.get()
+
+        super(ScrapyConsumer, self).run()
+
+    def stop(self):
+        self.suit.scraper.scraper_quit()
+        super(ScrapyConsumer, self).stop()
+
     def consuming(self, current: Task):
         # log in scrapy method
         if self.suit.scrapy(current):
@@ -123,3 +110,6 @@ class ScrapyConsumer(Consumer):
                 self.queue.put(current)
 
         self.suit.models.clear()
+
+    def __del__(self):
+        self.suit.scraper.scraper_quit()

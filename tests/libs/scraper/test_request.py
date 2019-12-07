@@ -12,54 +12,66 @@ class MyTestCase(unittest.TestCase):
 
     def test_request_header(self):
         """
-        RequestScraper custom headers
+        RequestScraper custom headers.
         """
-        r = self.r
 
-        # default header
-        assert len(r.headers) is 7
+        # default header.
+        assert len(self.r.headers) is 7
 
-        h = r.headers
-        header: dict = json.loads(r.get('http://127.0.0.1:8090/mock/header'))
+        h = self.r.headers
+        header: dict = json.loads(self.r.get('http://127.0.0.1:8090/mock/header'))
 
-        # add host
+        # Flask test server add host.
         assert len(header) is 8
-        assert header.get('Custom') is None
+
+    def test_request_header_update(self):
+        """
+        add new header. Session update the header.
+        """
 
         # update headers.
-        r.headers = {'custom': 'custom value'}
-        assert len(r.headers) is 1
-        header: dict = json.loads(r.get('http://127.0.0.1:8090/mock/header'))
+        self.r.headers = {'custom': 'custom value'}
+        assert len(self.r.headers) is 1
+        header: dict = json.loads(self.r.get('http://127.0.0.1:8090/mock/header'))
 
         # server add header
         assert len(header) is 9
         assert header.get('Custom') is not None
         assert header.get('Custom') == 'custom value'
 
+    def test_request_header_restart(self):
+        """
+        custom header activated when RequestScraper restart.
+        """
+
+        self.r.headers = {}
+
         # restart.
-        r.restart()
-        assert len(r.headers) is 1
-        header: dict = json.loads(r.get('http://127.0.0.1:8090/mock/header'))
+        self.r.restart()
+        assert len(self.r.headers) is 0
+        header: dict = json.loads(self.r.get('http://127.0.0.1:8090/mock/header'))
 
-        # server add host and encoding.
-        assert len(header) is 3
+        # Flask test server add host and encoding.
+        assert len(header) is 2
 
-        r.headers = None
-        r.restart()
+    def test_request_keep_alive(self):
+        """
+        property keep_alive. update scraper's header.
+        """
 
-        # keep alive
+        header: dict = json.loads(self.r.get('http://127.0.0.1:8090/mock/header'))
 
-        header: dict = json.loads(r.get('http://127.0.0.1:8090/mock/header'))
-
-        assert r.keep_alive is True
-        assert r.headers.get('Connection') == 'keep-alive'
+        # default.
+        assert self.r.keep_alive is True
+        assert self.r.headers.get('Connection') == 'keep-alive'
         assert header.get('Connection') == 'keep-alive'
 
-        r.keep_alive = False
-        header: dict = json.loads(r.get('http://127.0.0.1:8090/mock/header'))
+        # modify keep_alive.
+        self.r.keep_alive = False
+        header: dict = json.loads(self.r.get('http://127.0.0.1:8090/mock/header'))
 
-        assert r.keep_alive is False
-        assert r.headers.get('Connection') == 'close'
+        assert self.r.keep_alive is False
+        assert self.r.headers.get('Connection') == 'close'
         assert header.get('Connection') == 'close'
 
     def test_request_proxy(self):
@@ -77,6 +89,8 @@ class MyTestCase(unittest.TestCase):
         assert 'RequestScraper http status failed' in str(e.exception)
         assert '403' in str(e.exception)
 
+    def test_get_400_accept(self):
+        # TODO. to range.
         content = self.r.get('http://127.0.0.1:8090/mock/error', status=500)
         assert '403 failed' in content
 

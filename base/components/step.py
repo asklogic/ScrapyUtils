@@ -3,7 +3,7 @@ from typing import *
 
 from collections import deque
 from base.components.base import Component, ComponentMeta
-from base.libs import Scraper, Task, Model
+from base.libs import Scraper, Task, Model, Pool
 from base.log import Wrapper as logger
 
 
@@ -113,7 +113,7 @@ class StepSuit(object):
     scraper: Scraper
     log: logger
 
-    def __init__(self, steps: List[type(Step)], scraper: Scraper, log=logger, models=None):
+    def __init__(self, steps: List[type(Step)], scraper: Scraper, pool: Pool = None, log=logger, models=None):
         # assert
 
         for step in steps:
@@ -122,18 +122,26 @@ class StepSuit(object):
 
         assert scraper and isinstance(scraper, Scraper)
 
-        # init property
+        # step property
         self.content = ''
         self.context = {}
         self.scraper = scraper
         self.models = models if models else list()
-        self.log = log
+
+        # suit property
+        self._log = log
+        self._pool = pool
 
         # init step objects
         self.steps = [x(self) for x in steps]
 
         # scraper active
-        # assert scraper.activated is True, 'Scraper must be activated.'
+        # if not self.scraper.activated:
+        #     self.scraper.scraper_activate()
+
+        # pool
+        # if self.pool:
+        #     self.scraper.proxy = self.pool.get()
 
     def scrapy(self, task: Task) -> bool:
         """
@@ -146,10 +154,19 @@ class StepSuit(object):
         for step in self.steps:
             # TODO: refact
             if not step.do(task):
+
+                if self.pool:
+                    self.scraper.proxy = self.pool.get()
+
                 self.log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
                 return False
         self.log.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
         return True
 
+    @property
     def log(self):
-        pass
+        return self._log
+
+    @property
+    def pool(self):
+        return self._pool

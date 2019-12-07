@@ -143,6 +143,7 @@ class Scraper(object, metaclass=ScraperMeta):
     @proxy.setter
     @abstractmethod
     def proxy(self, value: Proxy):
+
         pass
 
     # ----------------------------------------------------------------------
@@ -182,7 +183,7 @@ class RequestScraper(Scraper):
         super().__init__()
 
         self.timeout = 10
-        self.headers =  self.headers if  self.headers else headers
+        self.headers = self.headers if self.headers else headers
 
     # ----------------------------------------------------------------------
     # scraper method
@@ -298,74 +299,6 @@ class RequestScraper(Scraper):
         return self.req
 
 
-# class RequestScraper(Scraper):
-#     schemes = ['get']
-#
-#     def __init__(self, activated=True):
-#         self.timeout: int = 10
-#         # TODO proxy_container
-#         self.current_proxy: str = {}
-#         self.proxies: Any = None
-#
-#         # requests
-#         self._req: requests.Session = None
-#         self.last: requests.Response = None
-#
-#         self.keep_alive = True
-#         # self.keep_alive = False
-#         self._headers = headers
-#
-#         # if activated:
-#         #     self.activate()
-#
-#         if self.keep_alive:
-#             self._headers['Connection'] = 'keep-alive'
-#
-#     def activate(self):
-#         self._req: requests.Session = requests.session()
-#         self._req.keep_alive = self.keep_alive
-#         self._req.headers = self._headers
-#
-#         self.activated = True
-#
-#     def _get(self, url: str, params: Dict = None) -> str:
-#         res = self._req.get(url=url, timeout=self.timeout, headers=self._headers, proxies=self.current_proxy,
-#                             params=params, stream=False, verify=False)
-#         self.last = res
-#         return res.content.decode("utf-8")
-#
-#     def post(self, url: str, data: Dict, params: Dict = None) -> str:
-#         res = self._req.post(url=url, data=data, timeout=self.timeout, headers=self._headers,
-#                              proxies=self.current_proxy,
-#                              params=params, stream=False, verify=False)
-#         self.last = res
-#         return res.content.decode("utf-8")
-#
-#     def get_current(self) -> requests.Response:
-#         return self.last
-#
-#     def get_status_code(self):
-#         return self.last.status_code
-#
-#     def set_proxy(self, proxy: Tuple[str, str]):
-#         self.current_proxy = {
-#             "http": r"http://{0}".format(":".join(proxy)),
-#             "https": r"http://{0}".format(":".join(proxy)),
-#         }
-#
-#     def set_timeout(self, time: int):
-#         self.timeout = time
-#
-#     def clear_session(self):
-#         self.current_proxy = {}
-#
-#         self._req.close()
-#         self.activate()
-#
-#     def quit(self):
-#         self.clear_session()
-
-
 class FireFoxScraper(Scraper):
     # firefox property
     _image: bool = False
@@ -409,19 +342,26 @@ class FireFoxScraper(Scraper):
 
         self._activated = True
 
+    # ----------------------------------------------------------------------
     # firefox property
+
     @property
     def image(self):
         return self._image
 
     @image.setter
     def image(self, value):
+        """
+        modify firefox options
+        """
         if value:
             self._image = True
-            self.options.set_preference('permissions.default.image', 2)
+            self.options.set_preference('permissions.default.image', 0)
         else:
             self._image = False
-            self.options.set_preference('permissions.default.image', 0)
+
+            self.options.set_preference('permissions.default.image', 2)
+            # self.options.set_preference('browser.migration.version', 9001)
 
     @property
     def headless(self):
@@ -436,11 +376,12 @@ class FireFoxScraper(Scraper):
             self._headless = False
             self.options.headless = False
 
+    # ----------------------------------------------------------------------
     # scraper property
 
     @Scraper.proxy.setter
-    def proxy(self, proxy):
-        self._proxy = (proxy.ip, proxy.port)
+    def proxy(self, proxy: Proxy):
+        self._proxy = proxy
 
         self.firefox.get("about:config")
         js_content = """
@@ -461,7 +402,9 @@ class FireFoxScraper(Scraper):
         self.firefox.set_script_timeout(self.timeout)
         self.firefox.set_page_load_timeout(self.timeout)
 
+    # ----------------------------------------------------------------------
     # scraper function
+
     def _clear(self):
         self.firefox.get("about:blank")
         self.firefox.delete_all_cookies()
@@ -469,7 +412,9 @@ class FireFoxScraper(Scraper):
     def _quit(self):
         self.firefox.quit()
 
+    # ----------------------------------------------------------------------
     # firefox function
+
     def get_driver(self) -> Firefox:
         return self.firefox
 

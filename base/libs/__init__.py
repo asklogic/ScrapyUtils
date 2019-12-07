@@ -6,5 +6,4 @@ from .model import Model, Field
 from .task import Task
 from .proxy import Proxy
 
-# TODO: Consumer
-from .thread import BaseThreading, Consumer, ConsumerSuit, ThreadSuit
+from .thread import BaseThreading, Consumer, ConsumerSuit, ThreadSuit, Pool

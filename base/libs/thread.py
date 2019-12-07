@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable, Generator
 from abc import abstractmethod
 import time
 import copy
@@ -15,6 +15,7 @@ class BaseThreading(Thread):
     默认为守护进程 和主线程一同退出 故只有暂停方法.
     """
     _stopped_event: Event = None
+    _waiting: bool = False
 
     def __init__(self, event: Event = Event(), **kwargs):
         assert isinstance(event, Event), 'need event instance.'
@@ -37,8 +38,14 @@ class BaseThreading(Thread):
     def event(self):
         return self._stopped_event
 
+    @property
+    def waiting(self):
+        return self._waiting
+
     def wait(self):
+        self._waiting = True
         self.event.wait()
+        self._waiting = False
 
     def stop(self):
         self._stopped_event.clear()
@@ -52,6 +59,10 @@ class BaseThreading(Thread):
 
 
 class Consumer(BaseThreading):
+    """
+    消费者类
+    具体消费者行为继承consuming方法
+    """
     _queue: Queue
     _delay: int
 
@@ -176,7 +187,11 @@ class ThreadSuit(object):
 
         assert type(number) == int, 'need int.'
 
+        # property
+        self._event = Event()
         self._consumers: List[BaseThreading] = []
+
+        kw['event'] = self.event
 
         for i in range(number):
 
@@ -191,6 +206,20 @@ class ThreadSuit(object):
     def consumers(self):
         return self._consumers
 
+    @property
+    def event(self):
+        return self._event
+
+    def stop(self):
+        self.consumers[0].event.clear()
+
+    def start(self):
+        if self.is_alive():
+            self.event.set()
+        else:
+            Thread.start(self)
+            self.event.set()
+
     def start_all(self):
         for consumer in self.consumers:
             consumer.start()
@@ -198,3 +227,52 @@ class ThreadSuit(object):
     def stop_all(self):
         for consumer in self.consumers:
             consumer.stop()
+
+
+class Pool(BaseThreading):
+    def __init__(self, generate: Callable, queue=None, limit=5, **kw):
+        BaseThreading.__init__(self, kw.pop('event', Event()), **kw)
+
+        self._queue = queue if queue else Queue()
+        self._limit = limit if limit else 5
+
+        assert callable(generate), 'Pool need callable.'
+        self._generate = generate
+
+    @property
+    def generate(self):
+        return self._generate
+
+    @property
+    def queue(self):
+        return self._queue
+
+    @property
+    def limit(self):
+        return self._limit
+
+    def generation(self):
+
+        try:
+            for model in self.generate(self.limit * 2):
+                self.queue.put(model)
+        except Exception as e:
+            time.sleep(1.5)
+            self.generation()
+
+    def run(self) -> None:
+        while True:
+
+            if self.queue.qsize() < self.limit:
+                self.generation()
+            # time.sleep(0.3154)
+            time.sleep(0.2)
+
+    # ----------------------------------------------------------------------
+    # pool methods
+
+    def size(self):
+        return self.queue.qsize()
+
+    def get(self):
+        return self.queue.get(timeout=10)

@@ -281,5 +281,8 @@ class TestStep(unittest.TestCase):
         simple_action_suit.scrapy(self.t)
 
 
+    def test_proxy(self):
+        pass
+
 if __name__ == '__main__':
     unittest.main()

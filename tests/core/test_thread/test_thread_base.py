@@ -28,8 +28,14 @@ class TestThread(unittest.TestCase):
 
         base = BaseThreading()
 
+        assert base.event.is_set() is False
         base.start()
+
+        assert base.event.is_set() is True
+
         base.stop()
+
+        assert base.event.is_set() is False
 
     def test_base_property(self):
         # parameter : event

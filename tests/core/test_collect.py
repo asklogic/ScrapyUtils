@@ -5,7 +5,8 @@ from base.core import collect
 from tests.telescreen import schemes_path
 from importlib import import_module
 
-from base.components import Step
+from base.components import *
+from base.libs import *
 
 
 class TestCollect(unittest.TestCase):
@@ -65,8 +66,48 @@ class TestCollect(unittest.TestCase):
         assert collect.steps
         assert len(collect.steps) == 4
 
-        r = collect.scraper()
-        assert isinstance(r, object)
+        r = collect.scraper_generate
+        assert callable(r)
+        assert isinstance(r(), RequestScraper)
+
+    def test_collect_scraper(self):
+        """
+        -> core.collect.collect_scheme
+        method invoked before Command run.
+        """
+
+        collect.collect_scheme('atom')
+
+        scraper_generate = collect.scraper_generate
+
+        assert callable(scraper_generate)
+        assert isinstance(scraper_generate(), Scraper)
+
+    def test_collect_suit(self):
+        collect.collect_scheme('atom')
+
+        scraper = collect.scraper_generate()
+        step = collect.steps
+
+        suit = StepSuit(step, scraper)
+
+    def test_deep(self):
+        import copy
+
+        class Demo(object):
+            def __init__(self, attr=2):
+                self.attr = attr
+                pass
+
+            def __copy__(self):
+                print('copy')
+                return '2'
+
+        d = Demo(3)
+        d.a = 1
+        assert copy.copy(d) == '2'
+
+        # assert False
 
 
 if __name__ == '__main__':

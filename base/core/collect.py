@@ -3,9 +3,10 @@ from typing import List, Callable
 
 from queue import Queue
 from importlib import import_module
+from urllib import parse
 
 from base.components import Component, Step, ActionStep, ParseStep, Processor, Pipeline
-from base.libs import Scraper, RequestScraper
+from base.libs import Scraper, RequestScraper, Pool, Proxy
 from base.log import Wrapper
 
 # global:
@@ -16,7 +17,7 @@ processors = None
 config = None
 
 # callable
-scraper = None
+scraper_generate = None
 
 # pipeline's
 tasks = Queue()
@@ -24,7 +25,7 @@ models_pipeline: Pipeline = None
 
 # others
 log = Wrapper
-proxy = Queue()
+proxy: Pool = None
 
 
 # *******************************************************************************
@@ -32,10 +33,9 @@ def collect_scheme(scheme: str):
     """
     load scheme.
     get attr in __init__ and init global variable.
-    :return: None
     """
 
-    global steps, processors, config, scraper, tasks, models_pipeline
+    global steps, processors, config, scraper_generate, tasks, models_pipeline, proxy
 
     module = import_module(scheme)
 
@@ -43,9 +43,24 @@ def collect_scheme(scheme: str):
     processors = module.processors
     config = module.config
 
-    scraper = _default_scraper(module.scraper_callable)
+    # ----------------------------------------------------------------------
+    # scraper
+    scraper_generate = _default_scraper(module.scraper_callable)
+
+    # task queue
     for task in module.tasks_callable():
         tasks.put(task)
+
+    # pool
+    # TODO: proxy
+
+    if config.get('proxy') and config.get('proxy_url'):
+        limit = config['thread']
+        generate = _get_proxy_generation(config.get('proxy_url'))
+
+        pool = Pool(generate, limit=limit)
+        pool.start()
+        proxy = pool
 
     # init
     models_pipeline = Pipeline(processors)
@@ -110,6 +125,9 @@ def collect_profile(module: ModuleType):
     current_config['thread'] = getattr(module, 'THREAD', 5)
     current_config['timeout'] = getattr(module, 'TIMEOUT', 1.5)
 
+    current_config['proxy'] = getattr(module, 'PROXY', False)
+    current_config['proxy_url'] = getattr(module, 'PROXY_URL', '')
+
     # Task
     tasks_callable = getattr(module, 'generate_tasks')
     assert callable(tasks_callable), "profile's generate_tasks must be callable."
@@ -121,7 +139,10 @@ def collect_profile(module: ModuleType):
     return current_config, tasks_callable, scraper_callable
 
 
-def _default_scraper(scraper_callable) -> Scraper:
+# utils
+# ----------------------------------------------------------------------
+
+def _default_scraper(scraper_callable) -> Callable:
     """
 
     :param scraper_callable: The function from profile's generate_scraper.That should return a Scraper instance.
@@ -130,15 +151,47 @@ def _default_scraper(scraper_callable) -> Scraper:
 
     def inner():
         try:
-            scraper = scraper_callable()
-            assert scraper
-            scraper.scraper_activate()
+            current_scraper = scraper_callable()
+            assert isinstance(current_scraper, Scraper)
+            # current_scraper.scraper_activate()
         except Exception as e:
             # log.exception('Scraper', e)
-            pass
-        else:
             log.warning('able default RequestScraper.')
-            scraper = RequestScraper()
-        return scraper
+            current_scraper = RequestScraper()
+
+        return current_scraper
 
     return inner
+
+
+# ----------------------------------------------------------------------
+# TODO: proxy
+def _get_proxy_generation(url):
+    res = parse.urlparse(url)
+
+    query = parse.parse_qs(res.query)
+
+    r = RequestScraper()
+    r.scraper_activate()
+
+    def proxy_generation(number):
+        query['qty'] = number
+        query_str = parse.urlencode(query, doseq=True)
+        res._replace(query=query_str)
+
+        current_url = res.geturl()
+
+        content = r.get(current_url)
+
+        proxy_list = content.split('\r\n')
+
+        for proxy_info in proxy_list:
+            ip, port = proxy_info.split(':')
+            proxy = Proxy(ip=ip, port=port)
+
+            assert ip
+            assert port
+
+            yield proxy
+
+    return proxy_generation

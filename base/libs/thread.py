@@ -3,26 +3,41 @@ from abc import abstractmethod
 import time
 import copy
 
-from queue import Queue, Empty
+from collections import deque
+from queue import Queue, Empty, Full
 from threading import Event, Thread, Lock
+from multiprocessing.dummy import Pool as ThreadPool
+from multiprocessing import TimeoutError
+
+from concurrent.futures import ThreadPoolExecutor
 
 
-class BaseThreading(Thread):
+class BaseThread(Thread):
     """
     BaseThreading
     提供简单启停的线程类 通过threading.Event来控制启停.
     若不提供默认event 则会使用全局同一的Event对象.
     默认为守护进程 和主线程一同退出 故只有暂停方法.
+
+    创建好对象时开始就执行Thread.start.
+    event.wait将会阻塞线程 需要调用BaseThreading.start来运行.
     """
     _stopped_event: Event = None
-    _waiting: bool = False
+    _stopped: bool = False
 
     def __init__(self, event: Event = Event(), **kwargs):
         assert isinstance(event, Event), 'need event instance.'
         Thread.__init__(self, name=kwargs.get('name'))
-
         self.setDaemon(True)
+
+        # set event before start.
         self._stopped_event = event
+        self.event.clear()
+
+        Thread.start(self)
+
+        # block at self.wait() in method run()
+        self.stop(True)
 
     def run(self) -> None:
         """
@@ -39,26 +54,30 @@ class BaseThreading(Thread):
         return self._stopped_event
 
     @property
-    def waiting(self):
-        return self._waiting
+    def stopped(self):
+        return self._stopped
 
-    def wait(self):
-        self._waiting = True
+    def wait(self) -> bool:
+        self._stopped = True
         self.event.wait()
-        self._waiting = False
+        self._stopped = False
+        return True
 
-    def stop(self):
+    def stop(self, block=True):
         self._stopped_event.clear()
+        if block:
+            while self.stopped is not True:
+                time.sleep(0.1)
 
-    def start(self):
-        if self.is_alive():
-            self.event.set()
-        else:
-            Thread.start(self)
-            self.event.set()
+    def start(self, block=True):
+        # TODO: abort block?
+        self.event.set()
+        if block:
+            while self.stopped is True:
+                time.sleep(0.1)
 
 
-class Consumer(BaseThreading):
+class Consumer(BaseThread):
     """
     消费者类
     具体消费者行为继承consuming方法
@@ -69,16 +88,89 @@ class Consumer(BaseThreading):
     _lock: Lock
 
     def __init__(self, queue, delay=1, lock=None, **kw):
+        # default
+        lock = lock if lock else Lock()
 
-        # !python default params will be initialized only once.
-        BaseThreading.__init__(self, kw.pop('event', Event()), **kw)
-
-        self._delay = delay
-
+        # assert
         assert isinstance(queue, Queue), 'Consumer need queue object.'
 
-        self._queue = queue if queue else Queue()
-        self._lock = lock if lock else Lock()
+        # property
+        self._queue = queue
+        self._lock = lock
+        self._delay = delay
+
+        # super
+        BaseThread.__init__(self, kw.pop('event', Event()), **kw)
+
+    @property
+    def queue(self):
+        return self._queue
+
+    @property
+    def delay(self):
+        return self._delay
+
+    @property
+    def lock(self):
+        return self._lock
+
+    @delay.setter
+    def delay(self, value):
+        self._delay = value
+
+    @abstractmethod
+    def consuming(self, obj):
+        pass
+
+    def exit(self):
+        # assert self.stopped is True, 'Consumer has stopped.'
+
+        while self.queue.qsize() != 0:
+            time.sleep(0.1)
+        self.stop(True)
+
+    def run(self):
+        # infinite loop.exit by join or main thread exit.
+        while self.wait():
+
+            with self.lock:
+                time.sleep(self.delay)
+
+            # consuming.
+            try:
+                obj = self._queue.get(block=True, timeout=0.1)
+                self.queue.task_done()
+
+                self.consuming(obj)
+            # empty. continue loop.
+            except Empty as e:
+                continue
+            except Exception as e:
+                self.stop(False)
+
+            # except Exception as e:
+            #     self.stop(False)
+
+            # TODO: other excetion?
+
+
+class Producer(BaseThread):
+    def __init__(self, queue, delay=0.1, lock=None, **kw):
+        # default
+        lock = lock if lock else Lock()
+
+        # assert
+        assert isinstance(queue, Queue), 'Consumer need queue object.'
+
+        # property
+        self._queue = queue
+        self._lock = lock
+        self._delay = delay
+
+        self.current = None
+
+        # super
+        BaseThread.__init__(self, kw.pop('event', Event()), **kw)
 
     @property
     def queue(self):
@@ -93,111 +185,185 @@ class Consumer(BaseThreading):
         return self._lock
 
     @abstractmethod
-    def consuming(self, obj):
+    def producing(self):
         pass
 
     def run(self):
-        # infinite loop.exit by join or daemon.
-        while True:
-            # event to start or stop
 
-            # lock to delay
-            if self.delay:
-                self.lock.acquire()
-                time.sleep(self.delay)
-                self.lock.release()
+        # only delay when producing.
+        delay_flag = True
 
-            # consuming.
+        while self.wait():
+
+            if delay_flag:
+                with self.lock:
+                    time.sleep(self.delay)
+                delay_flag = False
+
+            # TODO: refactor. temp loop
             try:
-                obj = self._queue.get(block=True, timeout=0.1)
-                self.queue.task_done()
+                self.current = self.current if self.current else self.producing()
+                self.queue.put(self.current, timeout=1)
+                self.current = None
+            except Full as full:
+                # full and continue loop.
+                continue
+            except Exception as e:
+                # TODO: log out
+                # error in method producing
+                self.stop(False)
+            else:
+                # producing success.
+                delay_flag = True
 
-                self.consuming(obj)
-            # empty. continue loop.
-            except Empty as e:
+
+class MultiProducer(Producer):
+    def __init__(self, increment: int, **kwargs):
+        # TODO: new init?
+
+        self.increment = int(increment)
+
+        # super
+        super(MultiProducer, self).__init__(**kwargs)
+
+        # overwrite
+        self.current = deque()
+
+    def run(self):
+        delay_flag = True
+
+        while self.wait():
+            # TODO: temp loop
+            if delay_flag:
+                with self.lock:
+                    time.sleep(self.delay)
+                delay_flag = False
+
+            # FIXME: new or add?
+            try:
+                if not self.current:
+                    for item in self.producing(self.increment):
+                        self.current.append(item)
+                    delay_flag = True
+            except Exception as e:
+                # TODO: log out
+                self.stop(False)
                 continue
 
-            self.wait()
-            # TODO: other excetion?
+            item = self.current.popleft()
+            try:
+                self.queue.put(item, timeout=1)
+            except Full as full:
+                self.current.appendleft(item)
+
+    @abstractmethod
+    def producing(self, increment):
+        pass
 
 
-class ConsumerSuit(object):
-    _lock = Lock
-    _delay = 1
-    _consumers: List[Consumer]
+class PoolProducer(BaseThread):
+    def __init__(self, queue, delay=0.1, lock=None, concurrent=10, **kw):
+        # default
+        lock = lock if lock else Lock()
 
-    def __init__(self, consumer_class: type(Consumer), queue: Queue = None, number: int = 1, delay: int = 1,
-                 name: str = 'Consumer',
-                 **kwargs):
-        """
+        # assert
+        assert isinstance(queue, Queue), 'Consumer need queue object.'
 
-        :param consumer_class: consumer class
-        :param queue: queue in consumer
-        :param number: thread's number
-        :param delay: delay in consumer
-        :param name: thread name
-        :param kwargs: other kwargs
-        """
-
-        assert isinstance(consumer_class, type), 'need consumer class'
-        assert issubclass(consumer_class, Consumer), 'must extend consumer'
-
-        assert type(number) == int
-
-        self._lock = Lock()
+        # property
+        self._queue = queue
+        self._lock = lock
         self._delay = delay
-        self._queue = queue if queue else Queue
-        self._consumers = []
 
-        for i in range(number):
-            self.consumers.append(consumer_class(queue=self.queue, delay=self._delay, lock=self.lock,
-                                                 name='{}-{}'.format(name, str(i)), **kwargs))
+        self.current = None
 
-    @property
-    def lock(self):
-        return self._lock
+        #
+        self._futures = Queue(self.queue.qsize())
+        self.pool = ThreadPoolExecutor(max_workers=concurrent)
+        self.pool = ThreadPool(concurrent)
 
-    @property
-    def consumers(self):
-        return self._consumers
+        # super
+        BaseThread.__init__(self, kw.pop('event', Event()), **kw)
 
     @property
     def queue(self):
         return self._queue
 
-    def start_all(self):
-        for consumer in self.consumers:
-            consumer.start()
+    @property
+    def delay(self):
+        return self._delay
 
-    def stop_all(self):
-        for consumer in self.consumers:
-            consumer.stop()
+    @property
+    def lock(self):
+        return self._lock
 
-    def block(self):
-        self.queue.join()
+    @abstractmethod
+    def producing(self, number):
+        pass
+
+    @property
+    def future_queue(self):
+        return self._futures
+
+    def run(self):
+
+        while True:
+            self.wait()
+
+            with self.lock:
+                time.sleep(self.delay)
+
+            try:
+                self.current = self.current if self.current else self.pool.apply_async(producing_wrapper, args=(self,))
+                self.future_queue.put(self.current, timeout=1)
+                self.current = None
+            except Full as full:
+                pass
+            except Exception as e:
+                self.stop(False)
+
+    def get(self):
+        future = self.future_queue.get()
+        return self.queue.get()
+
+    def exit(self):
+
+        self.stop(True)
+        # self.pool.shutdown(wait=False)
+        self.pool.terminate()
+
+
+def producing_wrapper(producer: Producer):
+    # TODO: invoke producing
+    # item = Producer.producing(producer, 10)
+    item = producer.producing(10)
+
+    producer.queue.put(item)
 
 
 class ThreadSuit(object):
-    def __init__(self, thread_class, number: int = 1, kw: dict = None, copy_attr: List[str] = ()):
+    def __init__(self, thread_class, number: int = 1, kw: dict = None, kw_list: List[dict] = ()):
         kw = kw if kw else {}
 
         assert isinstance(thread_class, type), 'ThreadSuit need BaseThreading class.'
         assert callable(thread_class), 'ThreadSuit must extend BaseThreading.'
-        assert issubclass(thread_class, BaseThreading), 'ThreadSuit must extend BaseThreading.'
+        assert issubclass(thread_class, BaseThread), 'ThreadSuit must extend BaseThreading.'
 
         assert type(number) == int, 'need int.'
+        if kw_list:
+            # TODO: assert
+            assert len(kw_list) == number, 'kw_list'
 
         # property
         self._event = Event()
-        self._consumers: List[BaseThreading] = []
+        self._consumers: List[BaseThread] = []
 
         kw['event'] = self.event
+        name = thread_class.__name__
 
         for i in range(number):
-
-            # copy
-            for attr in copy_attr:
-                kw[attr] = copy.deepcopy(kw.get(attr))
+            if kw_list:
+                kw.update(kw_list[i])
+            kw['name'] = '-'.join((name, str(i)))
 
             thread = thread_class(**kw)
             self._consumers.append(thread)
@@ -211,27 +377,24 @@ class ThreadSuit(object):
         return self._event
 
     def stop(self):
-        self.consumers[0].event.clear()
+        self.event.clear()
 
     def start(self):
-        if self.is_alive():
-            self.event.set()
-        else:
-            Thread.start(self)
-            self.event.set()
+        self.event.set()
 
     def start_all(self):
         for consumer in self.consumers:
             consumer.start()
 
     def stop_all(self):
+        # TODO: thread suit exit
         for consumer in self.consumers:
             consumer.stop()
 
 
-class Pool(BaseThreading):
+class ItemPool(BaseThread):
     def __init__(self, generate: Callable, queue=None, limit=5, **kw):
-        BaseThreading.__init__(self, kw.pop('event', Event()), **kw)
+        BaseThread.__init__(self, kw.pop('event', Event()), **kw)
 
         self._queue = queue if queue else Queue()
         self._limit = limit if limit else 5
@@ -262,7 +425,6 @@ class Pool(BaseThreading):
 
     def run(self) -> None:
         while True:
-
             if self.queue.qsize() < self.limit:
                 self.generation()
             # time.sleep(0.3154)
@@ -276,3 +438,32 @@ class Pool(BaseThreading):
 
     def get(self):
         return self.queue.get(timeout=10)
+
+
+class ThreadWrapper(Thread):
+
+    def __init__(self, callable: Callable, args=None, timeout: int = 3):
+        # thread property
+        super(ThreadWrapper, self).__init__()
+        self.setDaemon(True)
+
+        self.callable = callable
+        self.timeout = timeout
+        self.args = args
+
+        # property
+        self._result = None
+
+    def run(self) -> None:
+        current_pool = ThreadPool(1)
+        async_result = current_pool.apply_async(self.callable, args=self.args)
+        try:
+            self._result = async_result.get(self.timeout)
+        except TimeoutError as te:
+            pass
+        current_pool.terminate()
+        # TODO:sys garbage collect?
+
+    @property
+    def result(self):
+        return self._result

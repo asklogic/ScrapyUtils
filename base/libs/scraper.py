@@ -4,7 +4,6 @@ import typing
 from urllib3.exceptions import InsecureRequestWarning
 
 from selenium.webdriver import Firefox, FirefoxOptions
-from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 
 import requests
@@ -79,12 +78,12 @@ class Scraper(object, metaclass=ScraperMeta):
     def scraper_clear(self):
         self._clear()
 
-    @need_activated
     def scraper_quit(self):
         # TODO : need try-except?
         try:
-            self._quit()
-            self._activated = False
+            if self.activated:
+                self._quit()
+                self._activated = False
         except Exception as e:
             raise Exception('some exception in safe quit', e)
 
@@ -162,7 +161,6 @@ headers = {
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
     "Content-Type": "application/x-www-form-urlencoded",
-    # 'Connection': 'close',
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
 }
@@ -191,7 +189,10 @@ class RequestScraper(Scraper):
     def _activate(self):
         req = requests.Session()
         req.keep_alive = self.keep_alive
+
+        # TODO: one single header
         req.headers = self.headers
+
         self.req = req
 
         self._activated = True
@@ -263,6 +264,7 @@ class RequestScraper(Scraper):
         params = kwargs.get('params', {})
         status = kwargs.get('status', 300)
         timeout = kwargs.get('timeout', self.timeout)
+
         response = self.req.get(url=url, timeout=timeout, headers=self.headers, proxies=self.proxy,
                                 params=params, stream=False, verify=False)
         self.current = response
@@ -423,6 +425,11 @@ class FireFoxScraper(Scraper):
         self.firefox.get(url)
 
         return self.firefox.page_source
+
+    def __del__(self):
+        # TODO
+        if self.activated:
+            self.scraper_quit()
 
 
 # class FireFoxScraper(Scraper):

@@ -5,10 +5,10 @@ scheme's profile for atom scheme.
 generate by Generate command.
 """
 
-from base.libs import Task
+from base.libs import Task, FireFoxScraper
 
 THREAD = 2
-TIMEOUT = 0.5
+TIMEOUT = 2
 
 PROXY = False
 PROXY_URL = ''
@@ -25,4 +25,6 @@ def generate_tasks(**kwargs):
 # setting your scraper here.
 # default scraper is RequestScraper.
 def generate_scraper(**kwargs):
-    pass
+    f = FireFoxScraper(headless=False)
+    f.scraper_activate()
+    return f

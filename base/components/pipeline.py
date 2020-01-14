@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Lock
 
 from base.libs.thread import Consumer
-from . import Processor
+from .proceesor import Processor
 from base.libs.model import Model
 
 

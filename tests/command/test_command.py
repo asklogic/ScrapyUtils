@@ -102,7 +102,6 @@ class TestCommand(unittest.TestCase):
         command = Thread()
         mock_trigger(command, **params)
 
-
     @unittest.skip
     def test_proxy_test_runner(self):
         runner = CliRunner()
@@ -110,7 +109,6 @@ class TestCommand(unittest.TestCase):
         result = runner.invoke(thread, ['proxy_test', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
 
         print(result.output)
-
 
     def test_instable(self):
         runner = CliRunner()
@@ -131,8 +129,6 @@ class TestCommand(unittest.TestCase):
         command.log.info('wtf!', 'Scrapy')
         command.log.info('wtf!', 'Core')
         command.log.info('wtf!', )
-
-
 
 
 if __name__ == '__main__':

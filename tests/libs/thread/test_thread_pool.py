@@ -3,7 +3,7 @@ import time
 
 from queue import Queue
 
-from base.libs import thread, Pool, Proxy, Model
+from base.libs import thread, ItemPool, Proxy, Model
 
 
 def proxy_generate(number):
@@ -16,7 +16,7 @@ def proxy_generate(number):
 
 class MyTestCase(unittest.TestCase):
     def test_demo(self):
-        pool = Pool(proxy_generate)
+        pool = ItemPool(proxy_generate)
         pool.start()
         # pool.join(1)
 
@@ -63,12 +63,12 @@ class MyTestCase(unittest.TestCase):
 
             return proxy_generation
 
-        pool = Pool(_get_proxy_generation(url), limit=3)
+        pool = ItemPool(_get_proxy_generation(url), limit=3)
         pool.start()
         pool.join(60)
 
     def test_pool_generation(self):
-        pool = Pool(proxy_generate)
+        pool = ItemPool(proxy_generate)
 
         assert pool.size() is 0
         pool.start()
@@ -85,12 +85,12 @@ class MyTestCase(unittest.TestCase):
     # test_thread_property
 
     def test_thread_daemon(self):
-        pool = Pool(proxy_generate)
+        pool = ItemPool(proxy_generate)
 
         assert pool.isDaemon() is True
 
     def test_thread_event(self):
-        pool = Pool(proxy_generate)
+        pool = ItemPool(proxy_generate)
 
         assert pool.event.is_set() is False
 
@@ -104,7 +104,7 @@ class MyTestCase(unittest.TestCase):
     # test pool property
 
     def test_pool_generate(self):
-        pool = Pool(proxy_generate)
+        pool = ItemPool(proxy_generate)
 
         assert callable(pool.generate)
         assert pool.generate is proxy_generate
@@ -116,13 +116,13 @@ class MyTestCase(unittest.TestCase):
         assert pool.size() is 10
 
     def test_pool_limit(self):
-        pool = Pool(proxy_generate)
+        pool = ItemPool(proxy_generate)
 
         assert pool.limit is 5
 
     def test_pool_queue(self):
         queue = Queue()
-        pool = Pool(proxy_generate, queue=queue)
+        pool = ItemPool(proxy_generate, queue=queue)
 
         assert id(queue) == id(pool.queue)
 

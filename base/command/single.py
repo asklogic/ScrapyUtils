@@ -5,23 +5,23 @@ import os
 import ast
 
 from base.command import Command
-from base.core import PROJECT_PATH
 from base.components import *
 from base.libs import *
 
 import click
-from base.core import collect, PROJECT_PATH
+from base.core import collect
 
 
 class Single(Command):
 
     def options(self, **kwargs):
-        path = kwargs.get('path', PROJECT_PATH)
-        scheme = kwargs.get('scheme')
-        assert scheme, 'no scheme'
-
-        path = os.path.join(path, scheme)
-        assert os.path.exists(path), path + ' not exist'
+        # path = kwargs.get('path', PROJECT_PATH)
+        # scheme = kwargs.get('scheme')
+        # assert scheme, 'no scheme'
+        #
+        # path = os.path.join(path, scheme)
+        # assert os.path.exists(path), path + ' not exist'
+        pass
 
     def run(self):
 

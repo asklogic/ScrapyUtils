@@ -1,11 +1,10 @@
 import unittest
-from typing import List
 
-from base.components.step import Step, StepSuit, ActionStep, ParseStep
+from base.components.step import StepSuit, ActionStep, ParseStep
 from base.libs import RequestScraper, Task, Model, Field
 
 from base.tool import xpathParse
-from tests.core.test_command import Command
+from tests.command.test_command import Command
 
 
 # test demo
@@ -268,7 +267,7 @@ class TestStep(unittest.TestCase):
 
     def test_log(self):
 
-        from tests.core.test_command import Command
+        from tests.command.test_command import Command
 
         class TestStepCommand(Command):
             def syntax(self):

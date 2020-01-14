@@ -7,7 +7,6 @@ from base.command import Command
 from base.core.collect import collect_scheme
 from base.command.thread import Thread
 
-
 from tests.telescreen import tests_path, schemes_path
 
 
@@ -37,20 +36,21 @@ def mock_trigger(command, **kwargs):
         command.exit()
 
 
-class MyTestCase(unittest.TestCase):
+class CommandThreadTestCase(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, False)
 
-    def test_proxy(self):
-        params = {
-            'scheme': 'proxy_test',
-            'path': schemes_path
-        }
+    # def test_proxy(self):
+    #     params = {
+    #         'scheme': 'proxy_test',
+    #         'path': schemes_path
+    #     }
+    #
+    #     command = Thread()
+    #     mock_trigger(command, **params)
 
-        command = Thread()
-        mock_trigger(command, **params)
-
-
+    def test_concurrent(self):
+        pass
 
 
 if __name__ == '__main__':

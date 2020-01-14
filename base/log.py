@@ -20,16 +20,14 @@ logger.addHandler(sh)
 
 class Wrapper:
     log = logger
-
-    @classmethod
-    def syntax(self):
-        return '[Log]'
+    syntax: str = '[Log]'
+    line: int = 3
 
     @classmethod
     def _msg(cls, msg, *args):
         component = ' - '.join(args)
         component_msg = ''.join(['<', component, '>']) if component else ''
-        message = ' '.join((x for x in (cls.syntax(), component_msg, msg) if x))
+        message = ' '.join((x for x in (cls.syntax, component_msg, msg) if x))
         return message
 
     @classmethod
@@ -51,11 +49,11 @@ class Wrapper:
     @classmethod
     def exception(cls, component_name: str, exception: Exception, line: int = None):
         if not line:
-            line = globals().get('line', 3)
+            line = cls.line
 
         exception_name = exception.__class__.__name__
         component_name = '<{}>'.format(component_name)
-        message = ' '.join([cls.syntax(), component_name, 'Except :', exception_name, str(exception)])
+        message = ' '.join([cls.syntax, component_name, 'Except :', exception_name, str(exception)])
         cls.log.error(message)
 
         current = exception.__traceback__
@@ -78,12 +76,23 @@ class Wrapper:
                 cls.log.debug(msg)
 
 
-class ThreadLog(Wrapper):
+def set_syntax(syntax):
+    Wrapper.syntax = syntax
 
-    @classmethod
-    def syntax(self):
-        return '[Thread]'
 
+def set_line(line):
+    Wrapper.line = line
+
+
+# class ThreadLog(Wrapper):
+#
+#     @classmethod
+#     def syntax(self):
+#         return '[Thread]'
+
+
+default = Wrapper
+current = Wrapper
 
 if __name__ == '__main__':
     print('logger test!')
@@ -99,5 +108,7 @@ if __name__ == '__main__':
     Wrapper.info('info', 'Core')
     Wrapper.info('info')
 
-    ThreadLog.info('thread')
-    ThreadLog.info('thread', 'Core')
+    set_syntax('[Thread]')
+
+    Wrapper.info('thread')
+    Wrapper.info('thread', 'Core')

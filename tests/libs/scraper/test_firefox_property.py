@@ -4,11 +4,13 @@ from base.libs import FireFoxScraper, Scraper, Proxy
 from selenium.webdriver import Firefox, FirefoxOptions
 
 
-class MyTestCase(unittest.TestCase):
+class FirefoxPropertyTestCase(unittest.TestCase):
+
+    f = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        f = FireFoxScraper()
+        f = FireFoxScraper(headless=False)
         f.scraper_activate()
         cls.f = f
 
@@ -66,13 +68,9 @@ class MyTestCase(unittest.TestCase):
             f.scraper_clear()
 
         with self.assertRaises(Exception) as e:
-            f.scraper_quit()
-
-        with self.assertRaises(Exception) as e:
             f.get('http://127.0.0.1:8090/mock/get')
 
     def test_scraper_proxy(self):
-
         # TODO: proxy
 
         proxy_info = '116.140.24.128:11371'

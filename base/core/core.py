@@ -18,11 +18,12 @@ from base.components.prepare import Prepare
 from base.libs import Model, Scraper, RequestScraper
 from base.components.scheme import Action, Parse, Scheme
 from base.components.proceesor import Processor
-from base.common import ProxyProcessor, ProxyModel
+# from base.common import ProxyProcessor, ProxyModel
 from base.libs.scraper import Scraper
 from base.components import *
 from base.components.step import Step, ActionStep, ParseStep
 
+PROJECT_PATH = os.getcwd()
 
 
 def load_files(target_name: str) -> List[ModuleType]:

@@ -1,4 +1,5 @@
 import unittest
+import requests
 
 from base.libs import Scraper, RequestScraper, Proxy
 
@@ -10,114 +11,133 @@ class MyTestCase(unittest.TestCase):
         assert proxy.ip == '1.1.1.1'
         self.proxy = proxy
 
-    def test_activate(self):
-        """
-        scraper methods
-        """
-        r = RequestScraper()
+        self.r = RequestScraper()
 
-        with self.assertRaises(Exception) as e:
-            r.scraper_clear()
+    def test_property_activate(self):
+        self.r.scraper_activate()
 
-        with self.assertRaises(Exception) as e:
-            r.scraper_quit()
+        assert self.r.activated is True
 
-        with self.assertRaises(Exception) as e:
-            r.get('http://127.0.0.1:8090/mock/get')
+    def test_property_activate_default(self):
+        assert self.r.activated is False
 
-        # ----------------------------------------------------------------------
+    # TODO: proxy_setter and get_proxy
+    def test_property_proxy_default(self):
+        assert self.r.proxy == {}
 
-        r.scraper_activate()
-        r.scraper_clear()
-        r.get('http://127.0.0.1:8090/mock/get')
-        r.scraper_quit()
-
-    def test_request_init(self):
-        r = RequestScraper()
-
-        # scraper
-
-        assert r._proxy is None
-        assert r.timeout == 10
-        assert r._timeout == 10
-        assert r.activated is False
-        assert r._activated is False
-
-        # overwrite
-        assert r.proxy == {}
-
-        # request
-
-        assert r.headers != {}
-        assert isinstance(r.headers, dict)
-        assert isinstance(r._headers, dict)
-        assert r.keep_alive is True
-        assert r._keep_alive is True
-
-        assert r.req is None
-        assert r.current is None
-        assert r.schemes == ['get', 'post']
-
-    def test_request_proxy(self):
-        r = RequestScraper()
-
-        assert r.proxy == {}
-        r.proxy = self.proxy
-        assert r.proxy != {}
-
-        # custom proxy dict.
+    def test_property_proxy_setter(self):
+        self.r.proxy = self.proxy
+        assert self.r.proxy != {}
 
     def test_property_header(self):
-        r = RequestScraper()
-        assert isinstance(r.headers, dict)
+        """
+        to test_request.py
+        """
 
     def test_property_keep_alive(self):
-        r = RequestScraper()
+        """
+        to test_request.py
+        """
 
-        # default : True
-        assert r.keep_alive is True
-        assert r.headers.get('Connection') == 'keep-alive'
+    def test_property_req(self):
+        assert self.r.req is None
 
-    def test_property_keep_alive_modify(self):
-        r = RequestScraper()
+        self.r.scraper_activate()
 
-        r.keep_alive = False
+        assert self.r.req is not None
 
-        assert r.keep_alive is False
-        assert r.headers.get('Connection') == 'close'
+    def test_property_current(self):
+        assert self.r.current is None
 
-        r.keep_alive = True
-        assert r.keep_alive is True
-        assert r.headers.get('Connection') == 'keep-alive'
+        self.r.scraper_activate()
+        self.r.get('http://httpbin.org/')
 
-    def test_scraper_activate(self):
+        assert self.r.current is not None
+
+    def test_proeprty_current_change(self):
+        self.r.scraper_activate()
+        self.r.get('http://httpbin.org/')
+        assert self.r.current.url == 'http://httpbin.org/'
+
+        self.r.get('http://httpbin.org/cookies')
+        assert self.r.current.url == 'http://httpbin.org/cookies'
+
+    def test_property_scheme(self):
+        assert self.r.schemes == ['get', 'post']
+
+    def test_method_activate(self):
         r: RequestScraper = RequestScraper()
-
-        assert r.activated is False
-        assert r.req is None
-        assert r.current is None
 
         r.scraper_activate()
 
         assert r.activated is True
         assert r.req is not None
-
-        import requests
         assert isinstance(r.req, requests.Session)
 
-    def test_scraper_quit(self):
-        r: RequestScraper = RequestScraper()
-
-        assert r.req is None
-
+    def test_method_activate_again(self):
+        r = RequestScraper()
         r.scraper_activate()
 
+        with self.assertRaises(Exception) as e:
+            r.scraper_activate()
+        assert 'Scraper must be not activated.' == str(e.exception)
+
+        # def test_activate(self):
+
+    #     """
+    #     scraper methods
+    #     """
+    #     r = RequestScraper()
+    #
+    #     assert r.activated is False
+    #
+    #     with self.assertRaises(Exception) as e:
+    #         r.scraper_clear()
+    #
+    #     with self.assertRaises(Exception) as e:
+    #         r.scraper_quit()
+    #
+    #     with self.assertRaises(Exception) as e:
+    #         r.get('http://127.0.0.1:8090/mock/get')
+    #
+    #     # ----------------------------------------------------------------------
+    #
+    #     r.scraper_activate()
+    #     r.scraper_clear()
+    #     r.get('http://127.0.0.1:8090/mock/get')
+    #     r.scraper_quit()
+
+    # def test_property_keep_alive_modify(self):
+    #     r = RequestScraper()
+    #
+    #     r.keep_alive = False
+    #
+    #     assert r.keep_alive is False
+    #     assert r.headers.get('Connection') == 'close'
+    #
+    #     r.keep_alive = True
+    #     assert r.keep_alive is True
+    #     assert r.headers.get('Connection') == 'keep-alive'
+
+    def test_method_quit(self):
+        """
+        TODO : session's adapter closed.
+        """
+        r: RequestScraper = RequestScraper()
+        r.scraper_activate()
+        r.scraper_quit()
+
         assert r.req is not None
+
+    def test_method_quit_again(self):
+
+        r = RequestScraper()
+        r.scraper_activate()
 
         r.scraper_quit()
-        assert r.req is not None
+        r.scraper_quit()
 
-    def test_scraper_restart(self):
+    def test_method_restart(self):
         r = RequestScraper()
 
         r.scraper_activate()
@@ -130,21 +150,8 @@ class MyTestCase(unittest.TestCase):
 
         assert id1 != id2
 
-    def test_scraper_activate_again(self):
-        r = RequestScraper()
-        r.scraper_activate()
-
-        with self.assertRaises(Exception) as e:
-            r.scraper_activate()
-
-    def test_scraper_quit_again(self):
-        r = RequestScraper()
-        r.scraper_activate()
-
-        r.scraper_quit()
-        with self.assertRaises(Exception) as e:
-            r.scraper_quit()
-
+    def test_method_get_requests(self):
+        assert self.r.get_requests() is self.r.req
 
 if __name__ == '__main__':
     unittest.main()

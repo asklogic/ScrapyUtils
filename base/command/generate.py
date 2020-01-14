@@ -1,5 +1,5 @@
 from .Command import Command
-from base import core
+from base.core import core
 
 from base.generate.generator import  create_folder, create_components
 from base.exception import CmdRunException

@@ -6,7 +6,7 @@ from importlib import import_module
 from urllib import parse
 
 from base.components import Component, Step, ActionStep, ParseStep, Processor, Pipeline
-from base.libs import Scraper, RequestScraper, Pool, Proxy
+from base.libs import Scraper, RequestScraper, ItemPool, Proxy
 from base.log import Wrapper
 
 # global:
@@ -25,7 +25,7 @@ models_pipeline: Pipeline = None
 
 # others
 log = Wrapper
-proxy: Pool = None
+proxy: ItemPool = None
 
 
 # *******************************************************************************
@@ -41,26 +41,31 @@ def collect_scheme(scheme: str):
 
     steps = module.steps
     processors = module.processors
+
+    # config
     config = module.config
 
     # ----------------------------------------------------------------------
-    # scraper
+    # scraper : scraper_callable
     scraper_generate = _default_scraper(module.scraper_callable)
 
-    # task queue
+    # ----------------------------------------------------------------------
+    # task queue : tasks_callable
+    tasks = Queue()
     for task in module.tasks_callable():
         tasks.put(task)
 
-    # pool
+    # ----------------------------------------------------------------------
+    # proxy : producer
     # TODO: proxy
 
-    if config.get('proxy') and config.get('proxy_url'):
-        limit = config['thread']
-        generate = _get_proxy_generation(config.get('proxy_url'))
-
-        pool = Pool(generate, limit=limit)
-        pool.start()
-        proxy = pool
+    # if config.get('proxy') and config.get('proxy_url'):
+    #     limit = config['thread']
+    #     generate = _get_proxy_generation(config.get('proxy_url'))
+    #
+    #     pool = ItemPool(generate, limit=limit)
+    #     pool.start()
+    #     proxy = pool
 
     # init
     models_pipeline = Pipeline(processors)
@@ -121,7 +126,7 @@ def collect_profile(module: ModuleType):
     """
     current_config = {}
 
-    # common setting(
+    # common setting
     current_config['thread'] = getattr(module, 'THREAD', 5)
     current_config['timeout'] = getattr(module, 'TIMEOUT', 1.5)
 
@@ -158,6 +163,9 @@ def _default_scraper(scraper_callable) -> Callable:
             # log.exception('Scraper', e)
             log.warning('able default RequestScraper.')
             current_scraper = RequestScraper()
+        finally:
+            if not current_scraper.activated:
+                current_scraper.scraper_activate()
 
         return current_scraper
 

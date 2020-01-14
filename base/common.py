@@ -6,7 +6,7 @@ from typing import List, Dict, Generator, Any
 
 import redis
 import peewee
-from urllib.parse import ParseResult
+from urllib.parse import ParseResult, urlparse
 
 from base.libs import Model, Field
 from base.components.proceesor import Processor
@@ -16,8 +16,8 @@ from base.libs.task import TaskModel
 from base.log import logger
 from base.components.scheme import Action, Parse
 from base.libs.task import Task
-from scrapy_config import Project_Path
 from base.tool import xpathParse
+from base.core import core
 
 
 class DefaultAction(Action):

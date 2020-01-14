@@ -1,16 +1,7 @@
 import unittest
 import os
 
-from typing import List
-from queue import Queue
-
 from click.testing import CliRunner
-from base.command import Command
-from base.core import PROJECT_PATH
-
-from base.components import Pipeline, Step
-
-from tests.core.test_command import mock_trigger
 
 from tests.telescreen import tests_path
 

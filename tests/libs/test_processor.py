@@ -13,7 +13,7 @@ temp = os.path.join(project_path, 'tests', 'temp_dir')
 
 from base.components.proceesor import Processor
 from base.components.pipeline import Pipeline, ProcessorSuit
-from base.libs.thread import BaseThreading
+from base.libs.thread import BaseThread
 
 
 class Person(Model):
@@ -48,7 +48,7 @@ class Test_processor(unittest.TestCase):
         shutil.rmtree(temp)
 
     def test_test(self):
-        t = BaseThreading()
+        t = BaseThread()
 
         assert True
 

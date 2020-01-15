@@ -13,6 +13,9 @@ from multiprocessing.dummy import Pool as ThreadPool
 from base.libs import ThreadWrapper
 from queue import Queue
 
+from base.command.thread import Thread
+from base.command import *
+
 
 def inner():
     suit = StepSuit([], FireFoxScraper(headless=False))
@@ -85,7 +88,7 @@ def scraper_builder(invoker, number, timeout=10):
 class CommandThreadTestCase(unittest.TestCase):
 
     def test_init(self):
-        pass
+        trigger('thread', scheme='atom')
 
     def test_build_scraper(self):
         scrapers = scraper_builder(mock_firefox_generator, 2)

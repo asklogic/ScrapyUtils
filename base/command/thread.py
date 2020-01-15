@@ -2,15 +2,16 @@ from typing import List, Tuple, Callable
 
 import time
 import os
+import click
 from queue import Queue
 from threading import Lock, Event
 
-from base.command import Command
 from base.components import *
 from base.libs import *
 
 from base.core import *
 from base.log import set_syntax, set_line
+from base.exception import CommandExit
 
 from multiprocessing.dummy import Pool as ThreadPool
 from concurrent.futures import ThreadPoolExecutor
@@ -18,24 +19,22 @@ from concurrent.futures import TimeoutError as ConcurrentTimeout
 
 from multiprocessing import TimeoutError
 
+from base import command
 
-class Thread(Command):
+
+class Thread(command.Command):
     do_collect = True
 
     config: dict = None
+
+    queue: Queue = None
     suits: List[StepSuit] = None
+    consumers: List[Consumer] = None
 
     def syntax(self) -> str:
         return '[THREAD]'
 
     def options(self, **kwargs):
-        # path = kwargs.get('path', PROJECT_PATH)
-        # scheme = kwargs.get('scheme')
-        # assert scheme, 'no scheme'
-        #
-        # path = os.path.join(path, scheme)
-        # assert os.path.exists(path), path + ' not exist'
-
         set_syntax('[Thread]')
         set_line(kwargs.get('line', 3))
 
@@ -55,22 +54,6 @@ class Thread(Command):
             return suit
 
         self.suits = list_builder(inner_suit, self.config.get('thread'), 10)
-
-    def run(self):
-        # def inner_suit():
-        #     suit = StepSuit(steps, gen())
-        #     suit.suit_activate()
-        #     return suit
-
-        # TODO: to suit builder
-        # scrapers = list_builder(get_scraper_generate(), config.get('thread'), 10)
-        # suits = list_builder(inner_suit, config.get('thread'), 10)
-
-        # suits = []
-        # for x in scrapers:
-        #     suit = StepSuit(steps, x)
-        #     suit.suit_activate()
-        #     suits.append(suit)
 
         current_pipeline = get_pipeline()
 
@@ -92,41 +75,42 @@ class Thread(Command):
             for x in self.suits
         ]
 
-        consumers = [ScrapyConsumer(**kw) for kw in kws]
+        self.consumers = [ScrapyConsumer(**kw) for kw in kws]
 
-        [x.start() for x in consumers]
+    def run(self):
+        eno = self.consumers[0]
 
-        time.sleep(1)
+        eno.start()
 
-        # TODO: log out
+        eno.exit()
 
-        # [x.stop() for x in consumers]
-        #
-        consumers[0].exit()
-
-        [x.stop() for x in consumers]
-
-        [suit.suit_exit() for suit in self.suits]
+        [x.stop() for x in self.consumers]
 
     def exit(self):
+        """
+        正常退出
+        """
         log.info('trying to exit suits and scrapers.')
 
         [suit.suit_exit() for suit in self.suits]
-
-        log.info('done.')
 
         time.sleep(1)
 
         # TODO: wait to pipeline.
 
-        log.info('command Thread done.')
+        log.info('command Thread exit.')
 
     def signal_callback(self, signum, frame):
-        [suit.suit_exit() for suit in self.suits]
+        [x.stop() for x in self.consumers]
+
+        # [suit.suit_exit() for suit in self.suits]
 
         log.info('command Thread signal callback exit!.')
+        raise CommandExit()
 
     def failed(self):
+        [x.stop() for x in self.consumers]
+
         [suit.suit_exit() for suit in self.suits]
 
         log.info('command Thread failed!.')

@@ -4,7 +4,7 @@ from queue import Queue
 import os
 import ast
 
-from base.command import Command
+from ._base import Command
 from base.components import *
 from base.libs import *
 
@@ -33,7 +33,7 @@ class Single(Command):
         task = collect.tasks.get()
 
         # init step
-        suit = StepSuit(collect.steps, scraper, self.log, models)
+        suit = StepSuit(collect.steps_class, scraper, self.log, models)
 
         for step in suit.steps:
             res = step.do(task)

@@ -106,23 +106,21 @@ class ParseStep(Step):
 
 class StepSuit(object):
     # mounted
-    steps_class: List[type(Step)] = None
 
     _scraper: Scraper = None
     _steps: List[Step] = None
 
-    def __init__(self, steps: List[type(Step)], scraper: Scraper, models: List[Model] = None):
+    def __init__(self, steps: List[Step], scraper: Scraper, models: List[Model] = None):
         # assert
         for step in steps:
-            assert isinstance(step, type), 'StepSuit need Step class.'
-            assert issubclass(step, Step), 'StepSuit need Step class.'
+            assert isinstance(step, Step), 'StepSuit need Step instance.'
 
-        # assert scraper and callable(scraper), 'StepSuit need a callable.'
         assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
 
         # suit property
-        self.steps_class = steps
-        self._steps = None
+        for step in steps:
+            step._suit = self
+        self._steps = steps
 
         self._scraper = scraper
 
@@ -131,18 +129,8 @@ class StepSuit(object):
         self.context: dict = {}
         self.models: Deque = models if models else deque()
 
-    def suit_activate(self):
-        self._steps = [x(self) for x in self.steps_class]
-
-        # keep activated
-        if not self.scraper.activated:
-            self.scraper.scraper_activate()
-
-    def suit_exit(self):
-        # TODO: step exit
-        self.scraper.scraper_quit()
-
     def scrapy(self, task: Task):
+        # TODO: abort
 
         self.models.clear()
         self.content = ''
@@ -173,14 +161,12 @@ class StepSuit(object):
                 if not step.do(task):
                     # error and log out
                     logger.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
-                    return False , task
+                    return False, task
 
             logger.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
             return True, task
 
         return scrapy_inline
-
-
 
     @property
     def scraper(self) -> Scraper:

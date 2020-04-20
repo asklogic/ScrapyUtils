@@ -13,7 +13,7 @@ temp = os.path.join(project_path, 'tests', 'temp_dir')
 
 from base.components.proceesor import Processor
 from base.components.pipeline import Pipeline, ProcessorSuit
-from base.libs.thread import BaseThread
+from base.libs.threads import BaseThread
 
 
 class Person(Model):

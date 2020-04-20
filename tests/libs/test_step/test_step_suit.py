@@ -17,8 +17,8 @@ class StepSuitTestCase(unittest.TestCase):
     def setUpClass(cls) -> None:
         collect.collect_scheme('atom')
 
-        cls.scraper = collect.scraper_generate()
-        cls.steps = collect.steps
+        cls.scraper = collect.scrapers()
+        cls.steps = collect.steps_class
 
     def test_init(self):
         suit = StepSuit(self.steps, self.scraper)
@@ -32,7 +32,7 @@ class StepSuitTestCase(unittest.TestCase):
 
     def test_init_scraper(self):
         with self.assertRaises(AssertionError) as ae:
-            suit = StepSuit(self.steps, collect.scraper_generate)
+            suit = StepSuit(self.steps, collect.scrapers)
         assert 'StepSuit need a Scraper Instance.' in str(ae.exception)
 
     def test_method_suit_activate(self):

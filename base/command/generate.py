@@ -1,72 +1,79 @@
-from .Command import Command
 from base.core import core
 
-from base.generate.generator import  create_folder, create_components
+from base.generate.generator import create_folder, create_components
 from base.exception import CmdRunException
 import time
 import os
+from ._base import Command
+
+from base.log import Wrapper as log
 
 
 class Generate(Command):
-    do_collect = False
     path: str
 
-    def syntax(self):
-        return '[Generate]'
+    do_collect = False
 
-    def options(self, **kw):
+    @classmethod
+    def run(cls, kw):
         scheme = kw.get('scheme', 'Default')
-        path = kw.get('path', core.PROJECT_PATH)
+        relative_path = kw.get('path', core.PROJECT_PATH)
 
         # necessary property
 
-        self.path = os.path.join(path, scheme)
-
-    def run(self, **kw):
-
-        path = self.path
+        cls.path = os.path.join(relative_path, scheme)
+        path = cls.path
 
         time.sleep(0.2)
-        self.log.info('project path: ' + path)
-        self.log.info('scheme name: ' + os.path.basename(path))
+        log.info('scheme name: ' + os.path.basename(path))
+        log.info('scheme absolute path: ' + path)
         time.sleep(0.2)
 
         if os.path.exists(path) and os.path.isdir(path):
-            self.log.warning('exist path: ' + path)
+            log.warning('exist path: ' + path)
 
         else:
             os.makedirs(path)
 
-
-        # create folder
+        # create folder: __init__.py and data folder.
         create_folder(path)
 
+        # create component: py files(over write).
         create_components(path)
-        self.log.info('creating...')
-        self._check_target()
+        log.info('creating...')
+        cls._check_target()
         time.sleep(0.5)
 
+        log.info('Done.')
 
-
-        self.log.info('Done.')
-
-    def exit(self):
+    @classmethod
+    def exit(cls):
         time.sleep(1)
 
-    def _check_target(self):
-        self.log.info('create python packages : ' + self.path)
+    @classmethod
+    def signal_callback(cls, signum, frame):
+        pass
 
-        for file in list(os.walk(self.path))[0][2][:-1]:
-            file_path = os.path.join(self.path, file)
+    @classmethod
+    def failed(cls):
+        pass
+
+    @classmethod
+    def _check_target(cls):
+
+        log.info('create python packages : ' + cls.path)
+
+        for file in list(os.walk(cls.path))[0][2][:-1]:
+            file_path = os.path.join(cls.path, file)
             time.sleep(0.382)
-            self.log.info('create components: ' + file_path)
+            log.info('create components: ' + file_path)
             # os.remove(file_path)
 
         # folders (empty
-        for folder in list(os.walk(self.path))[0][1]:
+        for folder in list(os.walk(cls.path))[0][1]:
             time.sleep(0.382)
 
-            folder_path = os.path.join(self.path, folder)
-            self.log.info('create folder: ' + folder_path)
+            folder_path = os.path.join(cls.path, folder)
+            log.info('create folder: ' + folder_path)
 
             # os.rmdir(folder_path)

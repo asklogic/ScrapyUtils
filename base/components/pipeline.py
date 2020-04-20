@@ -1,8 +1,9 @@
 from typing import *
 from queue import Queue
+from collections import deque
 from threading import Lock
 
-from base.libs.thread import Consumer
+from base.libs.threads import Consumer
 from .proceesor import Processor
 from base.libs.model import Model
 
@@ -53,7 +54,7 @@ class ProcessorSuit(object):
 
 class PipelineConsumer(Consumer):
 
-    def __init__(self, failed: set, suit: ProcessorSuit, **kwargs):
+    def __init__(self, failed: deque, suit: ProcessorSuit, **kwargs):
         Consumer.__init__(self,
                           kwargs.pop('queue', Queue()),
                           kwargs.pop('delay', 1),
@@ -78,7 +79,7 @@ class PipelineConsumer(Consumer):
             self.suit.process(model=model)
         except Exception as e:
             # other exception in process_item method
-            self._failed.add(model)
+            self._failed.append(model)
 
             # TODO: necessary process
             # failed in process. break down all process
@@ -86,7 +87,7 @@ class PipelineConsumer(Consumer):
 
 class Pipeline(object):
     _queue: Queue
-    _failed: set
+    _failed: deque
 
     _suit: ProcessorSuit
     consumer: PipelineConsumer
@@ -97,7 +98,7 @@ class Pipeline(object):
             assert issubclass(processor, Processor)
 
         self._queue = Queue()
-        self._failed = set()
+        self._failed = deque()
 
         # init processor (processor's on_start method)
         suit = ProcessorSuit(processors)
@@ -155,4 +156,4 @@ class Pipeline(object):
 
         while self.queue.qsize() > 0:
             model = self.queue.get()
-            self.failed.add(model)
+            self.failed.append(model)

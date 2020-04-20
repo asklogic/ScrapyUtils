@@ -144,7 +144,7 @@ class ComsumerTestCase(unittest.TestCase):
         print(time.time() - start)
 
         # TODO : exit cost 1.2 second.
-        custom.exit()
+        custom.wait_exit()
         print(time.time() - start)
 
         assert custom.queue.qsize() == 0

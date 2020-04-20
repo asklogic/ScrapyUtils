@@ -1,8 +1,9 @@
 import time
-from logging import INFO
 
-from .Command import Command
+from logging import INFO
 from base import core
+
+from ._base import Command
 
 
 def _detail_info(setting) -> str:
@@ -15,7 +16,7 @@ def _detail_info(setting) -> str:
 
 def _base_info(setting) -> str:
     target = 'target name: {}'.format(setting.Target)
-    thread = 'thread: {}'.format(setting.Thread)
+    thread = 'thread: {}'.format(setting.thread)
 
     ProxyAble = setting.ProxyAble
     ProxyURL = setting.ProxyURL
@@ -34,6 +35,7 @@ def _base_info(setting) -> str:
 class Check(Command):
     require_target = True
 
+    @property
     def syntax(self):
         return '[Check]'
 
@@ -65,7 +67,7 @@ class Check(Command):
         time.sleep(1)
 
         start = time.time()
-        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
+        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.thread)
 
         # comment this
         time.sleep(1)
@@ -86,7 +88,7 @@ class Check(Command):
 
         self.log('Activated Components:\n' + _detail_info(setting))
         start = time.time()
-        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.Thread)
+        scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.thread)
 
         self.log('spend %.2f second(s) in' % float(time.time() - start))
 

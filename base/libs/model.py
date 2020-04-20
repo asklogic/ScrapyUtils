@@ -1,5 +1,7 @@
 from typing import *
 from abc import ABC, ABCMeta
+from dataclasses import dataclass
+import copy
 
 
 class Field(object):
@@ -24,15 +26,11 @@ class Field(object):
     def convert(self):
         return self._convert
 
-    @convert.setter
-    def convert(self, value):
-        self._convert = value
-
 
 class ModelMeta(type):
 
     def __new__(mcs, name, bases, attrs) -> Any:
-        attrs["_name"] = name
+        # attrs["_name"] = name
         _pure_data = {}
         _converts = {}
         _fields = []
@@ -59,59 +57,85 @@ class ModelMeta(type):
 
 
 class Model(metaclass=ModelMeta):
-    _name: str
+    # _name: str
 
     def __new__(cls, **kwargs) -> Any:
-        """
-        Model must be extended
-        """
-        if cls.__name__ is 'Model':
+        # Model must be extended
+        if cls.__name__ == 'Model':
             raise Exception('Model must be extended')
         return super().__new__(cls)
 
     def __init__(self, **kwargs) -> None:
-        """
-        init pure_data dict
-        set value from constructor
-        """
+        # copy default value dict from Filed instance.
+        self._pure_data = copy.deepcopy(self.__class__._pure_data)
+
+        # set value by kwargs.
         for key in kwargs.keys():
             setattr(self, key, kwargs[key])
-
-        self.pure_data = self.__class__._pure_data.copy()
 
     def __setattr__(self, name: str, value: Any) -> None:
         """
         in fields: save in pure_data
         not in field: save as attr
         """
+
         # TODO
         if name in self._fields:
             if self._converts[name] is type(None):
-                self.pure_data[name] = value
+                self._pure_data[name] = value
             else:
-                self.pure_data[name] = self._converts[name](value)
+                self._pure_data[name] = self._converts[name](value)
         else:
             super().__setattr__(name, value)
 
     def __getattr__(self, item):
-        """
-        same as __setattr__
-        """
         if item in self._fields:
-            return self.pure_data[item]
-        raise KeyError("Model {0} has no Field named {1}".format(self.get_name(), item))
+            return self._pure_data[item]
+        return super().__getattr__(item)
 
     @classmethod
     def get_name(cls):
-        return cls._name
+        return cls.__name__
 
     @property
     def pure_data(self):
         return self._pure_data
 
-    @pure_data.setter
-    def pure_data(self, value):
-        self._pure_data = value
+    # @pure_data.setter
+    # def pure_data(self, value):
+    #     self._pure_data = value
+
+
+# @dataclass
+# class Model(object):
+#
+#     def __new__(cls, **kwargs) -> Any:
+#         """
+#         Model must be extended
+#         """
+#         if cls.__name__ == 'Model':
+#             raise Exception('Model must be extended')
+#         return super().__new__(cls)
+#
+#     def __init__(self, **kwargs) -> None:
+#         """
+#         init pure_data dict
+#         set value from constructor
+#         """
+#         for key in kwargs.keys():
+#             setattr(self, key, kwargs[key])
+#
+#     @property
+#     def name(self):
+#         return self.__name__
+#
+#     @classmethod
+#     def get_name(cls):
+#         return cls.__name__
+#
+#     @property
+#     def pure_data(self):
+#         return self.__dict__
 
 
 if __name__ == '__main__':

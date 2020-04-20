@@ -3,7 +3,7 @@ import time
 
 from queue import Queue
 
-from base.libs import thread, ItemPool, Proxy, Model
+from base.libs import threads, ItemPool, Proxy, Model
 
 
 def proxy_generate(number):

@@ -1,107 +1,132 @@
 import unittest
 import time
-from threading import Thread
 from typing import Callable
 
 from base.libs import RequestScraper, Scraper, FireFoxScraper, Producer
 from base.components import StepSuit
 
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as ConcurrentTE
+from concurrent.futures import TimeoutError as ConcurrentTimeout
 from multiprocessing.dummy import Pool as ThreadPool
 
-from base.libs import ThreadWrapper
+from base.components import Step
 from queue import Queue
 
-from base.command.thread import Thread
 from base.command import *
+from base.libs import *
+from base.components import *
+from base.log import set_syntax
+
+from threading import Lock, Event
+
+from tests import telescreen
 
 
-def inner():
-    suit = StepSuit([], FireFoxScraper(headless=False))
-    suit.suit_activate()
-    return suit
+class Thread(Command, ComponentMixin):
+
+    @classmethod
+    def run(self):
+        event = Event()
+        lock = Lock()
+
+        kws = [
+            {
+                'queue': self.tasks,
+                'delay': self.config.get('timeout'),
+                'suit': x,
+                'pipeline': self.pipeline,
+                'proxy': self.proxy,
+
+                'event': event,
+                'lock': lock,
+            }
+            for x in self.suits
+        ]
+        consumers = [ScrapyConsumer(**kw) for kw in kws]
+
+        event.set()
+
+        while self.tasks.qsize() != 0:
+            time.sleep(0.1)
+
+        [x.stop() for x in consumers]
 
 
-# def mock_firefox_generator():
-#     f = FireFoxScraper(headless=False)
-#     f.scraper_activate()
-#     return f
+class CommandThread(unittest.TestCase):
+
+    def test_demo(self):
+        trigger('thread', **{'scheme': 'atom'})
 
 
-def mock_firefox_generator():
-    f = RequestScraper()
-    f.scraper_activate()
-    time.sleep(1)
-    return f
+class ScrapyConsumer(Consumer):
+    _suit: StepSuit = None
+    _pipeline: Pipeline = None
+    _proxy: Producer = None
 
+    def __init__(self, suit: StepSuit, pipeline: Pipeline, proxy: Producer = None,
+                 timeout=10,
+                 **kwargs):
 
-# def scraper_builder(generator, number):
-#     class InnerProducer(Producer):
-#
-#         def producing(self):
-#             return generator()
-#
-#     queue = Queue(number)
-#
-#     producers = [InnerProducer(queue, delay=0.1) for x in range(number)]
-#     [x.start(False) for x in producers]
-#     time.sleep(0.1)
-#     [x.stop() for x in producers]
-#
-#     scraper_list = list()
-#     if not queue.empty():
-#         scraper_list.append(queue.get())
-#
-#     [x.exit() for x in producers]
-#     return scraper_list
+        # assert
+        assert isinstance(pipeline, Pipeline), 'ScrapyConsumer need Pipeline.'
+        assert isinstance(suit, StepSuit), 'ScrapyConsumer need StepSuit instance.'
 
+        assert suit.scraper.activated, 'scraper must be activated.'
 
-# def scraper_builder(invoker, number):
-#     scraper_list = []
-#
-#     executor = ThreadPoolExecutor(number)
-#     with ThreadPoolExecutor(number) as executor:
-#         futures = [executor.submit(inner) for x in range(number)]
-#
-#     [x.result(1) for x in futures]
-#
-#     return scraper_list
+        self._pipeline = pipeline
+        self._proxy = proxy
+        self._suit = suit
 
+        self.timeout = timeout
 
-def scraper_builder(invoker, number, timeout=10):
-    scraper_list = []
+        # super
+        Consumer.__init__(self, kwargs.pop('queue'), kwargs.pop('delay', 1), kwargs.pop('lock', None), **kwargs)
 
-    def inner():
-        res = invoker()
-        scraper_list.append(res)
+    @property
+    def suit(self):
+        return self._suit
 
-    pool = ThreadPool(number)
-    # with ThreadPool(number) as pool:
-    res = [pool.apply_async(inner) for x in range(number)]
+    @property
+    def pipeline(self):
+        return self._pipeline
 
-    [x.get(timeout) for x in res]
+    @property
+    def proxy(self):
+        return self._proxy
 
-    return scraper_list
+    @property
+    def scraper(self):
+        return self.suit.scraper
 
+    def consuming(self, current: Task):
 
-class CommandThreadTestCase(unittest.TestCase):
+        # TODO: proxy.
+        # if self.proxy and not self.scraper.proxy:
+        #     self.scraper.proxy = self.proxy.queue.get()
 
-    def test_init(self):
-        trigger('thread', scheme='atom')
+        func = self.suit.closure_scrapy()
 
-    def test_build_scraper(self):
-        scrapers = scraper_builder(mock_firefox_generator, 2)
+        try:
+            with ThreadPoolExecutor(1) as pool:
+                future = pool.submit(func, current)
+                result = future.result(self.timeout)
+        except ConcurrentTimeout as CT:
+            # TODO: rebuild
+            pass
+        else:
+            if result[0]:
+                for data_model in self.suit.models:
+                    self.pipeline.push(data_model)
+            else:
+                # res is False, retry.
+                current.count += 1
 
-        for scraper in scrapers:
-            assert scraper.scraper_quit
-            assert isinstance(scraper, Scraper)
-            assert scraper.activated is True
+                # TODO: custom retry count.
+                if current.count <= 3:
+                    self.queue.put(current)
 
-        [x.scraper_quit() for x in scrapers]
-
-    def test_option(self):
-        pass
+                if self.proxy:
+                    self.scraper.proxy = self.proxy.queue.get()
 
 
 if __name__ == '__main__':

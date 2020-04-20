@@ -19,99 +19,72 @@ from concurrent.futures import TimeoutError as ConcurrentTimeout
 
 from multiprocessing import TimeoutError
 
-from base import command
+from ._base import Command, ComponentMixin
 
 
-class Thread(command.Command):
+class Thread(Command, ComponentMixin):
     do_collect = True
 
-    config: dict = None
+    consumers = None
 
-    queue: Queue = None
-    suits: List[StepSuit] = None
-    consumers: List[Consumer] = None
-
-    def syntax(self) -> str:
-        return '[THREAD]'
-
-    def options(self, **kwargs):
-        set_syntax('[Thread]')
-        set_line(kwargs.get('line', 3))
-
-        # TODO:  task's count
-
-        # TODO: log out config info.
-
-        steps = get_steps()
-        gen = get_scraper_generate()
-
-        self.config = get_config()
-        self.queue = get_tasks()
-
-        def inner_suit():
-            suit = StepSuit(steps, gen())
-            suit.suit_activate()
-            return suit
-
-        self.suits = list_builder(inner_suit, self.config.get('thread'), 10)
-
-        current_pipeline = get_pipeline()
-
-        # consumer's
+    @classmethod
+    def run(cls, kw):
         event = Event()
         lock = Lock()
 
         kws = [
             {
-                'queue': self.queue,
-                'delay': self.config.get('timeout'),
+                'queue': cls.tasks,
+                'delay': cls.config.get('timeout'),
                 'suit': x,
-                'pipeline': current_pipeline,
+                'pipeline': cls.pipeline,
+                'proxy': cls.proxy,
 
                 'event': event,
                 'lock': lock,
             }
-
-            for x in self.suits
+            for x in cls.suits
         ]
+        cls.consumers = [ScrapyConsumer(**kw) for kw in kws]
 
-        self.consumers = [ScrapyConsumer(**kw) for kw in kws]
+        event.set()
 
-    def run(self):
-        eno = self.consumers[0]
+        while cls.tasks.qsize() != 0:
+            time.sleep(0.1)
 
-        eno.start()
+        [x.stop() for x in cls.consumers]
 
-        eno.exit()
-
-        [x.stop() for x in self.consumers]
-
-    def exit(self):
+    @classmethod
+    def exit(cls):
         """
         正常退出
         """
-        log.info('trying to exit suits and scrapers.')
+        log.debug('trying to exit suits and scrapers.')
 
-        [suit.suit_exit() for suit in self.suits]
+        [x.scraper.scraper_quit() for x in cls.suits]
 
-        time.sleep(1)
+        time.sleep(2)
 
         # TODO: wait to pipeline.
 
-        log.info('command Thread exit.')
+        cls.pipeline.exit()
 
-    def signal_callback(self, signum, frame):
-        [x.stop() for x in self.consumers]
+        log.debug('command Thread exit.')
+
+    @classmethod
+    def signal_callback(cls, signum, frame):
+        [x.stop() for x in cls.consumers]
 
         # [suit.suit_exit() for suit in self.suits]
 
         log.info('command Thread signal callback exit!.')
         raise CommandExit()
 
-    def failed(self):
-        [x.stop() for x in self.consumers]
+    @classmethod
+    def failed(cls):
+        [x.stop() for x in cls.consumers]
 
-        [suit.suit_exit() for suit in self.suits]
+        [x.scraper.scraper_quit() for x in cls.suits]
 
         log.info('command Thread failed!.')
 
@@ -119,9 +92,9 @@ class Thread(command.Command):
 class ScrapyConsumer(Consumer):
     _suit: StepSuit = None
     _pipeline: Pipeline = None
-    _proxy: Consumer = None
+    _proxy: Producer = None
 
-    def __init__(self, suit: StepSuit, pipeline: Pipeline, proxy: Consumer = None,
+    def __init__(self, suit: StepSuit, pipeline: Pipeline, proxy: Producer = None,
                  timeout=10,
                  **kwargs):
 
@@ -159,28 +132,10 @@ class ScrapyConsumer(Consumer):
     def consuming(self, current: Task):
 
         # TODO: proxy.
-        # if self.proxy:
-        #     self.scraper.proxy = self.proxy.get()
-        pass
-
-        # if self.suit.scrapy(current):
-        #     # res is True. gather model.
-        #     for model in self.suit.models:
-        #         self.pipeline.push(model)
-        # else:
-        #     # res is False, retry.
-        #     current.count += 1
-        #
-        #     # TODO: custom retry count.
-        #     if current.count <= 3:
-        #         self.queue.put(current)
+        # if self.proxy and not self.scraper.proxy:
+        #     self.scraper.proxy = self.proxy.queue.get()
 
         func = self.suit.closure_scrapy()
-
-        # kw = {'task': current}
-
-        # async_res = thread_pool.apply_async(func, kwds=kw, callback=self.callback())
-        # TODO: timeout
 
         try:
             with ThreadPoolExecutor(1) as pool:
@@ -201,12 +156,8 @@ class ScrapyConsumer(Consumer):
                 if current.count <= 3:
                     self.queue.put(current)
 
-    # abort
-    # def error_callback(self):
-    #     def error_callback_inline():
-    #         pass
-    #
-    #     return error_callback_inline
+                if self.proxy:
+                    self.scraper.proxy = self.proxy.queue.get()
 
 
 def list_builder(invoker, number, timeout=10):
@@ -216,9 +167,14 @@ def list_builder(invoker, number, timeout=10):
         res = invoker()
         res_list.append(res)
 
-    with ThreadPoolExecutor(number) as executor:
-        futures = [executor.submit(inner) for x in range(number)]
+    executor = ThreadPoolExecutor(number)
 
+    futures = [executor.submit(inner) for x in range(number)]
+
+    # method result will raise exception when timeout.
     [x.result(timeout) for x in futures]
+
+    # TODO: exit executor.
+    executor.shutdown(False)
 
     return res_list

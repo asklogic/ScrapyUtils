@@ -1,10 +1,14 @@
 import unittest
 import time
 
-from base.libs import Producer, FireFoxScraper, MultiProducer
+from base.libs import Producer, FireFoxScraper, MultiProducer, PoolProducer
 from queue import Queue
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing.dummy import Pool
+from multiprocessing import TimeoutError
+import time
+
 from threading import Event
 
 
@@ -91,7 +95,7 @@ class ProducerTestCase(unittest.TestCase):
 
         assert self.queue.qsize() == 6
 
-    # @unittest.skip
+    @unittest.skip
     def test_case_stop_at_once_delay(self):
         queue = Queue(1)
 
@@ -128,6 +132,51 @@ class ProducerTestCase(unittest.TestCase):
         print(proxy_mock.queue.qsize())
         assert proxy_mock.queue.qsize() == 10
 
+    def test_function_wrapper(self):
+        def wrapper(func, timeout: int = 3):
+            with Pool(1) as pool:
+                res = pool.apply_async(func)
+                try:
+                    res.get(timeout)
+                except TimeoutError as te:
+                    pass
+                # pool.terminate()
+
+        def inner():
+            time.sleep(2)
+            print('done')
+
+        wrapper(inner, 3)
+
+        time.sleep(4)
+
+    # @unittest.skip
+    def test_case_firefox_pool(self):
+        class FoxCustom(PoolProducer):
+            def producing(self):
+                f = FireFoxScraper(headless=False)
+                f.scraper_activate()
+                return f
+
+        fox = FoxCustom(Queue(5), concurrent=2)
+        fox.start()
+
+        time.sleep(1)
+        fox.stop()
+
+
+    def test_case_pool(self):
+        class Custom(PoolProducer):
+            def producing(self):
+                return '1'
+
+        custom = Custom(Queue(50), concurrent=10, delay=0.1)
+        custom.start()
+
+        time.sleep(1)
+        print(custom.future_queue.qsize())
+
+        custom.stop()
 
 if __name__ == '__main__':
     unittest.main()

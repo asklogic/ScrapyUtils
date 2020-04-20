@@ -6,4 +6,4 @@ from .model import Model, Field
 from .task import Task
 from .proxy import Proxy
 
-from .thread import BaseThread, Consumer, ThreadSuit, ItemPool, ThreadWrapper, Producer, MultiProducer
+from .threads import BaseThread, Consumer, ThreadSuit, ItemPool, ThreadWrapper, Producer, MultiProducer, PoolProducer

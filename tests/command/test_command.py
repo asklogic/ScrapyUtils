@@ -20,8 +20,8 @@ from base.core.collect import collect_scheme
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
 from base.command import sys_exit
-from base.command.thread import Thread
-from base.command import Command
+from base.command.thread_ import Thread
+from base.command import Command, trigger
 
 from base.log import Wrapper as log
 from click.testing import CliRunner
@@ -63,6 +63,13 @@ class TestCommand(unittest.TestCase):
         import shutil
         # shutil.rmtree(os.path.join(schemes_path, 'generate'))
 
+    def test_generate(self):
+        params = {
+            'scheme': 'lianjia',
+        }
+
+        trigger('thread', **params)
+
     def test_atom(self):
         params = {
             'scheme': 'atom',
@@ -85,8 +92,8 @@ class TestCommand(unittest.TestCase):
 
     def test_atom_runner(self):
         runner = CliRunner()
-        from base.command import command_thread
-        result = runner.invoke(command_thread, ['atom', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
+        from base.command import thread
+        result = runner.invoke(thread, ['atom', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
 
         print(result.output)
 
@@ -102,15 +109,15 @@ class TestCommand(unittest.TestCase):
     @unittest.skip
     def test_proxy_test_runner(self):
         runner = CliRunner()
-        from base.command import command_thread
-        result = runner.invoke(command_thread, ['proxy_test', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
+        from base.command import thread
+        result = runner.invoke(thread, ['proxy_test', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
 
         print(result.output)
 
     def test_instable(self):
         runner = CliRunner()
-        from base.command import command_thread
-        result = runner.invoke(command_thread, ['test_instable', '--line', '0'])
+        from base.command import thread
+        result = runner.invoke(thread, ['test_instable', '--line', '0'])
 
         print(result.output)
 

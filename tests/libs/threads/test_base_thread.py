@@ -3,7 +3,7 @@ import sys
 import threading
 import time
 
-from base.libs.thread import BaseThread
+from base.libs.threads import BaseThread
 
 
 class MyTestCase(unittest.TestCase):

@@ -5,7 +5,6 @@ from selenium.webdriver import Firefox, FirefoxOptions
 
 
 class FirefoxPropertyTestCase(unittest.TestCase):
-
     f = None
 
     @classmethod
@@ -78,6 +77,32 @@ class FirefoxPropertyTestCase(unittest.TestCase):
         # f.proxy = proxy
 
         self.f.proxy = proxy
+
+    def test_property_proxy_default(self):
+        assert self.f.proxy == None
+
+    def test_property_proxy_set(self):
+        proxy_info = '117.30.209.184:32846'
+        proxy = Proxy(ip=proxy_info.split(':')[0], port=proxy_info.split(':')[1])
+
+        self.f.proxy = proxy
+
+        assert self.f.proxy != None
+        assert self.f.proxy.ip == '117.30.209.184'
+        assert self.f.proxy.port == '32846'
+
+    @unittest.skip
+    def test_property_proxy_get(self):
+
+        proxy_info = '14.115.205.182:34975'
+        proxy = Proxy(ip=proxy_info.split(':')[0], port=proxy_info.split(':')[1])
+
+        self.f.proxy = proxy
+
+
+        content = self.f.get('http://ip.tool.chinaz.com/')
+
+        assert self.f.proxy.ip in content
 
 
 if __name__ == '__main__':

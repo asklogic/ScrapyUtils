@@ -55,8 +55,8 @@ class StepSuitScrapyTestCase(unittest.TestCase):
     def setUpClass(cls) -> None:
         collect.collect_scheme('atom')
 
-        cls.steps = collect.steps
-        cls.scraper = collect.scraper_generate()
+        cls.steps = collect.steps_class
+        cls.scraper = collect.scrapers()
 
     @classmethod
     def tearDown(self) -> None:
@@ -104,7 +104,7 @@ class StepSuitScrapyTestCase(unittest.TestCase):
         """
         content and models.
         """
-        suit = StepSuit([Single, Tasks], collect.scraper_generate)
+        suit = StepSuit([Single, Tasks], collect.scrapers)
         suit.suit_activate()
 
         suit.scrapy(self.task)
@@ -117,7 +117,7 @@ class StepSuitScrapyTestCase(unittest.TestCase):
         """
         interrupt.
         """
-        suit = StepSuit([Single, FailedAction, Tasks], collect.scraper_generate)
+        suit = StepSuit([Single, FailedAction, Tasks], collect.scrapers)
         suit.suit_activate()
 
         suit.scrapy(self.task)

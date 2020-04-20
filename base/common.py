@@ -276,7 +276,7 @@ class ProxyProcessor(Processor):
     }
 
     def on_start(self, setting: Setting):
-        if not setting.ProxyFunc and setting.ProxyURL is '':
+        if not setting.ProxyFunc and setting.ProxyURL == '':
             raise Exception("didn't set proxy info. check setting")
 
         if setting.ProxyURL:

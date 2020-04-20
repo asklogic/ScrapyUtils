@@ -1,6 +1,6 @@
 import unittest
 
-from base.command.thread import ScrapyConsumer
+from base.command.thread_ import ScrapyConsumer
 from base.core import collect_scheme
 from base.core import *
 
@@ -38,7 +38,7 @@ class ScrapyConsumerTestCase(unittest.TestCase):
 
         }
 
-        cls.scraper = collect.scraper_generate()
+        cls.scraper = collect.scrapers()
 
     # def test_test(self):
     #     class Wrapper(threading.Thread):
@@ -122,7 +122,7 @@ class ScrapyConsumerTestCase(unittest.TestCase):
 
         consumer = ScrapyConsumer(**self.params)
         consumer.start()
-        consumer.exit()
+        consumer.wait_exit()
 
     def test_case_lock(self):
         pass

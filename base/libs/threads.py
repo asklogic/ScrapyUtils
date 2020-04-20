@@ -122,7 +122,7 @@ class Consumer(BaseThread):
     def consuming(self, obj):
         pass
 
-    def exit(self):
+    def wait_exit(self):
         # assert self.stopped is True, 'Consumer has stopped.'
 
         while self.queue.qsize() != 0:
@@ -277,8 +277,7 @@ class PoolProducer(BaseThread):
         self.current = None
 
         #
-        self._futures = Queue(self.queue.qsize())
-        self.pool = ThreadPoolExecutor(max_workers=concurrent)
+        self._futures = Queue(queue.maxsize)
         self.pool = ThreadPool(concurrent)
 
         # super
@@ -296,18 +295,13 @@ class PoolProducer(BaseThread):
     def lock(self):
         return self._lock
 
-    @abstractmethod
-    def producing(self, number):
-        pass
-
     @property
     def future_queue(self):
         return self._futures
 
     def run(self):
 
-        while True:
-            self.wait()
+        while self.wait():
 
             with self.lock:
                 time.sleep(self.delay)
@@ -333,10 +327,7 @@ class PoolProducer(BaseThread):
 
 
 def producing_wrapper(producer: Producer):
-    # TODO: invoke producing
-    # item = Producer.producing(producer, 10)
-    item = producer.producing(10)
-
+    item = producer.producing()
     producer.queue.put(item)
 
 

@@ -7,4 +7,4 @@ from base.core.collect import collect_steps, collect_processors
 
 from . import processor
 
-processors = collect_processors(processor)
+processors_class = collect_processors(processor)

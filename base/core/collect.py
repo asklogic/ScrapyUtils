@@ -6,7 +6,7 @@ from importlib import import_module
 from urllib import parse
 from concurrent.futures import ThreadPoolExecutor
 
-from base.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline
+from base.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline, ProcessorSuit
 from base.libs import Scraper, RequestScraper, ItemPool, Proxy, MultiProducer, Producer
 from base.log import Wrapper
 
@@ -15,7 +15,7 @@ from base.log import Wrapper
 module = None
 
 # component
-processors = None
+processors_class = None
 steps_class = None
 scrapers = None
 
@@ -23,7 +23,8 @@ config = None
 
 # property
 tasks = Queue()
-suits: List[StepSuit] = None
+step_suits: List[StepSuit] = None
+processor_suit: ProcessorSuit = None
 models_pipeline: Pipeline = None
 
 # others
@@ -34,14 +35,14 @@ proxy: Producer = None
 # *******************************************************************************
 
 def collect_scheme_prepare(scheme: str):
-    global steps_class, processors, config, module
+    global steps_class, processors_class, config, module
 
     try:
 
         module = import_module(scheme)
 
         steps_class = module.steps_class
-        processors = module.processors
+        processors_class = module.processors_class
 
         # ----------------------------------------------------------------------
         # config : dict
@@ -52,7 +53,7 @@ def collect_scheme_prepare(scheme: str):
 
 
 def collect_scheme_initial():
-    global module, tasks, scrapers, proxy, config, steps_class, suits, processors, models_pipeline
+    global module, tasks, scrapers, proxy, config, steps_class, step_suits, processors_class, models_pipeline, processor_suit
 
     try:
 
@@ -75,15 +76,18 @@ def collect_scheme_initial():
 
         # ----------------------------------------------------------------------
         # suits : List[StepSuit]
-        suits = [StepSuit(steps_list[i], scrapers[i]) for i in range(thread_num)]
+        step_suits = [StepSuit(steps_list[i], scrapers[i]) for i in range(thread_num)]
 
         # ----------------------------------------------------------------------
         # proxy : producer
         proxy = build_proxy(config)
 
         # ----------------------------------------------------------------------
-        # init pipeline
-        models_pipeline = Pipeline(processors)
+        # processor suits : List[ProcessorSuit]
+        processor_suit = ProcessorSuit(processors_class, config)
+        processor_suit.suit_start()
+
+        models_pipeline = Pipeline(processor_suit)
     except Exception as e:
         log.exception('Collect Initial', e)
         raise Exception('interrupt.')
@@ -95,12 +99,12 @@ def collect_scheme(scheme: str):
     get attr in __init__ and init global variable.
     """
 
-    global steps_class, processors, config, scrapers, tasks, models_pipeline, proxy
+    global steps_class, processors_class, config, scrapers, tasks, models_pipeline, proxy
 
     module = import_module(scheme)
 
     steps_class = module.steps
-    processors = module.processors
+    processors_class = module.components
 
     # config
     config = module.config
@@ -129,7 +133,7 @@ def collect_scheme(scheme: str):
 
     # ----------------------------------------------------------------------
     # init pipeline
-    models_pipeline = Pipeline(processors)
+    models_pipeline = Pipeline(processors_class)
 
 
 def _load_components(module: ModuleType, component: type(Component)):

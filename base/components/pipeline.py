@@ -1,55 +1,50 @@
 from typing import *
+import time
 from queue import Queue
 from collections import deque
 from threading import Lock
 
 from base.libs.threads import Consumer
 from .proceesor import Processor
+from .base import ComponentSuit
 from base.libs.model import Model
 
+from base.log import Wrapper as log
 
-class ProcessorSuit(object):
-    _processors: List[Processor]
 
-    def __init__(self, processors: List[type(Processor)]):
-        assert isinstance(processors, Iterable)
-        for processor in processors:
-            # assert isinstance(processor, Processor), 'Processor must be init'
-            assert issubclass(processor, Processor), 'Processor class'
+class ProcessorSuit(ComponentSuit):
+    _components: List[Processor] = None
+    target_components: type(Processor) = Processor
 
-        self._processors = []
-        # init
-        for processor in processors:
-            try:
-                current = processor()
-                self._processors.append(current)
-            except Exception as e:
-                pass
-                # TODO : log out
-            finally:
-                pass
-                # TODO : log out
+    config: dict = None
 
     @property
-    def processors(self):
-        return self._processors
+    def processor(self):
+        return self._components
 
     def process(self, model):
         current = model
-        next = None
-        # FIXME: linked?
-        for processor in self.processors:
-            if not isinstance(current, processor.target):
-                continue
+        next_model = None
+        for processor in self.components:
+            try:
+                if not isinstance(current, processor.target):
+                    continue
 
-            next = processor.process_item(current)
+                next_model = processor.process_item(current)
 
-            if next is False:
-                break
-            elif next is None:
-                continue
-            else:
-                current = next
+                if next_model:
+                    # return model: continue processing.
+                    current = next_model
+                elif next_model is None:
+                    # no return: next processor
+                    continue
+                else:
+                    # return false: abort processing
+                    break
+            except Exception as e:
+                # TODO: continue by config
+                log.exception('Processor', e)
+                raise Exception('interrupt.')
 
 
 class PipelineConsumer(Consumer):
@@ -74,15 +69,10 @@ class PipelineConsumer(Consumer):
         return self._failed
 
     def consuming(self, model: Model):
-        # TODO: log out
         try:
             self.suit.process(model=model)
         except Exception as e:
-            # other exception in process_item method
             self._failed.append(model)
-
-            # TODO: necessary process
-            # failed in process. break down all process
 
 
 class Pipeline(object):
@@ -92,17 +82,10 @@ class Pipeline(object):
     _suit: ProcessorSuit
     consumer: PipelineConsumer
 
-    def __init__(self, processors: List[type(Processor)]) -> None:
-        # processor
-        for processor in processors:
-            assert issubclass(processor, Processor)
-
+    def __init__(self, suit: ProcessorSuit) -> None:
         self._queue = Queue()
         self._failed = deque()
 
-        # init processor (processor's on_start method)
-        suit = ProcessorSuit(processors)
-        # TODO: log out
         self._suit = suit
 
         # consumer
@@ -112,15 +95,6 @@ class Pipeline(object):
         }
         self.consumer = PipelineConsumer(self.failed, suit, **consumer_kwargs)
         self.consumer.start()
-
-    def _start_processor(self):
-        """
-        in processor suit
-        """
-        pass
-
-    def _exit_processor(self):
-        pass
 
     @property
     def queue(self):
@@ -143,16 +117,14 @@ class Pipeline(object):
     def pop(self) -> object:
         return self.queue.get_nowait()
 
-    def process(self, model: Model):
-        pass
+    def exit(self, timeout: int = 1):
 
-    def exit(self):
+        while timeout > 0:
+            timeout = timeout - 0.1
+            time.sleep(0.1)
+
         # exit consumer
         self.consumer.stop()
-
-        # execute on_exit
-        for processor in self._suit.processors:
-            processor.on_exit()
 
         while self.queue.qsize() > 0:
             model = self.queue.get()

@@ -82,10 +82,10 @@ class TestCommand(unittest.TestCase):
         # block here
 
         from base.core.collect import models_pipeline as pipeline
-        assert pipeline.suit.processors[0].name == 'Duplication'
-        assert pipeline.suit.processors[1].name == 'Count'
+        assert pipeline.suit.components[0].name == 'Duplication'
+        assert pipeline.suit.components[1].name == 'Count'
 
-        count = pipeline.suit.processors[1].count
+        count = pipeline.suit.components[1].count
         failed = len(pipeline.failed)
 
         assert count + failed > 5 * 10
@@ -123,8 +123,8 @@ class TestCommand(unittest.TestCase):
 
         from base.core.collect import models_pipeline
 
-        print(models_pipeline.suit.processors[0].count)
-        assert models_pipeline.suit.processors[0].count > 0
+        print(models_pipeline.suit.components[0].count)
+        assert models_pipeline.suit.components[0].count > 0
 
     def test_log(self):
         command = Thread()

@@ -32,5 +32,5 @@ def get_proxy():
 
 
 def get_suits():
-    from .collect import suits
-    return suits
+    from .collect import step_suits
+    return step_suits

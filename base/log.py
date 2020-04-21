@@ -53,7 +53,7 @@ class Wrapper:
 
         exception_name = exception.__class__.__name__
         component_name = '<{}>'.format(component_name)
-        message = ' '.join([cls.syntax, component_name, 'Except :', exception_name, str(exception)])
+        message = ' '.join([cls.syntax, component_name, exception_name,'-' ,str(exception)])
         cls.log.error(message)
 
         current = exception.__traceback__

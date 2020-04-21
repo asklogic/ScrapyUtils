@@ -2,10 +2,9 @@ from abc import abstractmethod
 from typing import *
 
 from collections import deque
-from base.components.base import Component, ComponentMeta
+from base.components.base import Component, ComponentMeta, ComponentSuit
 from base.libs import Scraper, Task, Model, ItemPool
 from base.log import Wrapper as log
-from base.log import current as logger
 
 
 class StepMeta(ComponentMeta):
@@ -65,7 +64,7 @@ class ActionStep(Step):
             return True
         except Exception as e:
             # TODO: log out
-            logger.exception(self.name, e)
+            log.exception(self.name, e)
             # self.log.error('error', self.name)
             return False
 
@@ -83,7 +82,6 @@ class ParseStep(Step):
 
     def do(self, task: Task):
         try:
-            # TODO: deque instead list
             models = deque()
             # FIXME: crit!
 
@@ -99,51 +97,48 @@ class ParseStep(Step):
             return True
 
         except Exception as e:
-            logger.exception(self.name, e)
+            log.exception(self.name, e)
 
             return False
 
 
-class StepSuit(object):
+class StepSuit(ComponentSuit):
     # mounted
+    target_components = Step
 
     _scraper: Scraper = None
-    _steps: List[Step] = None
 
-    def __init__(self, steps: List[Step], scraper: Scraper, models: List[Model] = None):
-        # assert
-        for step in steps:
-            assert isinstance(step, Step), 'StepSuit need Step instance.'
+    def __init__(self, steps: List[type(Step)], scraper: Scraper, config: dict = None):
+        super(StepSuit, self).__init__(components=steps, config=config)
 
         assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
 
         # suit property
-        for step in steps:
+        for step in self.steps:
             step._suit = self
-        self._steps = steps
 
         self._scraper = scraper
 
         # step property
         self.content: str = ''
         self.context: dict = {}
-        self.models: Deque = models if models else deque()
+        self.models: Deque = deque()
 
-    def scrapy(self, task: Task):
-        # TODO: abort
-
-        self.models.clear()
-        self.content = ''
-
-        for step in self.steps:
-
-            if not step.do(task):
-                # error and log out
-                logger.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
-                return False
-
-        logger.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
-        return True
+    # def scrapy(self, task: Task):
+    #     # TODO: abort
+    #
+    #     # self.models.clear()
+    #     self.content = ''
+    #
+    #     for step in self.steps:
+    #
+    #         if not step.do(task):
+    #             # error and log out
+    #             logger.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
+    #             return False
+    #
+    #     logger.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
+    #     return True
 
     def closure_scrapy(self):
         """
@@ -160,10 +155,10 @@ class StepSuit(object):
 
                 if not step.do(task):
                     # error and log out
-                    logger.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
+                    log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
                     return False, task
 
-            logger.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
+            log.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
             return True, task
 
         return scrapy_inline
@@ -174,7 +169,7 @@ class StepSuit(object):
 
     @property
     def steps(self) -> List[Step]:
-        return self._steps
+        return self._components
 
 # class _StepSuit(object):
 #     # property

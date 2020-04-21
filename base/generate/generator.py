@@ -17,8 +17,8 @@ init_template = """from base.core.collect import collect_steps, collect_processo
 
 from . import action, parse, processor, profile
 
-steps = collect_steps(action, parse)
-processors = collect_processors(processor)
+steps_class = collect_steps(action, parse)
+processors_class = collect_processors(processor)
 config, tasks_callable, scraper_callable = collect_profile(profile)
 """
 

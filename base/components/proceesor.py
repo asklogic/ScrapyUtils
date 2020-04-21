@@ -17,17 +17,16 @@ class ProcessorMeta(ComponentMeta):
 
 class Processor(Component, metaclass=ProcessorMeta):
     target: type(Model)
-    data: []
+    data: [] = None
+    count: int = 0
 
-    setting: Setting
+    config: dict = None
 
-    def __init__(self, setting: Setting = Setting()):
+    def __init__(self, config: dict = None):
         self.count: int = 0
         self.data = []
 
-        self.setting = setting
-
-        self.on_start()
+        self.config = config
 
     @abstractmethod
     def on_start(self):

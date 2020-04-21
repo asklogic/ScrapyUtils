@@ -90,7 +90,7 @@ class TestScrapy(TestCase):
         pipeline.exit()
 
         failed = len(pipeline.failed)
-        processed = pipeline.suit.processors[0].count
+        processed = pipeline.suit.components[0].count
 
         assert (failed + processed) == count
 

@@ -43,7 +43,7 @@ def trigger(command_name: str, **kwargs):
 
     # collect. -> core.collect
     if command.do_collect:
-        collect_scheme_prepare(kwargs.get('scheme'))
+        collect_scheme_preload(kwargs.get('scheme'))
 
         if kwargs.get('confirm'):
             input('Press any key to continue.')

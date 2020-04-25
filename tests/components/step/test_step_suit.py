@@ -42,10 +42,18 @@ class StepSuitTestCase(unittest.TestCase):
         cls.r = RequestScraper()
         cls.r.scraper_activate()
 
-    def test_init(self):
-        suit = StepSuit([SingleAction], self.r, {})
+    def test_demo(self):
+        steps_class = [SimpleAction, SimpleParse]
 
-        # suit = StepSuit(self.steps, self.scraper)
+        suit1 = StepSuit(self.r, steps_class)
+        suit2 = StepSuit(self.r, steps_class)
+
+        assert suit1.steps[0].name == suit2.steps[0].name
+        assert suit1.steps[0] is not suit2.steps[0]
+        assert id(suit1.steps[0]) != id(suit2.steps[0])
+
+    def test_init(self):
+        suit = StepSuit(self.r, [SingleAction], {})
 
         assert suit.scraper and isinstance(suit.scraper, Scraper)
         assert len(suit.steps) == 1
@@ -54,29 +62,29 @@ class StepSuitTestCase(unittest.TestCase):
         func(Task(url='http://127.0.0.1:8090/mock/get'))
 
     def test_property_context(self):
-        suit = StepSuit([SimpleAction, SimpleParse], self.r)
+        suit = StepSuit(self.r, [SimpleAction, SimpleParse])
 
         assert suit.steps[0].context == suit.steps[1].context == {}
         assert suit.steps[0].context is suit.steps[1].context is suit.context
 
     def test_property_content(self):
-        suit = StepSuit([SimpleAction, SimpleParse], self.r)
+        suit = StepSuit(self.r, [SimpleAction, SimpleParse])
 
         assert suit.steps[0].content == suit.steps[1].content == ''
         assert suit.steps[0].content is suit.steps[1].content is suit.content
 
     def test_property_scraper(self):
-        suit = StepSuit([SimpleAction, SimpleParse], self.r)
+        suit = StepSuit(self.r, [SimpleAction, SimpleParse])
 
         assert suit.steps[0].scraper == suit.steps[1].scraper == self.r
         assert suit.steps[0].scraper is suit.steps[1].scraper is suit.scraper
 
     def test_property_models(self):
-        suit = StepSuit([SimpleAction, SimpleParse], self.r)
+        suit = StepSuit(self.r, [SimpleAction, SimpleParse])
 
         assert list(suit.models) == []
 
-        # def test_init_step(self):
+    # def test_init_step(self):
     #     suit = StepSuit([], self.scraper)
     #
     # def test_init_scraper(self):

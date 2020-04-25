@@ -43,8 +43,10 @@ class ProcessorSuit(ComponentSuit):
                     break
             except Exception as e:
                 # TODO: continue by config
-                log.exception('Processor', e)
-                raise Exception('interrupt.')
+                log.exception('Processor', e, line=1)
+                return False
+            else:
+                return True
 
 
 class PipelineConsumer(Consumer):
@@ -69,9 +71,7 @@ class PipelineConsumer(Consumer):
         return self._failed
 
     def consuming(self, model: Model):
-        try:
-            self.suit.process(model=model)
-        except Exception as e:
+        if not self.suit.process(model=model):
             self._failed.append(model)
 
 
@@ -119,7 +119,7 @@ class Pipeline(object):
 
     def exit(self, timeout: int = 1):
 
-        while timeout > 0:
+        while timeout > 0 and self.queue.qsize() > 0:
             timeout = timeout - 0.1
             time.sleep(0.1)
 

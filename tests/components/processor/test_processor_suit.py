@@ -90,6 +90,7 @@ class TestProcessorSuit(unittest.TestCase):
         suit.suit_start()
         suit.suit_exit()
 
+
         assert suit.components[1].exit_sign == []
 
     def test_function_suit_exit_failed(self):

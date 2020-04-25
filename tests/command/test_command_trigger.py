@@ -17,7 +17,7 @@ from base.log import Wrapper as log
 from click.testing import CliRunner
 
 from base.command import command_map
-from base.core.collect import collect_scheme_prepare, collect_scheme_initial
+from base.core.collect import collect_scheme_preload, collect_scheme_initial
 from base.core import get_scraper, get_proxy, get_config, get_pipeline, get_tasks, get_suits
 
 from queue import Queue
@@ -53,7 +53,7 @@ def mock_trigger(command_name: str, **kwargs):
     if command.do_collect:
         command: ComponentMixin or Command
         # stage 1: prepare
-        collect_scheme_prepare(kwargs.get('scheme'))
+        collect_scheme_preload(kwargs.get('scheme'))
 
         if kwargs.get('confirm'):
             input('Press any key to continue.')
@@ -94,7 +94,7 @@ class TestCommandTrigger(unittest.TestCase):
         mock_trigger('not_exist', **{'scheme': 'atom'})
 
     def test_collect_scheme_demo(self):
-        collect_scheme_prepare('atom')
+        collect_scheme_preload('atom')
         collect_scheme_initial()
 
         [x.scraper_quit() for x in get_scraper()]

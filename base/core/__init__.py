@@ -1,4 +1,4 @@
-from base.core.collect import collect_scheme, collect_scheme_initial, collect_scheme_prepare
+from base.core.collect import collect_scheme, collect_scheme_initial, collect_scheme_preload
 
 
 def get_steps():

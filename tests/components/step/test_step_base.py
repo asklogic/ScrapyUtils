@@ -73,7 +73,7 @@ class TestStep(unittest.TestCase):
         t.url = 'http://ip.cn'
         self.t = t
 
-        self.suit = StepSuit([], r)
+        self.suit = StepSuit(r, [])
 
     def test_demo(self):
         action = SimpleAction()

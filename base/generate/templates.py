@@ -64,7 +64,7 @@ from .model import *
 class ${class_name}Process(Processor):
 
     def process_item(self, model: Model) -> Any:
-        print(model.pure_data())
+        print(model.pure_data)
         return model        
 """
 
@@ -114,9 +114,9 @@ config_template = r"""
 
 """
 
-# profile
+# settings
 
-profile_template = r'''# -*- coding: utf-8 -*-
+settings_template = r'''# -*- coding: utf-8 -*-
 """
 scheme's profile for atom scheme.
 

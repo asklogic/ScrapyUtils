@@ -9,17 +9,17 @@ generator_mapper = {
     "processor.py": "process_template",
     "model.py": "model_template",
     # "prepare.py": "prepare_template",
-    "profile.py": "profile_template"
+    "settings.py": "settings_template"
 
 }
 
-init_template = """from base.core.collect import collect_steps, collect_processors, collect_profile
+init_template = """from base.core.collect import collect_steps, collect_processors, collect_settings
 
-from . import action, parse, processor, profile
+from . import action, parse, processor, settings
 
 steps_class = collect_steps(action, parse)
 processors_class = collect_processors(processor)
-config, tasks_callable, scraper_callable = collect_profile(profile)
+config, tasks_callable, scraper_callable = collect_settings(settings)
 """
 
 

@@ -61,9 +61,9 @@ class Thread(Command, ComponentMixin):
         """
         log.debug('trying to exit suits and scrapers.')
 
-        [x.scraper.scraper_quit() for x in cls.suits]
-
-        time.sleep(2)
+        # suit exit
+        [x.suit_exit() for x in cls.suits]
+        cls.pipeline.suit.suit_exit()
 
         # TODO: wait to pipeline.
 
@@ -84,7 +84,7 @@ class Thread(Command, ComponentMixin):
     def failed(cls):
         [x.stop() for x in cls.consumers]
 
-        [x.scraper.scraper_quit() for x in cls.suits]
+        # [x.scraper.scraper_quit() for x in cls.suits]
 
         log.info('command Thread failed!.')
 

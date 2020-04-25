@@ -108,7 +108,7 @@ class StepSuit(ComponentSuit):
 
     _scraper: Scraper = None
 
-    def __init__(self, steps: List[type(Step)], scraper: Scraper, config: dict = None):
+    def __init__(self, scraper: Scraper, steps: List[type(Step)], config: dict = None):
         super(StepSuit, self).__init__(components=steps, config=config)
 
         assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
@@ -123,6 +123,16 @@ class StepSuit(ComponentSuit):
         self.content: str = ''
         self.context: dict = {}
         self.models: Deque = deque()
+
+    def suit_start(self):
+        super().suit_start()
+        if not self.scraper.activated:
+            self.scraper.scraper_activate()
+
+    def suit_exit(self):
+        super().suit_exit()
+        if self.scraper.activated:
+            self.scraper.scraper_quit()
 
     # def scrapy(self, task: Task):
     #     # TODO: abort

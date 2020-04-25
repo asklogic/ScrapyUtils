@@ -1,6 +1,7 @@
 from types import ModuleType
 from typing import List, Callable
 
+from os import path
 from queue import Queue
 from importlib import import_module
 from urllib import parse
@@ -12,82 +13,123 @@ from base.log import Wrapper
 
 # global:
 # *******************************************************************************
-module = None
 
-# component
-processors_class = None
-steps_class = None
-scrapers = None
+# components
+processors_class: List[type(Step)] = None
+steps_class: List[type(Step)] = None
 
-config = None
+# callable
+tasks_callable: Callable = None
+scraper_callable: Callable = None
 
-# property
-tasks = Queue()
+config: dict = None
+
+# ----------------------------------------------------------------------
+
+tasks: Queue = Queue()
+scrapers: List[Scraper] = None
+proxy: Producer = None
+
+# suits
 step_suits: List[StepSuit] = None
 processor_suit: ProcessorSuit = None
+
 models_pipeline: Pipeline = None
 
 # others
 log = Wrapper
-proxy: Producer = None
 
 
 # *******************************************************************************
 
-def collect_scheme_prepare(scheme: str):
-    global steps_class, processors_class, config, module
+def collect_scheme_preload(scheme: str):
+    global tasks_callable, scraper_callable, steps_class, processors_class, config
 
     try:
-
         module = import_module(scheme)
-
         steps_class = module.steps_class
         processors_class = module.processors_class
+
+        tasks_callable = module.tasks_callable
+        scraper_callable = module.scraper_callable
 
         # ----------------------------------------------------------------------
         # config : dict
         config = module.config
+
+
     except Exception as e:
         log.exception('Collect Prepare', e)
+        # TODO: interrupt
         raise Exception('interrupt.')
+
+    # ----------------------------------------------------------------------
+    # global setting
+    try:
+        global_settings = import_module('settings')
+        g_config, g_tasks_callable, g_scraper_callable = collect_settings(global_settings)
+
+        if g_config.get('global_config'):
+            log.info('enable global config.', 'System')
+
+            for key, value in g_config.items():
+                if not key.startswith('scheme'):
+                    config[key] = value
+            # config = g_config
+
+        if g_config.get('global_task'):
+            log.info('enable global tasks.', 'System')
+            tasks_callable = g_tasks_callable
+
+        if g_config.get('global_scraper'):
+            log.info('enable global scraper.', 'System')
+            scraper_callable = g_scraper_callable
+
+    except ModuleNotFoundError as mnfe:
+        log.info('no global setting.', 'System')
+    except Exception as e:
+        log.warning('load global settings failed', 'System')
+        log.exception('System', e)
 
 
 def collect_scheme_initial():
-    global module, tasks, scrapers, proxy, config, steps_class, step_suits, processors_class, models_pipeline, processor_suit
+    global tasks_callable, scraper_callable, steps_class, processors_class, config
+
+    global tasks, scrapers, proxy, config, step_suits, processor_suit, models_pipeline
 
     try:
-
         thread_num = config.get('thread')
 
         # ----------------------------------------------------------------------
         # task queue : tasks_callable
         tasks = Queue()
-        for task in module.tasks_callable():
+        for task in tasks_callable():
             tasks.put(task)
 
         # ----------------------------------------------------------------------
         # scrapers* : list[Scraper]
-        gen = _default_scraper(module.scraper_callable)
+        gen = _default_scraper(scraper_callable)
         scrapers = list_builder(gen, thread_num, timeout=30)
 
         # ----------------------------------------------------------------------
-        # step* : List[step]
-        steps_list = list_builder(lambda: [x() for x in steps_class], thread_num, timeout=10)
+        # step suits : List[StepSuit]
+        step_suits = [StepSuit(scrapers[i], steps_class) for i in range(thread_num)]
 
         # ----------------------------------------------------------------------
-        # suits : List[StepSuit]
-        step_suits = [StepSuit(steps_list[i], scrapers[i]) for i in range(thread_num)]
+        # processor suits : List[ProcessorSuit]
+        processor_suit = ProcessorSuit(processors_class, config)
+
+        # ----------------------------------------------------------------------
+        # suit suit_start
+        [x.suit_start() for x in step_suits]
+        processor_suit.suit_start()
+
+        models_pipeline = Pipeline(processor_suit)
 
         # ----------------------------------------------------------------------
         # proxy : producer
         proxy = build_proxy(config)
 
-        # ----------------------------------------------------------------------
-        # processor suits : List[ProcessorSuit]
-        processor_suit = ProcessorSuit(processors_class, config)
-        processor_suit.suit_start()
-
-        models_pipeline = Pipeline(processor_suit)
     except Exception as e:
         log.exception('Collect Initial', e)
         raise Exception('interrupt.')
@@ -185,16 +227,28 @@ def collect_processors(module: ModuleType) -> List[Processor]:
     return current_processor
 
 
-def collect_profile(module: ModuleType):
+def collect_settings(module: ModuleType):
     """
-    load profile
+    load setting.py as a dict.
     """
     current_config = {}
+
+    # implicit settings
+    current_config['scheme_path'] = path.dirname(module.__file__)
 
     # common setting
     current_config['thread'] = getattr(module, 'THREAD', 5)
     current_config['timeout'] = getattr(module, 'TIMEOUT', 1.5)
 
+    # global setting
+    current_config['global_config'] = getattr(module, 'GLOBAL_CONFIG', False)
+    current_config['global_task'] = getattr(module, 'GLOBAL_TASK', False)
+    current_config['global_scraper'] = getattr(module, 'GLOBAL_SCRAPER', False)
+
+    # File setting
+    # TODO: global
+
+    # proxy
     current_config['proxy'] = getattr(module, 'PROXY', False)
     current_config['proxy_url'] = getattr(module, 'PROXY_URL', '')
     current_config['query_dict'] = getattr(module, 'PROXY_DICT', {})

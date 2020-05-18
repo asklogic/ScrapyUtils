@@ -18,7 +18,7 @@ class Parsing(Thread):
     @classmethod
     def command_config(cls, **kwargs):
         cls.config['thread'] = 1
-        cls.config['timeout'] = 1
+        cls.config['timeout'] = 0
 
         download = str(kwargs.get('download'))
 

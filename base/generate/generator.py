@@ -35,6 +35,14 @@ def create_folder(path: str):
     if not os.path.isdir(target_data_path):
         os.makedirs(target_data_path)
 
+    target_data_path = os.path.join(path, 'download')
+    if not os.path.isdir(target_data_path):
+        os.makedirs(target_data_path)
+
+    target_data_path = os.path.join(path, 'tasks')
+    if not os.path.isdir(target_data_path):
+        os.makedirs(target_data_path)
+
     # init file
     with open(os.path.join(path, "__init__.py"), "w") as f:
         f.writelines(init_template)

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List, Iterable
 
-from . import log
+from base.log import Wrapper as log
 
 
 class ComponentMeta(type):

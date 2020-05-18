@@ -1,15 +1,11 @@
-from typing import List, Callable, Generator
+from typing import List
 from abc import abstractmethod
 import time
-import copy
 
 from collections import deque
 from queue import Queue, Empty, Full
 from threading import Event, Thread, Lock
 from multiprocessing.dummy import Pool as ThreadPool
-from multiprocessing import TimeoutError
-
-from concurrent.futures import ThreadPoolExecutor
 
 
 class BaseThread(Thread):
@@ -383,78 +379,79 @@ class ThreadSuit(object):
             consumer.stop()
 
 
-class ItemPool(BaseThread):
-    def __init__(self, generate: Callable, queue=None, limit=5, **kw):
-        BaseThread.__init__(self, kw.pop('event', Event()), **kw)
+# class ItemPool(BaseThread):
+#     def __init__(self, generate: Callable, queue=None, limit=5, **kw):
+#         BaseThread.__init__(self, kw.pop('event', Event()), **kw)
+#
+#         self._queue = queue if queue else Queue()
+#         self._limit = limit if limit else 5
+#
+#         assert callable(generate), 'Pool need callable.'
+#         self._generate = generate
+#
+#     @property
+#     def generate(self):
+#         return self._generate
+#
+#     @property
+#     def queue(self):
+#         return self._queue
+#
+#     @property
+#     def limit(self):
+#         return self._limit
+#
+#     def generation(self):
+#
+#         try:
+#             for model in self.generate(self.limit * 2):
+#                 self.queue.put(model)
+#         except Exception as e:
+#             time.sleep(1.5)
+#             self.generation()
+#
+#     def run(self) -> None:
+#         while True:
+#             if self.queue.qsize() < self.limit:
+#                 self.generation()
+#             # time.sleep(0.3154)
+#             time.sleep(0.2)
+#
+#     # ----------------------------------------------------------------------
+#     # pool methods
+#
+#     def size(self):
+#         return self.queue.qsize()
+#
+#     def get(self):
+#         return self.queue.get(timeout=10)
 
-        self._queue = queue if queue else Queue()
-        self._limit = limit if limit else 5
 
-        assert callable(generate), 'Pool need callable.'
-        self._generate = generate
+# class ThreadWrapper(Thread):
+#
+#     def __init__(self, callable: Callable, args=None, timeout: int = 3):
+#         # thread property
+#         super(ThreadWrapper, self).__init__()
+#         self.setDaemon(True)
+#
+#         self.callable = callable
+#         self.timeout = timeout
+#         self.args = args
+#
+#         # property
+#         self._result = None
+#
+#     def run(self) -> None:
+#         current_pool = ThreadPool(1)
+#         async_result = current_pool.apply_async(self.callable, args=self.args)
+#         try:
+#             self._result = async_result.get(self.timeout)
+#         except TimeoutError as te:
+#             pass
+#         current_pool.terminate()
+#         # TODO:sys garbage collect?
+#
+#     @property
+#     def result(self):
+#         return self._result
 
-    @property
-    def generate(self):
-        return self._generate
-
-    @property
-    def queue(self):
-        return self._queue
-
-    @property
-    def limit(self):
-        return self._limit
-
-    def generation(self):
-
-        try:
-            for model in self.generate(self.limit * 2):
-                self.queue.put(model)
-        except Exception as e:
-            time.sleep(1.5)
-            self.generation()
-
-    def run(self) -> None:
-        while True:
-            if self.queue.qsize() < self.limit:
-                self.generation()
-            # time.sleep(0.3154)
-            time.sleep(0.2)
-
-    # ----------------------------------------------------------------------
-    # pool methods
-
-    def size(self):
-        return self.queue.qsize()
-
-    def get(self):
-        return self.queue.get(timeout=10)
-
-
-class ThreadWrapper(Thread):
-
-    def __init__(self, callable: Callable, args=None, timeout: int = 3):
-        # thread property
-        super(ThreadWrapper, self).__init__()
-        self.setDaemon(True)
-
-        self.callable = callable
-        self.timeout = timeout
-        self.args = args
-
-        # property
-        self._result = None
-
-    def run(self) -> None:
-        current_pool = ThreadPool(1)
-        async_result = current_pool.apply_async(self.callable, args=self.args)
-        try:
-            self._result = async_result.get(self.timeout)
-        except TimeoutError as te:
-            pass
-        current_pool.terminate()
-        # TODO:sys garbage collect?
-
-    @property
-    def result(self):
-        return self._result

@@ -1,32 +1,20 @@
 import unittest
 import os
 import signal
-from abc import abstractmethod, abstractclassmethod
-from typing import List
 
 from tests.telescreen import tests_path
-from base.core.collect import collect_scheme
 
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
-from base.command import sys_exit
-from base.command.thread_ import Thread
-from base.command import Command, trigger, ComponentMixin
+from base.command import Command, ComponentMixin
 
 from base.log import Wrapper as log
-from click.testing import CliRunner
 
 from base.command import command_map
-from base.core.collect import collect_scheme_preload, collect_scheme_initial
-from base.core import get_scraper, get_proxy, get_config, get_pipeline, get_tasks, get_suits
 
-from queue import Queue
-from base.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline
-from base.log import set_syntax, set_line
+from base.log import set_syntax
 
 from base.components import *
-from base.libs import *
-from threading import Lock, Event
 
 from base.core import *
 

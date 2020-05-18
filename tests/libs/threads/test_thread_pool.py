@@ -3,6 +3,7 @@ import time
 
 from queue import Queue
 
+import base.command.commands
 from base.libs import threads, ItemPool, Proxy, Model
 
 
@@ -106,8 +107,8 @@ class MyTestCase(unittest.TestCase):
     def test_pool_generate(self):
         pool = ItemPool(proxy_generate)
 
-        assert callable(pool.generate)
-        assert pool.generate is proxy_generate
+        assert callable(base.command.commands.generate)
+        assert base.command.commands.generate is proxy_generate
 
         # generate model
 

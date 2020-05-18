@@ -1,27 +1,15 @@
 import unittest
 import signal
 import os
-import time
-from os.path import basename
-
-from abc import abstractmethod
-from typing import Any
-
-import linecache
-import importlib
 
 from tests.telescreen import tests_path
-
-from base.libs import RequestScraper, Model
-from base.components import Processor
-from base.components.pipeline import Pipeline
 from base.core.collect import collect_scheme
 
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
-from base.command import sys_exit
-from base.command.thread_ import Thread
-from base.command import Command, trigger
+from base.command import Command, trigger, thread
+from base.command.process import sys_exit
+from base.command.entity.thread_ import Thread
 
 from base.log import Wrapper as log
 from click.testing import CliRunner
@@ -60,15 +48,39 @@ class TestCommand(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        import shutil
+        pass
         # shutil.rmtree(os.path.join(schemes_path, 'generate'))
 
     def test_generate(self):
         params = {
-            'scheme': 'lianjia',
+            # 'scheme': 'lianjia',
+            # 'scheme': 'JewDetail',
+            # 'scheme': 'UdemyDetail',
+            'scheme': 'atom',
         }
 
         trigger('thread', **params)
+
+
+    def test_download(self):
+        params = {
+            'scheme': 'lianjia',
+            # 'scheme': 'JewDetail',
+            # 'scheme': 'UdemyDetail',
+            # 'scheme': 'atom',
+        }
+
+        trigger('download', **params)
+
+    def test_parsing(self):
+        params = {
+            'scheme': 'lianjia',
+            # 'scheme': 'JewDetail',
+            # 'scheme': 'UdemyDetail',
+            # 'scheme': 'atom',
+        }
+
+        trigger('parsing', **params)
 
     def test_atom(self):
         params = {
@@ -92,7 +104,6 @@ class TestCommand(unittest.TestCase):
 
     def test_atom_runner(self):
         runner = CliRunner()
-        from base.command import thread
         result = runner.invoke(thread, ['atom', '--path', r'E:\cloudWF\RFW\ScrapyUtils\tests\mock_schemes'])
 
         print(result.output)

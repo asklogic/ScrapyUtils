@@ -4,7 +4,8 @@ from base.generate.generator import create_folder, create_components
 from base.exception import CmdRunException
 import time
 import os
-from ._base import Command
+
+from . import Command
 
 from base.log import Wrapper as log
 

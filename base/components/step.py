@@ -3,7 +3,7 @@ from typing import *
 
 from collections import deque
 from base.components.base import Component, ComponentMeta, ComponentSuit
-from base.libs import Scraper, Task, Model, ItemPool
+from base.libs import Scraper, Task, Model
 from base.log import Wrapper as log
 
 
@@ -58,9 +58,9 @@ class ActionStep(Step):
     def do(self, task: Task):
         try:
             content = self.scraping(task)
-            self.check(content)
-
-            self._suit.content = content
+            if content:
+                self.check(content)
+                self._suit.content = content
             return True
         except Exception as e:
             # TODO: log out

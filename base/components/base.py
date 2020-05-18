@@ -1,12 +1,13 @@
 from abc import abstractmethod
 from typing import List, Iterable
 
-from base.log import Wrapper as log
+from . import log
 
 
 class ComponentMeta(type):
 
     def __init__(cls, *args, **kwargs):
+        # TODO: init in type
         attr = args[2]
         cls._name = attr['_name']
         cls._active = attr['_active']

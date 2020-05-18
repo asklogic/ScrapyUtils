@@ -1,6 +1,7 @@
 import time
 import threading
 
+import base.command.commands
 from base.log import logger
 from base import core
 
@@ -45,8 +46,8 @@ def single_run(target_name):
 def thread_run(target_name: str):
     setting = core.build_setting(target_name)
 
-    scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, setting.thread)
-    schemes = core.build_thread_schemes(setting.CurrentSchemeList, setting.thread)
+    scrapers, tasks = core.build_thread_prepare(setting.CurrentPrepare, base.command.commands.thread)
+    schemes = core.build_thread_schemes(setting.CurrentSchemeList, base.command.commands.thread)
 
     sys_hub, dump_hub = core.build_hub(setting=setting)
 
@@ -58,7 +59,7 @@ def thread_run(target_name: str):
     logger.info("Target Process: " + str([x._name for x in setting.CurrentProcessorsList]))
 
     logger.info("Detect Task number : " + str(len(tasks)))
-    logger.info("Build Scraper finish. Thread number: " + str(setting.thread))
+    logger.info("Build Scraper finish. Thread number: " + str(base.command.commands.thread))
 
     sys_hub.scraper_activate()
     dump_hub.scraper_activate()
@@ -67,7 +68,7 @@ def thread_run(target_name: str):
         sys_hub.save(task)
 
     thread_List = []
-    for i in range(setting.thread):
+    for i in range(base.command.commands.thread):
         t = core.ScrapyThread(sys_hub, dump_hub, schemes[i], scrapers[i], setting)
         thread_List.append(t)
         t.setDaemon(True)

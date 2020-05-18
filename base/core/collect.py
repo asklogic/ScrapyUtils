@@ -1,3 +1,5 @@
+import time
+import os
 from types import ModuleType
 from typing import List, Callable
 
@@ -8,7 +10,7 @@ from urllib import parse
 from concurrent.futures import ThreadPoolExecutor
 
 from base.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline, ProcessorSuit
-from base.libs import Scraper, RequestScraper, ItemPool, Proxy, MultiProducer, Producer
+from base.libs import Scraper, RequestScraper, Proxy, MultiProducer, Producer
 from base.log import Wrapper
 
 # global:
@@ -196,7 +198,7 @@ def _load_components(module: ModuleType, component: type(Component)):
 
 def collect_steps(*modules: ModuleType) -> List[Step]:
     """
-    load steps
+    load scheme's steps
     """
     current_steps = list()
     for module in modules:
@@ -247,6 +249,11 @@ def collect_settings(module: ModuleType):
 
     # File setting
     # TODO: global
+    current_config['file_folder'] = getattr(module, 'FILE_FOLDER', os.path.join(path.dirname(module.__file__), 'data'))
+    current_config['file_name'] = getattr(module, 'FILE_NAME', str(int(time.time())))
+
+    current_config['download_folder'] = getattr(module, 'DOWNLOAD_FOLDER',
+                                                os.path.join(path.dirname(module.__file__), 'download'))
 
     # proxy
     current_config['proxy'] = getattr(module, 'PROXY', False)

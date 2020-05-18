@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import List
 from queue import Queue
+from typing import List, Callable
 
-from base.libs import *
-from base.components import *
+from base.components import StepSuit, Pipeline
+from base.libs import Producer
+
 
 
 class Command(object):
@@ -22,9 +23,21 @@ class Command(object):
         return '[Thread]'
 
     @classmethod
-    @abstractmethod
-    def signal_callback(cls, signum, frame):
+    def command_config(cls, **kwargs):
         pass
+
+    @classmethod
+    @abstractmethod
+    def command_components(cls, steps, processors, **kwargs):
+        return steps, processors
+
+    @classmethod
+    def command_scraper(cls, **kwargs) -> None or Callable:
+        return None
+
+    @classmethod
+    def command_task(cls, **kwargs) -> None or Callable:
+        return None
 
     @classmethod
     @abstractmethod
@@ -38,6 +51,11 @@ class Command(object):
 
     @classmethod
     @abstractmethod
+    def signal_callback(cls, signum, frame):
+        pass
+
+    @classmethod
+    @abstractmethod
     def exit(cls):
         pass
 
@@ -45,6 +63,6 @@ class Command(object):
 class ComponentMixin(object):
     config: dict = None
     tasks: Queue = None
-    suits: List[StepSuit] = None
+    suits: List[StepSuit] = []
     pipeline: Pipeline = None
     proxy: Producer = None

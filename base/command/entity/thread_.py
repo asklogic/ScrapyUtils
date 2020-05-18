@@ -1,31 +1,20 @@
-from typing import List, Tuple, Callable
-
 import time
-import os
-import click
-from queue import Queue
+from concurrent.futures._base import TimeoutError as ConcurrentTimeout
+from concurrent.futures.thread import ThreadPoolExecutor
 from threading import Lock, Event
 
 from base.components import *
-from base.libs import *
-
-from base.core import *
-from base.log import set_syntax, set_line
 from base.exception import CommandExit
+from . import Command, ComponentMixin
 
-from multiprocessing.dummy import Pool as ThreadPool
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError as ConcurrentTimeout
-
-from multiprocessing import TimeoutError
-
-from ._base import Command, ComponentMixin
+from base.components import *
+from base.libs import Task, Consumer, Producer
 
 
 class Thread(Command, ComponentMixin):
     do_collect = True
 
-    consumers = None
+    consumers = []
 
     @classmethod
     def run(cls, kw):
@@ -59,25 +48,19 @@ class Thread(Command, ComponentMixin):
         """
         正常退出
         """
-        log.debug('trying to exit suits and scrapers.')
-
         # suit exit
-        [x.suit_exit() for x in cls.suits]
-        cls.pipeline.suit.suit_exit()
+        [suit.suit_exit() for suit in cls.suits]
 
-        # TODO: wait to pipeline.
-
-        cls.pipeline.exit()
-
-        log.debug('command Thread exit.')
+        if cls.pipeline:
+            cls.pipeline.suit.suit_exit()
+            # TODO: wait to pipeline.
+            cls.pipeline.exit()
 
     @classmethod
     def signal_callback(cls, signum, frame):
         [x.stop() for x in cls.consumers]
 
-        # [suit.suit_exit() for suit in self.suits]
-
-        log.info('command Thread signal callback exit!.')
+        log.warning('thread signal callback exit!.', 'Interrupt')
         raise CommandExit()
 
     @classmethod
@@ -95,7 +78,7 @@ class ScrapyConsumer(Consumer):
     _proxy: Producer = None
 
     def __init__(self, suit: StepSuit, pipeline: Pipeline, proxy: Producer = None,
-                 timeout=10,
+                 timeout=20,
                  **kwargs):
 
         # assert
@@ -144,6 +127,13 @@ class ScrapyConsumer(Consumer):
         except ConcurrentTimeout as CT:
             # TODO: rebuild
             pass
+
+            current.count += 1
+            if current.count <= 3:
+                self.queue.put(current)
+            if self.proxy:
+                self.scraper.proxy = self.proxy.queue.get()
+
         else:
             if result[0]:
                 for model in self.suit.models:
@@ -158,23 +148,3 @@ class ScrapyConsumer(Consumer):
 
                 if self.proxy:
                     self.scraper.proxy = self.proxy.queue.get()
-
-
-def list_builder(invoker, number, timeout=10):
-    res_list = []
-
-    def inner():
-        res = invoker()
-        res_list.append(res)
-
-    executor = ThreadPoolExecutor(number)
-
-    futures = [executor.submit(inner) for x in range(number)]
-
-    # method result will raise exception when timeout.
-    [x.result(timeout) for x in futures]
-
-    # TODO: exit executor.
-    executor.shutdown(False)
-
-    return res_list

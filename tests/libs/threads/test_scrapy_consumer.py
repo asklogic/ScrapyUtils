@@ -1,6 +1,6 @@
 import unittest
 
-from base.command.thread_ import ScrapyConsumer
+
 from base.core import collect_scheme
 from base.core import *
 

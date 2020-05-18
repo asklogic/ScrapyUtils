@@ -4,7 +4,7 @@ from queue import Queue
 import os
 import ast
 
-from ._base import Command
+from . import Command, ComponentMixin
 from base.components import *
 from base.libs import *
 

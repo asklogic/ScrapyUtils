@@ -1,25 +1,14 @@
 import unittest
 import time
-from typing import Callable
-
-from base.libs import RequestScraper, Scraper, FireFoxScraper, Producer
-from base.components import StepSuit
 
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as ConcurrentTimeout
-from multiprocessing.dummy import Pool as ThreadPool
 
-from base.components import Step
-from queue import Queue
-
-from base.command import *
+from base.command import Command, ComponentMixin, trigger
 from base.libs import *
 from base.components import *
-from base.log import set_syntax
 
 from threading import Lock, Event
-
-from tests import telescreen
 
 
 class Thread(Command, ComponentMixin):

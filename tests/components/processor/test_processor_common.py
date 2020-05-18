@@ -11,37 +11,6 @@ from base.libs import Model, Field
 from collections import deque
 
 
-class JsonFileProcessor(Processor):
-    file_folder: str
-    file_name: str
-
-    file_path: str
-
-    file = None
-
-    def __init__(self, config: dict = None):
-        super().__init__(config)
-
-        self.file_folder = config.get('file_folder', os.getcwd())
-        self.file_name = config.get('file_name', str(int(time.time())))
-
-        self.file_path = os.path.join(self.file_folder, self.file_name + '.json')
-
-        self.data = deque()
-
-    def on_start(self):
-        temp_path = os.path.join(self.file_folder, 'touch')
-        with open(temp_path, 'w') as f:
-            pass
-        os.remove(temp_path)
-
-    def on_exit(self):
-        with open(self.file_path, 'w') as f:
-            json.dump(list(self.data), f)
-
-    def process_item(self, model: Model) -> Any:
-        self.data.append(model.pure_data)
-
 
 
 class TestCommonProcessor(unittest.TestCase):

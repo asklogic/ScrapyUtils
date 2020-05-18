@@ -3,6 +3,7 @@ from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any, Callable
 import typing
 from urllib3.exceptions import InsecureRequestWarning
 
+from appium import webdriver
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException
 
@@ -160,6 +161,7 @@ headers = {
     'Accept': 'text/html,application/xhtml+xml,application/json,text/plain,*/*,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Language': 'en-us',
     "Content-Type": "application/x-www-form-urlencoded",
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
@@ -304,14 +306,15 @@ class RequestScraper(Scraper):
 class FireFoxScraper(Scraper):
     # firefox property
     _image: bool = False
-    _headless: bool = False
+    _headless: bool = True
+    _js: bool = True
 
     firefox: Firefox = None
     options: FirefoxOptions = None
 
     schemes = ['get']
 
-    def __init__(self, image=False, headless=True):
+    def __init__(self, image=False, headless=True, js=True):
         super().__init__()
         self.options = FirefoxOptions()
 
@@ -329,6 +332,7 @@ class FireFoxScraper(Scraper):
         # default no image, headless
         self.image = image
         self.headless = headless
+        self.js = True
 
     def _activate(self):
 
@@ -341,6 +345,8 @@ class FireFoxScraper(Scraper):
         self.firefox.find_element_by_id("showWarningNextTime").click()
         self.firefox.find_element_by_id("warningButton").click()
         self.firefox.get("about:blank")
+
+        # self.firefox.set
 
         self._activated = True
 
@@ -377,6 +383,16 @@ class FireFoxScraper(Scraper):
         else:
             self._headless = False
             self.options.headless = False
+
+    @property
+    def js(self):
+        return self._js
+
+    @js.setter
+    def js(self, value):
+        if value:
+            self.options.set_preference("browser.download.folderList", 2)
+            self.options.set_preference("javascript.enabled", False)
 
     # ----------------------------------------------------------------------
     # scraper property
@@ -430,6 +446,25 @@ class FireFoxScraper(Scraper):
         # TODO
         if self.activated:
             self.scraper_quit()
+
+
+class AppiumScraper(Scraper):
+
+    def __init__(self, desired, ):
+        super(AppiumScraper, self).__init__()
+
+        driver = webdriver.Remote('http://localhost:4723/wd/hub', desired)
+
+        pass
+
+    def _activate(self):
+        pass
+
+    def _clear(self):
+        pass
+
+    def _quit(self):
+        pass
 
 
 # class FireFoxScraper(Scraper):

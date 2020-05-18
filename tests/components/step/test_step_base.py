@@ -4,7 +4,7 @@ from base.components.step import StepSuit, ActionStep, ParseStep
 from base.libs import RequestScraper, Task, Model, Field
 
 from base.tool import xpathParse
-from tests.command.test_command import Command
+from base.command import Command
 
 
 # test demo

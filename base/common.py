@@ -3,6 +3,7 @@ import os
 import time
 from os import path as path
 from typing import List, Dict, Generator, Any
+from collections import deque
 
 import redis
 import peewee
@@ -23,6 +24,39 @@ from base.core import core
 class DefaultAction(Action):
     def scraping(self, task: Task, scraper: Scraper) -> str:
         return scraper.get(url=task.url)
+
+
+class JsonFileProcessor(Processor):
+    file_folder: str
+    file_name: str
+
+    file_path: str
+
+    file = None
+
+    def __init__(self, config: dict = None):
+        super().__init__(config)
+
+        self.file_folder = config.get('file_folder', self.config.get('scheme_path'))
+
+        self.file_name = config.get('file_name', str(int(time.time())))
+
+        self.file_path = os.path.join(self.file_folder, self.file_name + '.json')
+
+        self.data = deque()
+
+    def on_start(self):
+        temp_path = os.path.join(self.file_folder, 'touch')
+        with open(temp_path, 'w') as f:
+            pass
+        os.remove(temp_path)
+
+    def on_exit(self):
+        with open(self.file_path, 'w') as f:
+            json.dump(list(self.data), f)
+
+    def process_item(self, model: Model) -> Any:
+        self.data.append(model.pure_data)
 
 
 class XpathMappingParse(Parse):
@@ -142,90 +176,90 @@ class HiddenInputParse(Parse):
                 self.context['hidden'] = hidden_mapper
 
 
-class JsonFileProcessor(Processor):
-
-    def __init__(self, settings: dict):
-        super().__init__(settings)
-
-        # TODO
-        # 文件分卷
-        self.part: int = 0
-        # 单个文件元素限制
-        self.limit: int = 5000
-        # 文件名字
-        self.name: str = self.__class__.__name__
-        # 文件路径
-
-        # data
-        self.data: List[Model] = []
-        self.mark = str(int(time.time()))[-4:]
-
-        if settings.get("JsonFile"):
-            json_setting = settings.get("JsonFile")
-            if json_setting.get("mark"):
-                self.mark = str(json_setting.get("mark"))
-
-        if settings.get("job"):
-            self.dir_path = path.join(Project_Path, settings.get("job"), "data")
-        else:
-            self.dir_path = path.join(Project_Path, "assets")
-
-        self.detect_save()
-        self.detect_exist_file()
-
-    def detect_exist_file(self):
-
-        while os.path.exists(path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(0), ".json"]))) \
-                and \
-                os.path.exists(
-                    path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part + 1), ".json"]))):
-            self.part = self.part + 1
-
-        file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
-        if os.path.exists(file_path):
-            with open(file_path) as f:
-                data = json.load(f)
-            self.data.extend(data)
-            logger.info("<<JsonFile>> load exist data. exist file: " + file_path)
-
-    def detect_save(self):
-        temp_file = path.join(self.dir_path, self.name + "JsonFileTest.json")
-        logger.info("<<JsonFile>> Json File path: " + path.join(self.dir_path))
-        try:
-            if not os.path.exists(self.dir_path):
-                os.mkdir(self.dir_path)
-
-            with open(temp_file, "w") as f:
-                json.dump([], f)
-            os.remove(temp_file)
-        except Exception as e:
-            print(e.args)
-            raise TypeError('<<JsonFile>> cannot dump json file!')
-
-    def save_model(self, model: Model):
-        self.data.append(model.pure_data())
-        return True
-
-    def dump_to_file(self):
-        file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
-        with open(file_path, "w") as f:
-            json.dump(self.data[:self.limit], f)
-            logger.info("<<JsonFile>> success dump file. " + file_path)
-        self.part += 1
-        self.data = self.data[self.limit:]
-
-    def end_process(self):
-        while len(self.data) >= self.limit:
-            self.dump_to_file()
-
-    def on_exit(self):
-        logger.info("<<JsonFile>> end task! last len:" + str(len(self.data)))
-        if self.data:
-            self.dump_to_file()
-
-    def process_item(self, model: Model) -> Model:
-        self.data.append(model.pure_data())
-        return model
+# class JsonFileProcessor(Processor):
+#
+#     def __init__(self, settings: dict):
+#         super().__init__(settings)
+#
+#         # TODO
+#         # 文件分卷
+#         self.part: int = 0
+#         # 单个文件元素限制
+#         self.limit: int = 5000
+#         # 文件名字
+#         self.name: str = self.__class__.__name__
+#         # 文件路径
+#
+#         # data
+#         self.data: List[Model] = []
+#         self.mark = str(int(time.time()))[-4:]
+#
+#         if settings.get("JsonFile"):
+#             json_setting = settings.get("JsonFile")
+#             if json_setting.get("mark"):
+#                 self.mark = str(json_setting.get("mark"))
+#
+#         if settings.get("job"):
+#             self.dir_path = path.join(Project_Path, settings.get("job"), "data")
+#         else:
+#             self.dir_path = path.join(Project_Path, "assets")
+#
+#         self.detect_save()
+#         self.detect_exist_file()
+#
+#     def detect_exist_file(self):
+#
+#         while os.path.exists(path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(0), ".json"]))) \
+#                 and \
+#                 os.path.exists(
+#                     path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part + 1), ".json"]))):
+#             self.part = self.part + 1
+#
+#         file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
+#         if os.path.exists(file_path):
+#             with open(file_path) as f:
+#                 data = json.load(f)
+#             self.data.extend(data)
+#             logger.info("<<JsonFile>> load exist data. exist file: " + file_path)
+#
+#     def detect_save(self):
+#         temp_file = path.join(self.dir_path, self.name + "JsonFileTest.json")
+#         logger.info("<<JsonFile>> Json File path: " + path.join(self.dir_path))
+#         try:
+#             if not os.path.exists(self.dir_path):
+#                 os.mkdir(self.dir_path)
+#
+#             with open(temp_file, "w") as f:
+#                 json.dump([], f)
+#             os.remove(temp_file)
+#         except Exception as e:
+#             print(e.args)
+#             raise TypeError('<<JsonFile>> cannot dump json file!')
+#
+#     def save_model(self, model: Model):
+#         self.data.append(model.pure_data())
+#         return True
+#
+#     def dump_to_file(self):
+#         file_path = path.join(self.dir_path, "".join([self.name, self.mark, "-part" + str(self.part), ".json"]))
+#         with open(file_path, "w") as f:
+#             json.dump(self.data[:self.limit], f)
+#             logger.info("<<JsonFile>> success dump file. " + file_path)
+#         self.part += 1
+#         self.data = self.data[self.limit:]
+#
+#     def end_process(self):
+#         while len(self.data) >= self.limit:
+#             self.dump_to_file()
+#
+#     def on_exit(self):
+#         logger.info("<<JsonFile>> end task! last len:" + str(len(self.data)))
+#         if self.data:
+#             self.dump_to_file()
+#
+#     def process_item(self, model: Model) -> Model:
+#         self.data.append(model.pure_data())
+#         return model
 
 
 class DumpProcessor(Processor):

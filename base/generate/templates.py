@@ -55,7 +55,7 @@ class ${class_name}Model(Model):
 process_template = """from typing import Any
 
 from base.components import Processor, active
-from base.common import DumpInPeeweeProcessor, DuplicateProcessor, JsonFileProcessor
+from base.common import DumpInPeeweeProcessor, DuplicateProcessor, JsonFileProcessor, CSVFileProcessor
 
 from .model import *
 

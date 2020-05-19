@@ -5,6 +5,7 @@ from os import path as path
 from typing import List, Dict, Generator, Any
 from collections import deque
 
+import csv
 import redis
 import peewee
 from urllib.parse import ParseResult, urlparse
@@ -39,9 +40,11 @@ class JsonFileProcessor(Processor):
 
         self.file_folder = config.get('file_folder', self.config.get('scheme_path'))
 
-        self.file_name = config.get('file_name', str(int(time.time())))
+        if not (hasattr(self, 'file_name') and self.file_name):
+            self.file_name = config.get('file_name', str(int(time.time())))
 
-        self.file_path = os.path.join(self.file_folder, self.file_name + '.json')
+        if not (hasattr(self, 'file_path') and self.file_path):
+            self.file_path = os.path.join(self.file_folder, self.file_name + '.json')
 
         self.data = deque()
 
@@ -57,6 +60,49 @@ class JsonFileProcessor(Processor):
 
     def process_item(self, model: Model) -> Any:
         self.data.append(model.pure_data)
+
+
+class CSVFileProcessor(Processor):
+    file_folder: str
+    file_name: str
+
+    file_path: str
+
+    file = None
+
+    def __init__(self, config: dict = None):
+        super().__init__(config)
+
+        self.file_folder = config.get('file_folder', self.config.get('scheme_path'))
+
+        if not (hasattr(self, 'file_name') and self.file_name):
+            self.file_name = config.get('file_name', str(int(time.time())))
+
+        if not (hasattr(self, 'file_path') and self.file_path):
+            self.file_path = os.path.join(self.file_folder, self.file_name + '.csv')
+
+        # self.file_name = config.get('file_name', str(int(time.time())))
+        #
+        # self.file_path = os.path.join(self.file_folder, self.file_name + '.csv')
+
+        self.data = deque()
+
+    def on_start(self):
+        temp_path = os.path.join(self.file_folder, 'touch')
+        with open(temp_path, 'w') as f:
+            pass
+        os.remove(temp_path)
+
+    def process_item(self, model: Model) -> Any:
+        self.data.append(model.pure_data)
+
+    def on_exit(self):
+        with open(self.file_path, 'w', encoding='utf-8', newline='' "") as f:
+            writer = csv.writer(f)
+
+            writer.writerow(list(self.data[0].keys()))
+            for i in self.data:
+                writer.writerow(list(i.values()))
 
 
 class XpathMappingParse(Parse):
@@ -101,7 +147,7 @@ class XpathMappingParse(Parse):
 
             # 根据长度来生成model
             for index in range(length):
-                data_model: Model = ModelManager.model(model.get_name())
+                data_model: type(Model) = data_model()
                 for key, item in model._mapper.items():
                     try:
                         # 解析为列表

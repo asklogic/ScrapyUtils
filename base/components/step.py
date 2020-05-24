@@ -131,8 +131,9 @@ class StepSuit(ComponentSuit):
 
     def suit_exit(self):
         super().suit_exit()
-        if self.scraper.activated:
-            self.scraper.scraper_quit()
+        # if self.scraper.activated:
+        self.scraper.scraper_quit()
+
 
     # def scrapy(self, task: Task):
     #     # TODO: abort
@@ -168,7 +169,8 @@ class StepSuit(ComponentSuit):
                     log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
                     return False, task
 
-            log.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
+            # log.info('success. url: {0}, param: {1}, models: {2}.'.format(task.url, str(task.param), len(self.models)))
+            log.info('success. url: {0}, models: {2}.'.format(task.url, str(task.param), len(self.models)))
             return True, task
 
         return scrapy_inline

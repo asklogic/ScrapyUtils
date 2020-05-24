@@ -19,19 +19,21 @@ def thread(scheme: str, path, line):
 
 @click.command()
 @click.argument('scheme')
+@click.option('type', '--type', default='html')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
 @click.option('line', '--line', default=3)
-def download(scheme: str, path, line):
-    trigger('download', scheme=scheme, path=path, line=line, confirm=True)
+def download(scheme: str, type, path, line):
+    trigger('download', scheme=scheme, file_type=type, path=path, line=line, confirm=True)
 
 
 @click.command()
 @click.argument('scheme')
-# @click.option('download', '--download')
+@click.option('download', '--download')
+@click.option('index', '--index', default=-1)
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
 @click.option('line', '--line', default=3)
-def parsing(scheme: str, path, line):
-    trigger('parsing', scheme=scheme, download='', path=path, line=line, confirm=True)
+def parsing(scheme: str, download, index, path, line):
+    trigger('parsing', scheme=scheme, download=download, index=index, path=path, line=line, confirm=True)
 
 
 @click.command()

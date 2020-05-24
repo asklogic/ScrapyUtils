@@ -86,7 +86,7 @@ class Scraper(object, metaclass=ScraperMeta):
                 self._quit()
                 self._activated = False
         except Exception as e:
-            raise Exception('some exception in safe quit', e)
+            raise Exception('some exception in scraper quit', e)
 
     # ----------------------------------------------------------------------
     # http methods
@@ -332,7 +332,7 @@ class FireFoxScraper(Scraper):
         # default no image, headless
         self.image = image
         self.headless = headless
-        self.js = True
+        self.js = js
 
     def _activate(self):
 
@@ -390,7 +390,7 @@ class FireFoxScraper(Scraper):
 
     @js.setter
     def js(self, value):
-        if value:
+        if not value:
             self.options.set_preference("browser.download.folderList", 2)
             self.options.set_preference("javascript.enabled", False)
 
@@ -417,8 +417,9 @@ class FireFoxScraper(Scraper):
     @Scraper.timeout.setter
     def timeout(self, value):
         self._timeout = int(value)
-        self.firefox.set_script_timeout(self.timeout)
-        self.firefox.set_page_load_timeout(self.timeout)
+        if self.firefox:
+            self.firefox.set_script_timeout(self.timeout)
+            self.firefox.set_page_load_timeout(self.timeout)
 
     # ----------------------------------------------------------------------
     # scraper function

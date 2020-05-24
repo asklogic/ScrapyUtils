@@ -1,4 +1,5 @@
 import signal
+import ctypes
 import sys
 
 from .entity import ComponentMixin, Command
@@ -17,10 +18,15 @@ def trigger(command_name: str, **kwargs):
 
     # register signal
     # TODO: windows and linux
+    # FIXME: sigint in windows(ctrl + c）can not exit FirefoxScraper
     signal.signal(signal.SIGTERM, command.signal_callback)
     signal.signal(signal.SIGINT, command.signal_callback)
-    log.info('starting command {}'.format(command.__name__), 'System', 'Processing')
 
+    # ucrtbase = ctypes.CDLL('ucrtbase')
+    # c_raise = ucrtbase['raise']
+    # signal.signal(signal.SIGINT, lambda *args: c_raise(signal.SIGTERM))
+
+    log.info('starting command {}'.format(command.__name__), 'System', 'Processing'a)
     # TODO: try - catch
     try:
         # collect. -> core.collect
@@ -47,11 +53,9 @@ def trigger(command_name: str, **kwargs):
             if task:
                 set_task_callable(task)
 
+            command.command_logout()
             # initial scheme
-            if kwargs.get('confirm'):
-                input('Press any key to continue.')
-
-            collect_scheme_initial()
+            collect_scheme_initial(**kwargs)
 
             # TODO: refactor
             command.suits = get_suits()
@@ -69,18 +73,21 @@ def trigger(command_name: str, **kwargs):
 
         log.debug('command finish.', 'System', 'Processing')
 
-    except CommandExit as ex:
-        log.info('CommandExit interrupt.', 'System', 'Interrupt')
+    except CommandExit as ce:
+        log.info('CommandExit interrupt.', 'Interrupt')
+
+    except AssertionError as ae:
+        log.exception('Command', ae, 0)
 
     except Exception as e:
         command.failed()
         log.exception('Command', e)
 
     finally:
-        log.info('command exiting...', 'System', 'Processing')
+        log.info('command exiting...', 'System', 'Exit')
 
         command.exit()
-        log.info('command exited.', 'System', 'Processing')
+        log.info('command exited.', 'System', 'Exit')
 
     sys_exit(command.exitcode)
 

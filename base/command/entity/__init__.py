@@ -2,9 +2,9 @@ from abc import abstractmethod
 from queue import Queue
 from typing import List, Callable
 
-from base.components import StepSuit, Pipeline
+from base.components import StepSuit, Pipeline, log
 from base.libs import Producer
-
+from base.core import get_steps, get_processors
 
 
 class Command(object):
@@ -38,6 +38,14 @@ class Command(object):
     @classmethod
     def command_task(cls, **kwargs) -> None or Callable:
         return None
+
+    @classmethod
+    def command_logout(cls):
+        log.info('########### suit components ##########', 'System')
+        log.info('### ' + ' - '.join([x.name for x in get_steps()]), 'System')
+        log.info('######## processor components ########', 'System')
+        log.info('### ' + ' - '.join([x.name for x in get_processors()]), 'System')
+        log.info('######################################', 'System')
 
     @classmethod
     @abstractmethod

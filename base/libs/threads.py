@@ -378,7 +378,6 @@ class ThreadSuit(object):
         for consumer in self.consumers:
             consumer.stop()
 
-
 # class ItemPool(BaseThread):
 #     def __init__(self, generate: Callable, queue=None, limit=5, **kw):
 #         BaseThread.__init__(self, kw.pop('event', Event()), **kw)
@@ -454,4 +453,3 @@ class ThreadSuit(object):
 #     @property
 #     def result(self):
 #         return self._result
-

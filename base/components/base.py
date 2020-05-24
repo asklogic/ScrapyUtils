@@ -106,3 +106,7 @@ class ComponentSuit(object):
 def active(component_class: type(Component)):
     component_class._active = True
     return component_class
+
+
+def set_active(component_class: type(Component)):
+    component_class._active = True

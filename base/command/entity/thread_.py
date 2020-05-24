@@ -9,6 +9,7 @@ from . import Command, ComponentMixin
 
 from base.components import *
 from base.libs import Task, Consumer, Producer
+from base.core import get_scraper
 
 
 class Thread(Command, ComponentMixin):
@@ -48,6 +49,11 @@ class Thread(Command, ComponentMixin):
         """
         正常退出
         """
+        # scrapers = get_scraper()
+        # [scraper.scraper_quit() for scraper in scrapers]
+
+        [x.stop() for x in cls.consumers]
+
         # suit exit
         [suit.suit_exit() for suit in cls.suits]
 
@@ -61,6 +67,10 @@ class Thread(Command, ComponentMixin):
         [x.stop() for x in cls.consumers]
 
         log.warning('thread signal callback exit!.', 'Interrupt')
+
+        # while not cls.tasks.empty():
+        #     cls.tasks.get()
+
         raise CommandExit()
 
     @classmethod

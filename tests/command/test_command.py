@@ -7,7 +7,9 @@ from base.core.collect import collect_scheme
 
 schemes_path = os.path.join(tests_path, 'mock_schemes')
 
-from base.command import Command, trigger, thread
+from base.command.commands import trigger, thread
+from base.command.entity import Command
+
 from base.command.process import sys_exit
 from base.command.entity.thread_ import Thread
 
@@ -61,10 +63,10 @@ class TestCommand(unittest.TestCase):
 
         trigger('thread', **params)
 
-
     def test_download(self):
         params = {
             'scheme': 'lianjia',
+            # 'scheme': 'uspto_detail',
             # 'scheme': 'JewDetail',
             # 'scheme': 'UdemyDetail',
             # 'scheme': 'atom',
@@ -74,7 +76,10 @@ class TestCommand(unittest.TestCase):
 
     def test_parsing(self):
         params = {
-            'scheme': 'lianjia',
+            'scheme': 'uspto_detail',
+            'index': 1,
+            # 'download': '1590088871'
+            # 'scheme': 'lianjia',
             # 'scheme': 'JewDetail',
             # 'scheme': 'UdemyDetail',
             # 'scheme': 'atom',

@@ -15,11 +15,16 @@ from base.components.proceesor import Processor
 from base.libs.scraper import Scraper
 from base.libs.setting import Setting
 from base.libs.task import TaskModel
-from base.log import logger
+from base.log import current as log
 from base.components.scheme import Action, Parse
 from base.libs.task import Task
 from base.tool import xpathParse
 from base.core import core
+
+
+class DownloadModel(Model):
+    page_name = Field()
+    page_content = Field()
 
 
 class DefaultAction(Action):
@@ -27,76 +32,68 @@ class DefaultAction(Action):
         return scraper.get(url=task.url)
 
 
-class JsonFileProcessor(Processor):
-    file_folder: str
-    file_name: str
+class FileProcessorMixin(Processor):
+    file_folder: str = None
+    file_name: str = None
 
-    file_path: str
+    file_path: str = None
 
-    file = None
+    file_suffix: str = '.data'
 
     def __init__(self, config: dict = None):
         super().__init__(config)
 
-        self.file_folder = config.get('file_folder', self.config.get('scheme_path'))
+        # file's folder.
+        # default : /<scheme>/data
+        if not (hasattr(self, 'file_folder') and self.file_folder):
+            self.file_folder = config.get('file_folder', self.config.get('file_folder'))
 
+        # file's name.
+        # default : timestamp
         if not (hasattr(self, 'file_name') and self.file_name):
             self.file_name = config.get('file_name', str(int(time.time())))
 
+        # fixed path.
         if not (hasattr(self, 'file_path') and self.file_path):
-            self.file_path = os.path.join(self.file_folder, self.file_name + '.json')
+            self.file_path = os.path.join(self.file_folder, self.file_name)
+
+        # add suffix
+        if not (self.file_suffix in self.file_path):
+            self.file_path = self.file_path + self.file_suffix
 
         self.data = deque()
+
+        log.info('folder: {}'.format(self.file_folder), self.name)
+        log.info('file name: {}'.format(self.file_name), self.name)
+        log.info('path: {}'.format(self.file_path), self.name)
 
     def on_start(self):
         temp_path = os.path.join(self.file_folder, 'touch')
         with open(temp_path, 'w') as f:
             pass
         os.remove(temp_path)
+
+        # log.info('folder: {}'.format(self.file_folder), self.name)
+        # log.info('file name: {}'.format(self.file_name), self.name)
+        # log.info('path: {}'.format(self.file_path), self.name)
+
+    def process_item(self, model: Model) -> Any:
+        self.data.append(model.pure_data)
+
+
+class JsonFileProcessor(FileProcessorMixin, Processor):
+    file_suffix = '.json'
 
     def on_exit(self):
         with open(self.file_path, 'w') as f:
             json.dump(list(self.data), f)
 
-    def process_item(self, model: Model) -> Any:
-        self.data.append(model.pure_data)
 
-
-class CSVFileProcessor(Processor):
-    file_folder: str
-    file_name: str
-
-    file_path: str
-
-    file = None
-
-    def __init__(self, config: dict = None):
-        super().__init__(config)
-
-        self.file_folder = config.get('file_folder', self.config.get('scheme_path'))
-
-        if not (hasattr(self, 'file_name') and self.file_name):
-            self.file_name = config.get('file_name', str(int(time.time())))
-
-        if not (hasattr(self, 'file_path') and self.file_path):
-            self.file_path = os.path.join(self.file_folder, self.file_name + '.csv')
-
-        # self.file_name = config.get('file_name', str(int(time.time())))
-        #
-        # self.file_path = os.path.join(self.file_folder, self.file_name + '.csv')
-
-        self.data = deque()
-
-    def on_start(self):
-        temp_path = os.path.join(self.file_folder, 'touch')
-        with open(temp_path, 'w') as f:
-            pass
-        os.remove(temp_path)
-
-    def process_item(self, model: Model) -> Any:
-        self.data.append(model.pure_data)
+class CSVFileProcessor(FileProcessorMixin, Processor):
+    file_suffix = '.csv'
 
     def on_exit(self):
+        log.info(print(len(self.data)))
         with open(self.file_path, 'w', encoding='utf-8', newline='' "") as f:
             writer = csv.writer(f)
 

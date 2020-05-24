@@ -25,8 +25,8 @@ class ProcessorSuit(ComponentSuit):
     def process(self, model):
         current = model
         next_model = None
-        for processor in self.components:
-            try:
+        try:
+            for processor in self.components:
                 if not isinstance(current, processor.target):
                     continue
 
@@ -41,12 +41,12 @@ class ProcessorSuit(ComponentSuit):
                 else:
                     # return false: abort processing
                     break
-            except Exception as e:
-                # TODO: continue by config
-                log.exception('Processor', e, line=1)
-                return False
-            else:
-                return True
+        except Exception as e:
+            # TODO: continue by config
+            log.exception('Processor', e, line=1)
+            return False
+        else:
+            return True
 
 
 class PipelineConsumer(Consumer):

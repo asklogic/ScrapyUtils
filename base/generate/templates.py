@@ -22,7 +22,7 @@ class ${class_name}Action(ActionStep):
 
 parse_template = """from typing import Generator, List
 
-from base.components import ParseStep, active
+from base.components import ParseStep, active, set_active
 from .model import *
 
 from base.common import HiddenInputParse
@@ -54,7 +54,7 @@ class ${class_name}Model(Model):
 
 process_template = """from typing import Any
 
-from base.components import Processor, active
+from base.components import Processor, active, set_active
 from base.common import DumpInPeeweeProcessor, DuplicateProcessor, JsonFileProcessor, CSVFileProcessor
 
 from .model import *

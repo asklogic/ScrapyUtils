@@ -9,7 +9,8 @@ from base.components import *
 
 
 class Parsing(Thread):
-    download = None
+    download: str = None
+    index: int = None
 
     @classmethod
     def syntax(cls):
@@ -17,40 +18,49 @@ class Parsing(Thread):
 
     @classmethod
     def command_config(cls, **kwargs):
-        cls.config['thread'] = 1
+        cls.config['thread'] = 6
         cls.config['timeout'] = 0
 
-        download = str(kwargs.get('download'))
+        download = kwargs.get('download')
+        index = int(kwargs.get('index', -1))
 
-        # TODO: fixed path
-
+        # TODO: fixed download folder path
         download_folder = cls.config.get('download_folder')
 
+        # list download target.
         dirs = os.listdir(download_folder)
-
         download_target = [x for x in dirs if os.path.isdir(os.path.join(download_folder, x))]
-        assert download_target
 
-        download_target.sort(key=lambda x: int(x), reverse=True)
+        assert download_target, 'there are no download targets.'
 
-        if download_target:
-            if not (download and download in download_target):
-                download = download_target[0]
+        # sort and reverse.
+        download_target.sort(key=lambda x: int(x))
+
+        # select download target.
+        if not (download and download in download_target):
+            download = download_target[index]
 
         cls.download = os.path.join(download_folder, download)
-        assert os.path.isdir(cls.download)
+        assert os.path.isdir(cls.download), 'download target {} not exist.'.format(cls.download)
 
-        log.info('parsing download path: {}'.format(cls.download), 'Config')
-        log.info('parsing download target: {}'.format(download), 'Config')
+    @classmethod
+    def command_logout(cls):
+        files = list(os.walk(cls.download))[0][2]
+
+        log.info('parsing download path:', 'Command')
+        log.info(cls.download, 'Command')
+        log.info('download target name:', 'Command')
+        log.info(os.path.basename(cls.download), 'Command')
+        log.info('page count:', 'Command')
+        log.info(str(len(files)), 'Command')
+
+        super().command_logout()
 
     @classmethod
     def command_task(cls, **kwargs):
-
-        # TODO: inner
-        # dirs = os.listdir(cls.download)
-        # dirs = [x for x in dirs if os.path.isfile(x)]
-
         def inner():
+            time.sleep(0.618)
+            log.info('loading download files.')
             dirs = [os.path.join(cls.download, x) for x in os.listdir(cls.download)]
             dirs = [x for x in dirs if os.path.isfile(x)]
 
@@ -58,8 +68,11 @@ class Parsing(Thread):
                 with open(file, 'r', encoding='utf8') as f:
                     content = f.read()
                 t = Task()
+                t.url = os.path.basename(file)
                 t.param = content
                 yield t
+
+            log.info('done.')
 
         return inner
 
@@ -85,4 +98,5 @@ class Parsing(Thread):
 
 class ParsingLoadAction(ActionStep):
     def scraping(self, task: Task):
+        self.context['page_name'] = task.url
         return task.param

@@ -6,8 +6,24 @@ from base.command.entity.thread_ import Thread
 from base.components import *
 from base.libs import Model, Field, Task
 
+from base.common import DownloadModel
+from urllib.parse import urlparse
+
+file_type = 'html'
+
 
 class Download(Thread):
+    @classmethod
+    def syntax(cls):
+        return '[Download]'
+
+    @classmethod
+    def command_config(cls, **kwargs):
+        super().command_config(**kwargs)
+
+        global file_type
+        if kwargs.get('file_type', 'html'):
+            file_type = str(kwargs.get('file_type', 'html'))
 
     @classmethod
     def command_components(cls, steps: List[type(ActionStep)], processors: List[type(ParseStep)], **kwargs):
@@ -27,23 +43,26 @@ class Download(Thread):
         return steps, processors
 
 
-class DownloadModel(Model):
-    page_name = Field()
-    page_content = Field()
-
-
 class DownloadAction(ActionStep):
 
     def scraping(self, task: Task):
-        self.context['page_name'] = task.url
+        # if url. parse and get uri
+        path = urlparse(task.url).path
+
+        page_name = path.split('/')[-1]
+
+        if not self.context.get('page_name'):
+            self.context['page_name'] = page_name
 
 
 class DownloadParse(ParseStep):
+
     def parsing(self):
         model = DownloadModel()
 
-        model.page_content = self.content
         model.page_name = self.context['page_name']
+        model.page_content = self.content
+
         yield model
 
 
@@ -53,32 +72,44 @@ class DownloadProcessor(Processor):
     def __init__(self, config: dict = None):
         super().__init__(config)
 
+        # download folder.
         self.download_folder = config.get('download_folder')
+
         if not os.path.isdir(self.download_folder):
             os.mkdir(self.download_folder)
 
+        # create download target folder.
         self.download_name = str(int(time.time()))
 
         self.current_download_path = os.path.join(self.download_folder, self.download_name)
         if not os.path.isdir(self.current_download_path):
             os.mkdir(self.current_download_path)
 
-        log.info('download path {}'.format(self.current_download_path), 'Download')
-
         self.download_index = 0
+        # assert False
+
+        log.info(os.path.basename(self.current_download_path), 'Target')
+        log.info(file_type, 'Suffix')
+        log.info(self.current_download_path, 'Path')
+
+        # log.info('download path target: {}'.format(os.path.basename(self.current_download_path)), 'Download')
 
     def process_item(self, model: DownloadModel) -> Any:
         # name = os.path.join(self.current_download_path, str(model.page_name))
         # while os.path.exists(name):
         #     name = os.path.join(self.current_download_path, str(model.page_name) + str(self.download_index))
         #     self.download_index += 1
-        name = os.path.join(self.current_download_path, str(self.download_index) + '.html')
+
+
+        name = os.path.join(self.current_download_path, ''.join((str(model.page_name), '.', file_type)))
         while os.path.exists(name):
             self.download_index += 1
-            name = os.path.join(self.current_download_path, str(self.download_index) + '.html')
+            name = os.path.join(self.current_download_path,
+                                ''.join((str(model.page_name), str(self.download_index), '.', file_type)))
 
-        with open(name, 'w', encoding='utf8') as f:
-            f.writelines(model.page_content)
+        with open(name, 'w', encoding='utf-8') as f:
+            # with open(name, 'wb') as f:
+            f.write(model.page_content)
 
     def on_start(self):
         pass

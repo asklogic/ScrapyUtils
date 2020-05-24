@@ -16,7 +16,7 @@ class ProcessorMeta(ComponentMeta):
 
 
 class Processor(Component, metaclass=ProcessorMeta):
-    target: type(Model)
+    target: type(Model) = Model
     data: [] = None
     count: int = 0
 

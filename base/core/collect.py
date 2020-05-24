@@ -94,7 +94,7 @@ def collect_scheme_preload(scheme: str):
         log.exception('System', e)
 
 
-def collect_scheme_initial():
+def collect_scheme_initial(**kwargs):
     global tasks_callable, scraper_callable, steps_class, processors_class, config
 
     global tasks, scrapers, proxy, config, step_suits, processor_suit, models_pipeline
@@ -109,6 +109,14 @@ def collect_scheme_initial():
             tasks.put(task)
 
         # ----------------------------------------------------------------------
+        # processor suits : List[ProcessorSuit]
+        processor_suit = ProcessorSuit(processors_class, config)
+        models_pipeline = Pipeline(processor_suit)
+
+        if kwargs.get('confirm'):
+            input('Press any key to continue.')
+
+        # ----------------------------------------------------------------------
         # scrapers* : list[Scraper]
         gen = _default_scraper(scraper_callable)
         scrapers = list_builder(gen, thread_num, timeout=30)
@@ -118,23 +126,18 @@ def collect_scheme_initial():
         step_suits = [StepSuit(scrapers[i], steps_class) for i in range(thread_num)]
 
         # ----------------------------------------------------------------------
-        # processor suits : List[ProcessorSuit]
-        processor_suit = ProcessorSuit(processors_class, config)
-
-        # ----------------------------------------------------------------------
         # suit suit_start
         [x.suit_start() for x in step_suits]
         processor_suit.suit_start()
-
-        models_pipeline = Pipeline(processor_suit)
 
         # ----------------------------------------------------------------------
         # proxy : producer
         proxy = build_proxy(config)
 
+
     except Exception as e:
-        log.exception('Collect Initial', e)
-        raise Exception('interrupt.')
+        # log.exception('Collect Initial', e)
+        raise Exception('collect initial interrupt.')
 
 
 def collect_scheme(scheme: str):

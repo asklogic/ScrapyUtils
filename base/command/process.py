@@ -26,7 +26,7 @@ def trigger(command_name: str, **kwargs):
     # c_raise = ucrtbase['raise']
     # signal.signal(signal.SIGINT, lambda *args: c_raise(signal.SIGTERM))
 
-    log.info('starting command {}'.format(command.__name__), 'System', 'Processing'a)
+    log.info('starting command {}'.format(command.__name__), 'System', 'Processing')
     # TODO: try - catch
     try:
         # collect. -> core.collect

@@ -3,7 +3,7 @@ from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any, Callable
 import typing
 from urllib3.exceptions import InsecureRequestWarning
 
-from appium import webdriver
+# from appium import webdriver
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException
 
@@ -448,24 +448,24 @@ class FireFoxScraper(Scraper):
         if self.activated:
             self.scraper_quit()
 
-
-class AppiumScraper(Scraper):
-
-    def __init__(self, desired, ):
-        super(AppiumScraper, self).__init__()
-
-        driver = webdriver.Remote('http://localhost:4723/wd/hub', desired)
-
-        pass
-
-    def _activate(self):
-        pass
-
-    def _clear(self):
-        pass
-
-    def _quit(self):
-        pass
+#
+# class AppiumScraper(Scraper):
+#
+#     def __init__(self, desired, ):
+#         super(AppiumScraper, self).__init__()
+#
+#         driver = webdriver.Remote('http://localhost:4723/wd/hub', desired)
+#
+#         pass
+#
+#     def _activate(self):
+#         pass
+#
+#     def _clear(self):
+#         pass
+#
+#     def _quit(self):
+#         pass
 
 
 # class FireFoxScraper(Scraper):

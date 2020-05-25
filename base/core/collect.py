@@ -136,7 +136,7 @@ def collect_scheme_initial(**kwargs):
 
 
     except Exception as e:
-        # log.exception('Collect Initial', e)
+        log.exception('Collect Initial', e)
         raise Exception('collect initial interrupt.')
 
 

@@ -93,7 +93,6 @@ class CSVFileProcessor(FileProcessorMixin, Processor):
     file_suffix = '.csv'
 
     def on_exit(self):
-        log.info(print(len(self.data)))
         with open(self.file_path, 'w', encoding='utf-8', newline='' "") as f:
             writer = csv.writer(f)
 

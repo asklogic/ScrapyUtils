@@ -100,7 +100,6 @@ class DownloadProcessor(Processor):
         #     name = os.path.join(self.current_download_path, str(model.page_name) + str(self.download_index))
         #     self.download_index += 1
 
-
         name = os.path.join(self.current_download_path, ''.join((str(model.page_name), '.', file_type)))
         while os.path.exists(name):
             self.download_index += 1

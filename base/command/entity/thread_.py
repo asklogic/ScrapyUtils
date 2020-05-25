@@ -39,10 +39,13 @@ class Thread(Command, ComponentMixin):
 
         event.set()
 
-        while cls.tasks.qsize() != 0:
-            time.sleep(0.1)
 
-        [x.stop() for x in cls.consumers]
+        while cls.tasks.qsize() != 0:
+            while cls.tasks.qsize() != 0:
+                time.sleep(0.1)
+
+
+            [x.stop() for x in cls.consumers]
 
     @classmethod
     def exit(cls):

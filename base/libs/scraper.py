@@ -314,7 +314,7 @@ class FireFoxScraper(Scraper):
 
     schemes = ['get']
 
-    def __init__(self, image=False, headless=True, js=True):
+    def __init__(self, image=False, headless=True, js=True, executable_path=None):
         super().__init__()
         self.options = FirefoxOptions()
 
@@ -333,10 +333,15 @@ class FireFoxScraper(Scraper):
         self.image = image
         self.headless = headless
         self.js = js
+        self.executable_path = executable_path
 
     def _activate(self):
 
-        self.firefox = Firefox(options=self.options)
+        if self.executable_path:
+            self.firefox = Firefox(options=self.options, executable_path=self.executable_path)
+        else:
+            self.firefox = Firefox(options=self.options)
+
         self.firefox.set_script_timeout(self.timeout)
         self.firefox.set_page_load_timeout(self.timeout)
 
@@ -448,7 +453,7 @@ class FireFoxScraper(Scraper):
         if self.activated:
             self.scraper_quit()
 
-#
+
 # class AppiumScraper(Scraper):
 #
 #     def __init__(self, desired, ):

@@ -7,7 +7,7 @@ from collections import deque
 
 import csv
 import redis
-import peewee
+# import peewee
 from urllib.parse import ParseResult, urlparse
 
 from base.libs import Model, Field

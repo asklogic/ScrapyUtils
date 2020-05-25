@@ -144,7 +144,7 @@ class ScrapyConsumer(Consumer):
             pass
 
             current.count += 1
-            if current.count <= 5:
+            if current.count <= 5gi:
                 self.queue.put(current)
             if self.proxy:
                 self.scraper.proxy = self.proxy.queue.get()

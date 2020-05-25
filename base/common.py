@@ -401,6 +401,10 @@ class ProxyProcessor(Processor):
         return model
 
 
+class DumpInPeeweeProcessor():
+    pass
+
+
 class DuplicateProcessor(Processor):
     # property
     host: int = '127.0.0.1'

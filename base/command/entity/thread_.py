@@ -39,13 +39,15 @@ class Thread(Command, ComponentMixin):
 
         event.set()
 
-
+        # TODO:
         while cls.tasks.qsize() != 0:
-            while cls.tasks.qsize() != 0:
-                time.sleep(0.1)
+            time.sleep(0.1)
 
-
-            [x.stop() for x in cls.consumers]
+        # while cls.tasks.qsize() != 0:
+        #     while cls.tasks.qsize() != 0:
+        #         time.sleep(0.1)
+        #
+        [x.stop() for x in cls.consumers]
 
     @classmethod
     def exit(cls):
@@ -142,7 +144,7 @@ class ScrapyConsumer(Consumer):
             pass
 
             current.count += 1
-            if current.count <= 3:
+            if current.count <= 5:
                 self.queue.put(current)
             if self.proxy:
                 self.scraper.proxy = self.proxy.queue.get()

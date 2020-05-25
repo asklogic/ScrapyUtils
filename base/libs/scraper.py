@@ -161,7 +161,7 @@ headers = {
     'Accept': 'text/html,application/xhtml+xml,application/json,text/plain,*/*,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Accept-Language': 'en-us',
+    # 'Accept-Language': 'en-us',
     "Content-Type": "application/x-www-form-urlencoded",
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',

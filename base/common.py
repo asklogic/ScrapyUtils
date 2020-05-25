@@ -319,20 +319,20 @@ class DumpProcessor(Processor):
         print('data len', len(self.data))
 
 
-class DumpInPeeweeProcessor(Processor):
-    table: peewee.Model = None
-
-    def on_start(self, setting: Setting):
-        assert bool(self.table)
-
-    def process_item(self, model: Model) -> Any:
-        self.data.append(model.pure_data())
-        return model
-
-    def end_process(self):
-        if self.data:
-            self.table.insert(self.data).execute()
-        self.data.clear()
+# class DumpInPeeweeProcessor(Processor):
+#     table: peewee.Model = None
+#
+#     def on_start(self, setting: Setting):
+#         assert bool(self.table)
+#
+#     def process_item(self, model: Model) -> Any:
+#         self.data.append(model.pure_data())
+#         return model
+#
+#     def end_process(self):
+#         if self.data:
+#             self.table.insert(self.data).execute()
+#         self.data.clear()
 
 
 class ProxyProcessor(Processor):

@@ -1,6 +1,5 @@
 from typing import *
 from abc import ABC, ABCMeta
-from dataclasses import dataclass
 import copy
 
 
@@ -101,41 +100,8 @@ class Model(metaclass=ModelMeta):
     def pure_data(self):
         return self._pure_data
 
-    # @pure_data.setter
-    # def pure_data(self, value):
-    #     self._pure_data = value
 
 
-# @dataclass
-# class Model(object):
-#
-#     def __new__(cls, **kwargs) -> Any:
-#         """
-#         Model must be extended
-#         """
-#         if cls.__name__ == 'Model':
-#             raise Exception('Model must be extended')
-#         return super().__new__(cls)
-#
-#     def __init__(self, **kwargs) -> None:
-#         """
-#         init pure_data dict
-#         set value from constructor
-#         """
-#         for key in kwargs.keys():
-#             setattr(self, key, kwargs[key])
-#
-#     @property
-#     def name(self):
-#         return self.__name__
-#
-#     @classmethod
-#     def get_name(cls):
-#         return cls.__name__
-#
-#     @property
-#     def pure_data(self):
-#         return self.__dict__
 
 
 if __name__ == '__main__':

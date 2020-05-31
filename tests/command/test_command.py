@@ -58,14 +58,18 @@ class TestCommand(unittest.TestCase):
             # 'scheme': 'lianjia',
             # 'scheme': 'JewDetail',
             # 'scheme': 'UdemyDetail',
-            'scheme': 'atom',
+            # 'scheme': 'atom',
+            # 'scheme': 'diretta',
+            'scheme': 'diretta_detail',
         }
 
         trigger('thread', **params)
 
     def test_download(self):
         params = {
-            'scheme': 'lianjia',
+            # 'scheme': 'lianjia',
+            'scheme': 'diretta',
+            # 'scheme': 'diretta_detail',
             # 'scheme': 'uspto_detail',
             # 'scheme': 'JewDetail',
             # 'scheme': 'UdemyDetail',
@@ -76,8 +80,9 @@ class TestCommand(unittest.TestCase):
 
     def test_parsing(self):
         params = {
-            'scheme': 'uspto_detail',
-            'index': 1,
+            'scheme': 'diretta_match',
+            # 'scheme': 'uspto_detail',
+            # 'index': 1,
             # 'download': '1590088871'
             # 'scheme': 'lianjia',
             # 'scheme': 'JewDetail',

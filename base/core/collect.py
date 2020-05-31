@@ -290,7 +290,7 @@ def _default_scraper(scraper_callable) -> Callable:
             assert isinstance(current_scraper, Scraper)
             # current_scraper.scraper_activate()
         except Exception as e:
-            # log.exception('Scraper', e)
+            log.exception('Scraper', e)
             log.warning('able default RequestScraper.')
             current_scraper = RequestScraper()
         finally:

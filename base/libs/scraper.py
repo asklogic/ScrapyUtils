@@ -6,6 +6,7 @@ from urllib3.exceptions import InsecureRequestWarning
 # from appium import webdriver
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 import requests
 import time
@@ -314,7 +315,7 @@ class FireFoxScraper(Scraper):
 
     schemes = ['get']
 
-    def __init__(self, image=False, headless=True, js=True, executable_path=None):
+    def __init__(self, image=False, headless=True, js=True, exe_path=None, driver_path=None):
         super().__init__()
         self.options = FirefoxOptions()
 
@@ -333,12 +334,16 @@ class FireFoxScraper(Scraper):
         self.image = image
         self.headless = headless
         self.js = js
-        self.executable_path = executable_path
+        self.exe_path = exe_path
+        self.driver_path = driver_path
 
     def _activate(self):
+        binary = None
+        if self.exe_path:
+            binary = FirefoxBinary(self.exe_path)
 
-        if self.executable_path:
-            self.firefox = Firefox(options=self.options, executable_path=self.executable_path)
+        if self.driver_path:
+            self.firefox = Firefox(options=self.options, firefox_binary=binary, executable_path=self.driver_path)
         else:
             self.firefox = Firefox(options=self.options)
 
@@ -434,7 +439,12 @@ class FireFoxScraper(Scraper):
         self.firefox.delete_all_cookies()
 
     def _quit(self):
-        self.firefox.quit()
+        try:
+            self.firefox.service.assert_process_still_running()
+        except Exception as e:
+            pass
+        finally:
+            self.firefox.quit()
 
     # ----------------------------------------------------------------------
     # firefox function

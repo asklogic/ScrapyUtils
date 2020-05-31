@@ -18,7 +18,7 @@ def trigger(command_name: str, **kwargs):
 
     # register signal
     # TODO: windows and linux
-    # FIXME: sigint in windows(ctrl + c）can not exit FirefoxScraper
+    # FIXME: signal in windows(ctrl + c）can not exit FirefoxScraper
     signal.signal(signal.SIGTERM, command.signal_callback)
     signal.signal(signal.SIGINT, command.signal_callback)
 
@@ -72,6 +72,8 @@ def trigger(command_name: str, **kwargs):
         command.run(kwargs)
 
         log.debug('command finish.', 'System', 'Processing')
+    # except KeyboardInterrupt as ke:
+    #     log.info('KeyboardInterrupt interrupt.', 'Interrupt')
 
     except CommandExit as ce:
         log.info('CommandExit interrupt.', 'Interrupt')

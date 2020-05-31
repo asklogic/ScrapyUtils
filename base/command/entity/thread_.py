@@ -37,16 +37,21 @@ class Thread(Command, ComponentMixin):
         ]
         cls.consumers = [ScrapyConsumer(**kw) for kw in kws]
 
-        event.set()
+        # event.set()
 
-        # TODO:
-        while cls.tasks.qsize() != 0:
-            time.sleep(0.1)
+        # TODO: refactor this
 
-        # while cls.tasks.qsize() != 0:
-        #     while cls.tasks.qsize() != 0:
-        #         time.sleep(0.1)
-        #
+        empty_flag = False
+
+        while not empty_flag:
+            [x.start() for x in cls.consumers]
+            while cls.tasks.qsize() != 0:
+                time.sleep(0.1)
+
+            [x.stop() for x in cls.consumers]
+
+            empty_flag = cls.tasks.empty()
+
         [x.stop() for x in cls.consumers]
 
     @classmethod

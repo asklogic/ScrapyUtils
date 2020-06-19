@@ -5,6 +5,8 @@ from base.command.entity.thread_ import Thread
 from base.command.entity.download import Download
 from base.command.entity.parsing import Parsing
 
+from base.command.entity import Command
+
 command_map = {
     'check': Check,
     'generate': Generate,
@@ -13,3 +15,8 @@ command_map = {
     'download': Download,
     'parsing': Parsing,
 }
+
+
+def get_command_type(command_name: str) -> Command:
+    # TODO: exception
+    return command_map[command_name]

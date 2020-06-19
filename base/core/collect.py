@@ -61,7 +61,7 @@ def collect_scheme_preload(scheme: str):
 
 
     except Exception as e:
-        log.exception('Collect Prepare', e)
+        log.exception('collect', e)
         # TODO: interrupt
         raise Exception('interrupt.')
 
@@ -113,8 +113,8 @@ def collect_scheme_initial(**kwargs):
         processor_suit = ProcessorSuit(processors_class, config)
         models_pipeline = Pipeline(processor_suit)
 
-        if kwargs.get('confirm'):
-            input('Press any key to continue.')
+        # if kwargs.get('confirm'):
+        #     input('Press any key to continue.')
 
         # ----------------------------------------------------------------------
         # scrapers* : list[Scraper]
@@ -277,6 +277,10 @@ def collect_settings(module: ModuleType):
 # utils
 # ----------------------------------------------------------------------
 
+
+default_flag = True
+
+
 def _default_scraper(scraper_callable) -> Callable:
     """
 
@@ -285,14 +289,18 @@ def _default_scraper(scraper_callable) -> Callable:
     """
 
     def inner():
+        current_scraper = None
+        global default_flag
         try:
             current_scraper = scraper_callable()
             assert isinstance(current_scraper, Scraper)
-            # current_scraper.scraper_activate()
         except Exception as e:
-            log.exception('Scraper', e)
-            log.warning('able default RequestScraper.')
             current_scraper = RequestScraper()
+            if default_flag:
+                # TODO: wtf is that?
+                # log.exception('Scraper', e)
+                log.warning('able default RequestScraper.')
+                default_flag = False
         finally:
             if not current_scraper.activated:
                 current_scraper.scraper_activate()

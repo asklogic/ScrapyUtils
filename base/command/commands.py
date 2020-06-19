@@ -1,7 +1,7 @@
 import os
 import click
 
-from .process import trigger
+from base.engine import trigger
 
 
 @click.group()
@@ -13,9 +13,10 @@ def cli():
 @click.argument('scheme')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
 @click.option('line', '--line', default=3)
+@click.option('-p', '--port', 'port', type=int)
 @click.option('--confirm', is_flag=True)
-def thread(scheme: str, path, line, confirm):
-    trigger('thread', scheme=scheme, path=path, line=line, confirm=not confirm)
+def thread(scheme: str, path, line, confirm, port):
+    trigger('thread', scheme=scheme, path=path, line=line, confirm=not confirm, port=port)
 
 
 @click.command()

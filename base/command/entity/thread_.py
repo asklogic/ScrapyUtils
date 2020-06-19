@@ -2,6 +2,7 @@ import time
 from concurrent.futures._base import TimeoutError as ConcurrentTimeout
 from concurrent.futures.thread import ThreadPoolExecutor
 from threading import Lock, Event
+from typing import List
 
 from base.components import *
 from base.exception import CommandExit
@@ -15,7 +16,11 @@ from base.core import get_scraper
 class Thread(Command, ComponentMixin):
     do_collect = True
 
-    consumers = []
+    consumers: List[Consumer] = []
+
+    @classmethod
+    def syntax(cls):
+        return '[Thread]'
 
     @classmethod
     def run(cls, kw):
@@ -37,22 +42,22 @@ class Thread(Command, ComponentMixin):
         ]
         cls.consumers = [ScrapyConsumer(**kw) for kw in kws]
 
-        # event.set()
+        event.set()
 
         # TODO: refactor this
 
-        empty_flag = False
-
-        while not empty_flag:
-            [x.start() for x in cls.consumers]
-            while cls.tasks.qsize() != 0:
-                time.sleep(0.1)
-
-            [x.stop() for x in cls.consumers]
-
-            empty_flag = cls.tasks.empty()
-
-        [x.stop() for x in cls.consumers]
+        # empty_flag = False
+        #
+        # while not empty_flag:
+        #     [x.start() for x in cls.consumers]
+        #     while cls.tasks.qsize() != 0:
+        #         time.sleep(0.1)
+        #
+        #     [x.stop() for x in cls.consumers]
+        #
+        #     empty_flag = cls.tasks.empty()
+        #
+        # [x.stop() for x in cls.consumers]
 
     @classmethod
     def exit(cls):
@@ -64,6 +69,8 @@ class Thread(Command, ComponentMixin):
 
         [x.stop() for x in cls.consumers]
 
+        log.info('exit command {}'.format(cls.__name__), 'System')
+
         # suit exit
         [suit.suit_exit() for suit in cls.suits]
 
@@ -72,9 +79,14 @@ class Thread(Command, ComponentMixin):
             # TODO: wait to pipeline.
             cls.pipeline.exit()
 
+        log.info('tasks remain: {}'.format(cls.tasks.qsize()), 'Exit')
+        log.info('models remain: {}'.format(len(cls.pipeline.failed)), 'Exit')
+
+        log.info('command finished.')
+
     @classmethod
     def signal_callback(cls, signum, frame):
-        [x.stop() for x in cls.consumers]
+        # [x.stop() for x in cls.consumers]
 
         log.warning('thread signal callback exit!.', 'Interrupt')
 
@@ -85,11 +97,16 @@ class Thread(Command, ComponentMixin):
 
     @classmethod
     def failed(cls):
-        [x.stop() for x in cls.consumers]
+        # [x.stop() for x in cls.consumers]
 
         # [x.scraper.scraper_quit() for x in cls.suits]
 
         log.info('command Thread failed!.')
+
+    @classmethod
+    def finished(cls):
+        return cls.tasks.qsize() == 0 and not [None for consumer in cls.consumers if not consumer.block]
+        # return not (cls.tasks.qsize() > 0 or [None for consumer in cls.consumers if not consumer.block])
 
 
 class ScrapyConsumer(Consumer):
@@ -114,7 +131,7 @@ class ScrapyConsumer(Consumer):
         self.timeout = timeout
 
         # super
-        Consumer.__init__(self, kwargs.pop('queue'), kwargs.pop('delay', 1), kwargs.pop('lock', None), **kwargs)
+        Consumer.__init__(self, kwargs.pop('queue'), kwargs.pop('delay', 1), kwargs.pop('lock', None), True, **kwargs)
 
     @property
     def suit(self):

@@ -19,8 +19,8 @@ class Download(Thread):
 
     @classmethod
     def command_config(cls, **kwargs):
-        super().command_config(**kwargs)
 
+        # TODO: refactor
         global file_type
         if kwargs.get('file_type', 'html'):
             file_type = str(kwargs.get('file_type', 'html'))

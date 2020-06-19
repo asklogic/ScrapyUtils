@@ -81,9 +81,12 @@ class Consumer(BaseThread):
     _queue: Queue
     _delay: int
 
+    _block: bool = False
     _lock: Lock
 
-    def __init__(self, queue, delay=1, lock=None, **kw):
+    blocked: bool = False
+
+    def __init__(self, queue, delay=1, lock=None, blocked=False, **kw):
         # default
         lock = lock if lock else Lock()
 
@@ -92,8 +95,10 @@ class Consumer(BaseThread):
 
         # property
         self._queue = queue
-        self._lock = lock
         self._delay = delay
+
+        self._lock = lock
+        self.blocked = blocked
 
         # super
         BaseThread.__init__(self, kw.pop('event', Event()), **kw)
@@ -110,6 +115,10 @@ class Consumer(BaseThread):
     def lock(self):
         return self._lock
 
+    @property
+    def block(self):
+        return self._block
+
     @delay.setter
     def delay(self, value):
         self._delay = value
@@ -125,6 +134,18 @@ class Consumer(BaseThread):
             time.sleep(0.1)
         self.stop(True)
 
+    def stop(self, block=True):
+        if self.blocked:
+            # must be the blocked
+            if self.block:
+                # already in block
+                super().stop(False)
+            else:
+                # still consuming. normal stop
+                super().stop(block)
+        else:
+            super().stop(block)
+
     def run(self):
         # infinite loop.exit by join or main thread exit.
         while self.wait():
@@ -134,8 +155,14 @@ class Consumer(BaseThread):
 
             # consuming.
             try:
-                obj = self._queue.get(block=True, timeout=0.1)
+                self._block = True
+                if self.blocked:
+                    obj = self._queue.get(block=True)
+                else:
+                    obj = self._queue.get(block=True, timeout=0.1)
                 self.queue.task_done()
+
+                self._block = False
 
                 self.consuming(obj)
             # empty. continue loop.

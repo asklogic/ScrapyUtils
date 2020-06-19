@@ -53,7 +53,7 @@ class Wrapper:
 
         exception_name = exception.__class__.__name__
         component_name = '<{}>'.format(component_name)
-        message = ' '.join([cls.syntax, component_name, exception_name,'-' ,str(exception)])
+        message = ' '.join([cls.syntax, component_name, exception_name, '-', str(exception)])
         cls.log.error(message)
 
         current = exception.__traceback__
@@ -82,6 +82,16 @@ def set_syntax(syntax):
 
 def set_line(line):
     Wrapper.line = line
+
+
+def set_log_file_name(name):
+    if not '.out' in name:
+        name = name + '.out'
+    fh = logging.FileHandler(filename=name)
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%m/%d %H:%M:%S'))
+
+    logger.addHandler(fh)
 
 
 # class ThreadLog(Wrapper):

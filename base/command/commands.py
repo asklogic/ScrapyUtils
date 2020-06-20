@@ -15,8 +15,9 @@ def cli():
 @click.option('line', '--line', default=3)
 @click.option('-p', '--port', 'port', type=int)
 @click.option('--confirm', is_flag=True)
-def thread(scheme: str, path, line, confirm, port):
-    trigger('thread', scheme=scheme, path=path, line=line, confirm=not confirm, port=port)
+@click.option('-b', '--background/--no-background', 'background', is_flag=True)
+def thread(scheme: str, path, line, confirm, port, background):
+    trigger('thread', scheme=scheme, path=path, line=line, confirm=confirm, port=port, background=background)
 
 
 @click.command()
@@ -26,7 +27,7 @@ def thread(scheme: str, path, line, confirm, port):
 @click.option('line', '--line', default=3)
 @click.option('--confirm', is_flag=True)
 def download(scheme: str, type, path, line, confirm):
-    trigger('download', scheme=scheme, file_type=type, path=path, line=line, confirm=not confirm)
+    trigger('download', scheme=scheme, file_type=type, path=path, line=line, confirm=confirm)
 
 
 @click.command()
@@ -37,7 +38,7 @@ def download(scheme: str, type, path, line, confirm):
 @click.option('line', '--line', default=3)
 @click.option('--confirm', is_flag=True)
 def parsing(scheme: str, download, index, path, line, confirm):
-    trigger('parsing', scheme=scheme, download=download, index=index, path=path, line=line, confirm=not confirm)
+    trigger('parsing', scheme=scheme, download=download, index=index, path=path, line=line, confirm=confirm)
 
 
 @click.command()

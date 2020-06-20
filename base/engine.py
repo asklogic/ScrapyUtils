@@ -221,6 +221,8 @@ class Tail(Thread):
         self.setDaemon(True)
         self.file_path = file_path
 
+        self.start()
+
     def run(self) -> None:
         with open(self.file_path) as file_:
             # Go to the end of file
@@ -244,6 +246,14 @@ def get_available_port() -> int:
     return start_port
 
 
+listener = None
+
+
+# temp
+def listener_state():
+    pass
+
+
 def trigger(command_name, **kwargs):
     # set log
     command = get_command_type(command_name)
@@ -264,22 +274,23 @@ def trigger(command_name, **kwargs):
     # 1. run process function
     # 2. block and wait to exit
 
-    if not kwargs.get('port'):
+    if not kwargs.get('background'):
 
         port = get_available_port()
+        print('starting listenner at {}'.format(port))
 
-        p = background(command_name, kwargs.get('scheme'), port)
+        background(command_name, kwargs.get('scheme'), port)
 
-        time.sleep(0.5)
+        time.sleep(1)
 
-        count = 3
+        # TODO: refactor output
+        count = 0
         output = get_output(port)
         while count < 5 and not output:
             print('failed to get output from port: {}'.format(str(port)))
             count += 1
             output = get_output(port)
-
-        assert output
+        assert output, 'failed to get output.'
 
         time.sleep(0.5)
 
@@ -287,81 +298,92 @@ def trigger(command_name, **kwargs):
         print('port:', port)
 
         tail = Tail(output)
-        tail.start()
 
-        assert start_listener(port)
+        assert start_listener(port), 'failed to start process.'
 
-        # TODO:
-
+        # block
+        # main loop
         try:
             while tail.is_alive():
-                time.sleep(0.1)
+
+                # inner loop
+                try:
+                    while tail.is_alive():
+                        time.sleep(0.1)
+
+                except KeyboardInterrupt as e:
+                    # except inner ctrl-c
+                    pass
+
+                # double ctrl-c delay
+                time.sleep(0.618)
+
+                print('paused.')
+                # TODO: tail paused
+
+                print('TODO')
+                # TODO: command
+
+
         except KeyboardInterrupt as ke:
-            pass
+            # except another ctrl-c.
+            print('Aborted by two ctrl-c request.')
 
+        # FIXME: what's wrong with pyinstaller?
         sys.exit(0)
-        # exit(0)
-        # quit(0)
-
-        # blocking
     else:
-        print('command start background')
-        listener = Listener(kwargs.get('port'))
-
-        assert kwargs.get('port') == listener.port
-
         output = '-'.join((command.__name__, kwargs.get('scheme'), str(int(time.time())))[-4:]) + '.out'
-
         output = os.path.join(os.getcwd(), kwargs.get('scheme'), output)
 
-        print('listen:', listener.port)
         print('output:', output)
-
-        listener.set_output(output)
-
         set_log_file_name(output)
 
-        # print('wait to start')
-        listener.wait_to_start()
+        if kwargs.get('port'):
+            listener = Listener(kwargs.get('port'))
+            assert kwargs.get('port') == listener.port
+
+            listener.set_output(output)
+
+            print('listen:', listener.port)
+
+            # TODO: refactor.
+            if not kwargs.get('confirm'):
+                listener.wait_to_start()
+
+            sys.stdout = None
 
         if not command.command_run(**kwargs):
             # TODO: failed and exit
             logger.info('failed in command_run. exiting...')
+            command.failed()
             return False
 
         # subprocess
-        sys.stdout = None
 
+        # TODO: listener to global
         # blocking
         while not command.finished() and listener.block:
             time.sleep(0.2)
 
         command.exit()
 
-    # blocking
-
-    # if not blocked
-
-    # 1. invoke pythonw command with process function
-    # 2. run tail command
-    # 3. block and wait to exit.
-
-    pass
-
 
 p = None
 
 
 def background(command_name, scheme, port):
-    startupinfo = subprocess.STARTUPINFO()
-
     executable = r'C:\Python38\pythonw'
-    if '.exe' in sys.executable:
-        executable = sys.executable
 
     port = '--port=' + str(port)
-    print([executable, command_name, scheme, port])
-    p = subprocess.Popen([executable, command_name, scheme, port],
+    cmd_list = [executable, command_name, scheme, port, '--background']
+
+    if not 'python.exe' in sys.executable:
+        executable = sys.executable
+    else:
+        cmd_list.insert(1, 'trigger.py')
+
+    print(cmd_list)
+    p = subprocess.Popen(cmd_list,
                          shell=True,
                          # startupinfo=startupinfo,
                          creationflags=subprocess.CREATE_NO_WINDOW,
@@ -375,45 +397,5 @@ def background(command_name, scheme, port):
     return p
 
 
-def _background(command_name, **kwargs):
-    startupinfo = subprocess.STARTUPINFO()
-
-    p = subprocess.Popen(r'pythonw .\trigger.py {} {} -b'.format(command_name, kwargs.get('scheme')),
-                         shell=True,
-                         startupinfo=startupinfo,
-                         creationflags=subprocess.CREATE_NO_WINDOW,
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         universal_newlines=True,
-                         # close_fds=True,
-                         # env={'PYTHONUNBUFFERED': '1'}
-                         )
-
-    # p = subprocess.Popen(r'pythonw .\trigger.py {} {} -b'.format(command_name, kwargs.get('scheme')),
-    #                      shell=True)
-
-    # print(p.stdout.readline(1))
-
-    # res = p.communicate()
-    # print('mother fucker!')
-    # print(res[-1])
-
-    port = p.stdout.readline().strip().split(' ')[-1]
-    output = p.stdout.readline().strip().split(' ')[-1]
-
-    # p.stdout = None
-
-    print(int(port))
-    print(output)
-
-    return int(port), output
-
-
-if __name__ == '__main__':
-    # start_server()
-
-    # trigger('thread', **{'scheme': 'lianjia'})
-    trigger('thread', **{'scheme': 'atom'})
-    # background('thread', **{'scheme': 'atom'})
-    # pass
+if __name__ == '__main__'
+    pass

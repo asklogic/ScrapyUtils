@@ -56,6 +56,19 @@ class TestCaseListener(unittest.TestCase):
         print('port is ', listener.port)
         assert get_output(listener.port) == output
 
+    def test_function_stop_listener(self):
+
+        listener = Listener()
+
+        assert listener.is_alive()
+
+        stop_listener(listener.port)
+
+        time.sleep(1)
+
+        assert listener.is_alive() is False
+
+
     @unittest.skip
     def test_property_active_false(self):
         listener = Listener()

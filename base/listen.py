@@ -63,7 +63,6 @@ class Listener(threading.Thread):
     port: int = 52000
     socket: socket.socket
     wait: bool = False
-    _stop: bool = False
 
     def __init__(self, port=52000):
         threading.Thread.__init__(self)
@@ -85,7 +84,6 @@ class Listener(threading.Thread):
         self.port = port
         self.socket = _socket
         self.wait = False
-        self.stop = False
 
         self.start()
 
@@ -127,7 +125,11 @@ class Listener(threading.Thread):
                         connect.send(b'start listener.')
                     elif command == b'3':
                         self.block = not self.block
-                        logger.info('command exit. listener block state: {}'.format(self.block), 'Listener')
+                        if self.block:
+                            logger.info('command paused. listener block state: {}'.format(self.block), 'Listener')
+                        else:
+                            logger.info('command start. listener block state: {}'.format(self.block), 'Listener')
+
                         connect.send(str(int(self.block)).encode('utf-8'))
                     else:
                         connect.send(b'no state.')
@@ -142,8 +144,6 @@ class Listener(threading.Thread):
                 print('connect exit.')
             finally:
                 connect.close()
-
-        self.stop = True
 
     def __del__(self):
         self.socket.close()

@@ -25,7 +25,7 @@ def _socket_connect(msg, port, timeout=0.1):
         s.close()
 
 
-def block_listener(port):
+def change_state(port):
     data = _socket_connect(msg=3, port=port)
     return bool(int(data))
 
@@ -56,9 +56,25 @@ def port_connect_test(port):
     return False
 
 
+def port_bind_test(port):
+    s = socket.socket()
+    s.settimeout(0.1)
+    host = '127.0.0.1'
+
+    try:
+        s.bind((host, port))
+    except OSError as ose:
+        if 'WinError 10048' in str(ose):
+            return True
+    else:
+        return False
+    finally:
+        s.close()
+
+
 # FIXME: connect reply
 class Listener(threading.Thread):
-    block: bool = True
+    state: bool = True
     output: str = None
     port: int = 52000
     socket: socket.socket
@@ -69,23 +85,18 @@ class Listener(threading.Thread):
 
         _socket = socket.socket()
 
-        host = '127.0.0.1'
-        while port_connect_test(port) and port < 52100:
+        while port_bind_test(port) and port < 52100:
             port += 1
-
-        _socket.bind((host, port))
-        _socket.listen(5)
 
         self.setDaemon(True)
         # property
-        # TODO: refactor. too many property
-        self.block = True
-        self.output = 'output'
         self.port = port
         self.socket = _socket
-        self.wait = False
 
-        self.start()
+        # TODO: refactor. too many property
+        self.output = 'output'
+        self.state = True
+        self.wait = False
 
     @property
     def active(self):
@@ -100,7 +111,24 @@ class Listener(threading.Thread):
             time.sleep(0.2)
         assert timeout, 'wait timeout'
 
+    @property
+    def finished(self):
+        """
+        case 1: before thread start. is_alive -> False & active -> True
+        case 2: thread running. is_alive -> True & active -> True
+        case 3: thread done. is_alive -> False * active -> False
+
+        case 1 & 2 -> False.
+        case 3 -> True
+        """
+        if self.is_alive() or self.active:
+            return True
+        return False
+
     def run(self) -> None:
+        self.socket.bind((('127.0.0.1', self.port)))
+        self.socket.listen(5)
+
         connect_loop_flag = True
         # print('start listening.', self.port)
 
@@ -124,13 +152,13 @@ class Listener(threading.Thread):
                         logger.info('start listener', 'Listener')
                         connect.send(b'start listener.')
                     elif command == b'3':
-                        self.block = not self.block
-                        if self.block:
-                            logger.info('command paused. listener block state: {}'.format(self.block), 'Listener')
+                        self.state = not self.state
+                        if self.state:
+                            logger.info('command paused. listener block state: {}'.format(self.state), 'Listener')
                         else:
-                            logger.info('command start. listener block state: {}'.format(self.block), 'Listener')
+                            logger.info('command start. listener block state: {}'.format(self.state), 'Listener')
 
-                        connect.send(str(int(self.block)).encode('utf-8'))
+                        connect.send(str(int(self.state)).encode('utf-8'))
                     else:
                         connect.send(b'no state.')
 

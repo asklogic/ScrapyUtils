@@ -84,10 +84,11 @@ def set_line(line):
     Wrapper.line = line
 
 
-def set_log_file_name(name):
-    if not '.out' in name:
-        name = name + '.out'
-    fh = logging.FileHandler(filename=name)
+def set_log_file_name(file_name):
+
+    if not '.out' in file_name:
+        file_name = file_name + '.out'
+    fh = logging.FileHandler(filename=file_name)
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%m/%d %H:%M:%S'))
 

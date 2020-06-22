@@ -2,28 +2,29 @@ import unittest
 import socket
 import time
 
-from base.listen import Listener, stop_listener, get_output, _socket_connect
+from base.listen import Listener, stop_listener, get_output, port_connect_test, port_bind_test
 
 
 class TestCaseListener(unittest.TestCase):
     def test_demo(self):
         listener = Listener()
 
+        assert listener.is_alive() is False
+
+        listener.start()
+
         assert listener.port == 52000
-        assert listener.stop is False
+        assert listener.is_alive() is True
 
         assert stop_listener(52000) is True
 
         # need some time to receive
         time.sleep(0.2)
-        assert listener.stop is True
+        assert listener.is_alive() is False
 
     def test_init_port(self):
         listener = Listener(52002)
-
         assert listener.port == 52002
-        assert listener.stop is False
-
 
     def test_property_socket(self):
         listener = Listener()
@@ -31,9 +32,13 @@ class TestCaseListener(unittest.TestCase):
         assert listener.socket
         assert isinstance(listener.socket, socket.socket)
 
-    def test_property_active(self):
+    def test_property_state(self):
         listener = Listener()
 
+        assert listener.state is True
+
+    def test_property_active(self):
+        listener = Listener()
         assert listener.active is True
 
     def test_method_set_output(self):
@@ -50,6 +55,8 @@ class TestCaseListener(unittest.TestCase):
 
     def test_function_get_output(self):
         listener = Listener()
+        listener.start()
+
         output = 'lianjia-' + str(int(time.time())) + '.out'
         listener.set_output(output)
 
@@ -57,8 +64,8 @@ class TestCaseListener(unittest.TestCase):
         assert get_output(listener.port) == output
 
     def test_function_stop_listener(self):
-
         listener = Listener()
+        listener.start()
 
         assert listener.is_alive()
 
@@ -67,7 +74,6 @@ class TestCaseListener(unittest.TestCase):
         time.sleep(1)
 
         assert listener.is_alive() is False
-
 
     @unittest.skip
     def test_property_active_false(self):

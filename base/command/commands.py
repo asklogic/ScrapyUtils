@@ -14,10 +14,11 @@ def cli():
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
 @click.option('line', '--line', default=3)
 @click.option('-p', '--port', 'port', type=int)
-@click.option('--confirm', is_flag=True)
-@click.option('-b', '--background/--no-background', 'background', is_flag=True)
-def thread(scheme: str, path, line, confirm, port, background):
-    trigger('thread', scheme=scheme, path=path, line=line, confirm=confirm, port=port, background=background)
+@click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
+@click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
+@click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
+def thread(scheme: str, path, line, confirm, port, background, log):
+    trigger(command='thread', scheme=scheme, path=path, line=line, confirm=confirm, port=port, background=background, log=log)
 
 
 @click.command()

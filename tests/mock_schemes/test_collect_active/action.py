@@ -6,6 +6,10 @@ from base.libs import Task
 @active
 class Actived(ActionStep):
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         return self.scraper.get(task.url)
 
 

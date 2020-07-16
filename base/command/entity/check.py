@@ -8,6 +8,10 @@ from base import core
 from . import Command
 
 def _detail_info(setting) -> str:
+    """
+    Args:
+        setting:
+    """
     prepare = 'Selected Prepare: {} - {}'.format(setting.CurrentPrepare.get_name(), str(setting.CurrentPrepare))
     model = core.components_detail(setting.CurrentModels, 'Model')
     scheme = core.components_detail(setting.CurrentSchemeList, 'Scheme')
@@ -16,6 +20,10 @@ def _detail_info(setting) -> str:
 
 
 def _base_info(setting) -> str:
+    """
+    Args:
+        setting:
+    """
     target = 'target name: {}'.format(setting.Target)
     thread = 'thread: {}'.format(base.command.commands.thread)
 

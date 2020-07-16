@@ -21,13 +21,26 @@ class Download(Thread):
     def command_config(cls, **kwargs):
 
         # TODO: refactor
+        """
+        Args:
+            **kwargs:
+        """
         global file_type
         if kwargs.get('file_type', 'html'):
             file_type = str(kwargs.get('file_type', 'html'))
 
+        if kwargs.get('download'):
+            cls.config['download_target'] = kwargs.get('download')
+
     @classmethod
     def command_components(cls, steps: List[type(ActionStep)], processors: List[type(ParseStep)], **kwargs):
 
+        """
+        Args:
+            steps:
+            processors:
+            **kwargs:
+        """
         last_action = 0
 
         for index in range(len(steps)):
@@ -44,15 +57,24 @@ class Download(Thread):
 
 
 class DownloadAction(ActionStep):
+    """add page_name"""
 
     def scraping(self, task: Task):
         # if url. parse and get uri
-        path = urlparse(task.url).path
+        """
+        Args:
+            task (Task):
+        """
+        path: str = urlparse(task.url).path
 
-        page_name = path.split('/')[-1]
+        if path.count(r'/') > 1:
+            page_name = path.split('/')[-1]
+        else:
+            page_name = path
 
-        if not self.context.get('page_name'):
-            self.context['page_name'] = page_name
+        # TODO: get page_name from Task
+
+        self.context['page_name'] = page_name
 
 
 class DownloadParse(ParseStep):
@@ -70,6 +92,10 @@ class DownloadProcessor(Processor):
     target = DownloadModel
 
     def __init__(self, config: dict = None):
+        """
+        Args:
+            config (dict):
+        """
         super().__init__(config)
 
         # download folder.
@@ -79,7 +105,8 @@ class DownloadProcessor(Processor):
             os.mkdir(self.download_folder)
 
         # create download target folder.
-        self.download_name = str(int(time.time()))
+
+        self.download_name = config.get('download_target', str(int(time.time())))
 
         self.current_download_path = os.path.join(self.download_folder, self.download_name)
         if not os.path.isdir(self.current_download_path):
@@ -100,6 +127,10 @@ class DownloadProcessor(Processor):
         #     name = os.path.join(self.current_download_path, str(model.page_name) + str(self.download_index))
         #     self.download_index += 1
 
+        """
+        Args:
+            model (DownloadModel):
+        """
         name = os.path.join(self.current_download_path, ''.join((str(model.page_name), '.', file_type)))
         while os.path.exists(name):
             self.download_index += 1

@@ -6,6 +6,10 @@ class First(ActionStep):
     priority = 700
 
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         return self.scraper.get(task.url)
 
 

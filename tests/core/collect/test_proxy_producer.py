@@ -16,6 +16,11 @@ url = 'http://ip.11jsq.com/index.php/api/entry?method=proxyServer.generate_api_u
 
 def rebuild_url(url: str, query_dict: dict):
     # TODO: assert
+    """
+    Args:
+        url (str):
+        query_dict (dict):
+    """
     assert type(url) is str, 'type'
     assert type(query_dict) is dict, 'type'
 
@@ -33,8 +38,10 @@ def rebuild_url(url: str, query_dict: dict):
 
 
 def proxy_generation(url):
-    """
-    url from profile.
+    """url from profile.
+
+    Args:
+        url:
     """
 
     r = RequestScraper()

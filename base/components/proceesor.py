@@ -2,7 +2,6 @@ from abc import abstractmethod
 from typing import Any
 
 from base.components.base import ComponentMeta, Component
-from base.libs.setting import Setting
 from base.libs import Model
 
 
@@ -10,6 +9,12 @@ class ProcessorMeta(ComponentMeta):
 
     def __new__(cls, name, bases, attrs: dict):
         # default target : Model
+        """
+        Args:
+            name:
+            bases:
+            attrs (dict):
+        """
         if not attrs.get("target"):
             attrs["target"] = Model
         return super().__new__(cls, name, bases, attrs)
@@ -23,6 +28,10 @@ class Processor(Component, metaclass=ProcessorMeta):
     config: dict = None
 
     def __init__(self, config: dict = None):
+        """
+        Args:
+            config (dict):
+        """
         self.count: int = 0
         self.data = []
 
@@ -38,4 +47,8 @@ class Processor(Component, metaclass=ProcessorMeta):
 
     @abstractmethod
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         pass

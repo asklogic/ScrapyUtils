@@ -9,6 +9,10 @@ from base.libs import Model, Field
 class MockProcessor(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         pass
 
 

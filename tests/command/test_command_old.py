@@ -20,6 +20,11 @@ from click.testing import CliRunner
 # mock
 def mock_trigger(command, **kwargs):
     # get command class
+    """
+    Args:
+        command:
+        **kwargs:
+    """
     command: Command = command
 
     # register signal

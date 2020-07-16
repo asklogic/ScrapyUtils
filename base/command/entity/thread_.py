@@ -97,6 +97,7 @@ class Thread(Command, ComponentMixin):
 
     @classmethod
     def failed(cls):
+        # TODO: failed in command thread
         # [x.stop() for x in cls.consumers]
 
         # [x.scraper.scraper_quit() for x in cls.suits]
@@ -105,7 +106,10 @@ class Thread(Command, ComponentMixin):
 
     @classmethod
     def finished(cls):
-        return cls.tasks.qsize() == 0 and not [None for consumer in cls.consumers if not consumer.block]
+        case_empty = cls.tasks.qsize() == 0
+        case_block = [None for consumer in cls.consumers if not consumer.block] == []
+        return case_empty and case_block
+        # return case_empty and not [None for consumer in cls.consumers if not consumer.block]
         # return not (cls.tasks.qsize() > 0 or [None for consumer in cls.consumers if not consumer.block])
 
 

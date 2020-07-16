@@ -12,6 +12,10 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 class FailedAction(ActionStep):
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         raise Exception('failed.')
 
 
@@ -22,6 +26,10 @@ class FailedParse(ParseStep):
 
 class Single(ActionStep):
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         return self.scraper.get(task.url)
 
 
@@ -35,16 +43,28 @@ thread_pool = ThreadPool(5)
 
 
 def callback(ojb):
+    """
+    Args:
+        ojb:
+    """
     assert ojb
     # raise Exception()
     pass
 
 
 def error_callback(obj):
+    """
+    Args:
+        obj:
+    """
     assert obj
 
 
 def assert_callback(args):
+    """
+    Args:
+        args:
+    """
     assert type(args[0]) is bool
     assert isinstance(args[1], Task)
 
@@ -101,9 +121,7 @@ class StepSuitScrapyTestCase(unittest.TestCase):
 
     @unittest.skip
     def test_scrapy_content(self):
-        """
-        content and models.
-        """
+        """content and models."""
         suit = StepSuit([Single, Tasks], collect.scrapers)
         suit.suit_activate()
 
@@ -114,9 +132,7 @@ class StepSuitScrapyTestCase(unittest.TestCase):
 
     @unittest.skip
     def test_scrapy_failed(self):
-        """
-        interrupt.
-        """
+        """interrupt."""
         suit = StepSuit([Single, FailedAction, Tasks], collect.scrapers)
         suit.suit_activate()
 

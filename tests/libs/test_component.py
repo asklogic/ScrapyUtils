@@ -15,8 +15,7 @@ from tests.telescreen import schemes_path
 class MyTestCase(unittest.TestCase):
 
     def test_property(self):
-        """
-        component common property
+        """component common property
 
         active
         """
@@ -68,21 +67,15 @@ class MyTestCase(unittest.TestCase):
         assert CustomProcessor().name == 'CustomProcessor'
 
     def test_step_property(self):
-        """
-        to test_step_base.py
-        """
+        """to test_step_base.py"""
         pass
 
     def test_processor_property(self):
-        """
-        to test_processor.py
-        """
+        """to test_processor.py"""
         pass
 
     def test_priority(self):
-        """
-        property priority
-        """
+        """property priority"""
 
         # default processor priority: 500
         # default action priority: 600
@@ -142,9 +135,7 @@ class MyTestCase(unittest.TestCase):
         assert processors[0].name == 'Count'
 
     def test_collect(self):
-        """
-        collect step in command
-        """
+        """collect step in command"""
         atom = os.path.join(schemes_path, 'atom')
         actions = collect(atom, 'action.py', ActionStep)
 

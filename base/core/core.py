@@ -11,10 +11,8 @@ import importlib
 from queue import Queue
 
 from base.log import logger
-from base.libs.setting import Setting
 from base.components.base import Component, ComponentMeta
 from base.libs.task import Task, TaskModel
-from base.components.prepare import Prepare
 from base.libs import Model, Scraper, RequestScraper
 from base.components.scheme import Action, Parse, Scheme
 from base.components.proceesor import Processor
@@ -48,7 +46,7 @@ def load_files(target_name: str) -> List[ModuleType]:
     return target_modules
 
 
-def load_components(target_name: str = None) -> Tuple[Prepare, List[Scheme], List[Model], List[Processor]]:
+def load_components(target_name: str = None) -> Tuple[List[Scheme], List[Model], List[Processor]]:
     # search modules in target dir
     target_modules = load_files(target_name)
 
@@ -73,28 +71,7 @@ def load_components(target_name: str = None) -> Tuple[Prepare, List[Scheme], Lis
     return prepares, schemes, models, processors
 
 
-def build_setting(target: str) -> Setting:
-    # 1. Setting object
-    # default setting in Setting class property
-    setting = Setting()
-    setting.Target = target
 
-    # 2. load config.py
-
-    try:
-        config = __import__('config')
-        setting.load_config(config)
-    except ModuleNotFoundError as mnfe:
-        warnings.warn('there is not config.py')
-
-    # 3. load and check components
-    components = load_components(target)
-    setting.check_components(components)
-
-    # 4. add default and check prepare
-    setting.default()
-
-    return setting
 
 
 def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
@@ -114,14 +91,6 @@ def load_context(task: Task, schemes: List[Scheme]):
         for key, item in task.param.items():
             schemes[0].context[key] = item
 
-
-def build_thread_prepare(prepare: Prepare, thread: int) -> Tuple[List[Scraper], List[Task]]:
-    tasks = prepare.get_tasks()
-    scrapers: List[Scraper] = []
-    for i in range(thread):
-        thread_scraper: Scraper = prepare.get_scraper()
-        scrapers.append(thread_scraper)
-    return scrapers, tasks
 
 
 def build_thread_schemes(schemes: List[Scheme], thread: int) -> List[List[Scheme]]:
@@ -171,24 +140,6 @@ def _load_component(module, component: type) -> List[type]:
             res.append(f)
     return res
 
-
-def build_prepare(prepare: Prepare) -> Tuple[type(Scraper), List[Task]]:
-    try:
-        scraper = prepare.get_scraper()
-        tasks = prepare.get_tasks()
-    except Exception as e:
-        logger.exception(e)
-        raise Exception('build_prepare failed')
-    return scraper, tasks
-
-
-def generate_task(prepare: Prepare) -> List[Task]:
-    task = prepare.get_tasks()
-
-    if not task:
-        logger.warning("[Config] prepare must yield tasks")
-        raise TypeError("[Config] build_prepare error")
-    return task
 
 
 

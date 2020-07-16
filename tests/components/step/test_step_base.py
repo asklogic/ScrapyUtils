@@ -15,6 +15,10 @@ class ItemTest(Model):
 class SimpleAction(ActionStep):
 
     def scraping(self, task):
+        """
+        Args:
+            task:
+        """
         return 'info'
 
 
@@ -34,6 +38,10 @@ class IpModel(Model):
 
 class SingleAction(ActionStep):
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         return self.scraper.get(task.url)
 
 
@@ -59,10 +67,7 @@ class ParseIp(ParseStep):
 # test_failed_init:
 
 class TestStep(unittest.TestCase):
-    """
-    TODO: base step unittest
-
-    """
+    """TODO: base step unittest"""
 
     def setUp(self) -> None:
         r = RequestScraper()

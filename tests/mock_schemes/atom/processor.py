@@ -8,6 +8,10 @@ from base.libs import Model
 class Count(Processor):
     count = 0
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         self.count += 1
         print(model.name, model.pure_data)
 

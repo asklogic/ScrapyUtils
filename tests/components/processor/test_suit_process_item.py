@@ -9,17 +9,29 @@ from base.libs import Model, Field
 class Count(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         self.count += 1
 
 
 class ContinueProcessor(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         pass
 
 
 class Abort(Processor):
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         return False
 
 

@@ -21,6 +21,10 @@ class Single(Command):
         #
         # path = os.path.join(path, scheme)
         # assert os.path.exists(path), path + ' not exist'
+        """
+        Args:
+            **kwargs:
+        """
         pass
 
     def run(self):
@@ -64,6 +68,11 @@ class Single(Command):
         return '[Single]'
 
     def signal_callback(self, signum, frame):
+        """
+        Args:
+            signum:
+            frame:
+        """
         print('signal_callback')
 
     def failed(self):

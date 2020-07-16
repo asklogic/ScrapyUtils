@@ -20,6 +20,10 @@ PROXY_DICT = {
 # generator your tasks in here.
 
 def generate_tasks(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     for i in range(10):
         t = Task(url='http://ip.cn')
         yield t
@@ -28,6 +32,10 @@ def generate_tasks(**kwargs):
 # setting your scraper here.
 # default scraper is RequestScraper.
 def generate_scraper(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     f = FireFoxScraper()
     f.image = True
     f.headless = False

@@ -17,6 +17,11 @@ headers = {
 
 
 def xpathParse(htmlContent: str, xpathContent: str) -> List[str]:
+    """
+    Args:
+        htmlContent (str):
+        xpathContent (str):
+    """
     assert bool(htmlContent), "empty content"
     assert bool(xpathContent), "empty xpath"
 
@@ -37,7 +42,46 @@ def xpathParse(htmlContent: str, xpathContent: str) -> List[str]:
     return pure_data
 
 
+class XpathParser(object):
+    etree: etree.HTML
+    single: bool = False
+
+    def __init__(self, html):
+        assert html, "empty content."
+        assert type(html) == str, "html content must be str."
+
+        self.etree = etree.HTML(html)
+
+    def xpath(self, xpath):
+        assert xpath, "empty xpath."
+        assert type(xpath) == str, "xpath content must be str."
+
+        result = self.etree.xpath(xpath)
+
+        pure_data = []
+        for el in result:
+            if isinstance(el, etree._ElementUnicodeResult):
+                el = str(el)
+                pure_data.append(el)
+            elif isinstance(el, etree._Element):
+                el = str(el.text)
+                pure_data.append(el)
+            else:
+                pure_data.append(el)
+
+        return pure_data
+
+    def origin_xpath(self, xpath):
+        return self.etree.xpath(xpath)
+
+
 def xpathParseList(htmlContent: str, xpathContent: str, separator: str = "") -> str:
+    """
+    Args:
+        htmlContent (str):
+        xpathContent (str):
+        separator (str):
+    """
     data = xpathParse(htmlContent, xpathContent)
 
     return separator.join(data)
@@ -45,6 +89,10 @@ def xpathParseList(htmlContent: str, xpathContent: str, separator: str = "") -> 
 
 # TODO
 def jinglin(number):
+    """
+    Args:
+        number:
+    """
     status_code = 1000
     r = None
     while status_code > 300:
@@ -62,9 +110,6 @@ def jinglin(number):
     proxyList = r.content.decode("utf-8").split("\r\n")
 
     return proxyList
-
-
-
 
 # def rebuild_duplication_info(rdb: redis.Redis, table: peewee.Model, primary_key: str, duplicated: list, key):
 #     all_key = []

@@ -26,9 +26,7 @@ class TestCollectPreloadTestCase(unittest.TestCase):
         collect_scheme_preload('test_preload')
 
     def test_variable(self):
-        """
-        import before preload.
-        """
+        """import before preload."""
         assert steps_class is None
         assert processors_class is None
         assert scraper_callable is None

@@ -16,4 +16,8 @@ class Test_instableParse(ParseStep):
         yield m
 
     def check(self, models: List[Model]):
+        """
+        Args:
+            models:
+        """
         pass

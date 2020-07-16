@@ -1,3 +1,4 @@
+import click
 import os
 import sys
 import subprocess
@@ -9,12 +10,17 @@ from base.command import Command, get_command_type
 
 from base.log import set_log_file_name, set_syntax
 
-from base.log import Wrapper as logger
+from base.log import common as log
+from base.log import basic
 from base.listen import Listener, get_output, start_listener, port_connect_test
 
 
 class Tail(Thread):
     def __init__(self, file_path):
+        """
+        Args:
+            file_path: log out file's absolute path
+        """
         Thread.__init__(self)
 
         self.setDaemon(True)
@@ -38,18 +44,15 @@ class Tail(Thread):
                         break
 
 
-def get_available_port() -> int:
-    start_port = 53000
-    while port_connect_test(start_port) and start_port < 53100:
-        start_port += 1
-    return start_port
-
-
 listener = Listener()
 output: None or str = None
 
 
 def trigger(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     global listener, output
 
     # set log
@@ -57,57 +60,25 @@ def trigger(**kwargs):
 
     set_syntax(command.syntax())
 
-
     if kwargs.get('background'):
         port = get_available_port()
-
-        print('starting listenner at {}'.format(port))
 
         start_subprocess(kwargs.get('command'), kwargs.get('scheme'), port)
 
         output = get_subprocess_output(port)
 
-        time.sleep(0.5)
-
-        print('output:', output)
-        print('port:', port)
+        check_output(output)
 
         tail = Tail(output)
 
         assert start_listener(port), 'failed to start process.'
 
         # block
-        # main loop
-        # TODO: common block
-        try:
-            while tail.is_alive():
-
-                # inner loop
-                try:
-                    while tail.is_alive():
-                        time.sleep(0.1)
-
-                except KeyboardInterrupt as e:
-                    # except inner ctrl-c
-                    pass
-
-                # double ctrl-c delay
-                time.sleep(0.618)
-
-                print('paused.')
-                # TODO: tail paused
-
-                print('TODO')
-                # TODO: command
+        blocking(tail.is_alive, tail.is_alive)
 
 
-        except KeyboardInterrupt as ke:
-            # except another ctrl-c.
-            print('Aborted by two ctrl-c request.')
-
-        # FIXME: what's wrong with pyinstaller?
-        sys.exit(0)
     else:
+        # TODO: refactor
         init_output(**kwargs)
 
         init_listener(**kwargs)
@@ -116,37 +87,35 @@ def trigger(**kwargs):
 
         # main command run
         if not command.command_run(**kwargs):
-            # TODO: failed and exit
-            logger.info('failed in command_run. exiting...')
+            log.info('failed in command_run. exiting...')
             command.failed()
             return False
 
         # TODO: listener paused.
-        # blocking
-        # TODO: common block
-        # double loop
-        while not command.finished() and listener.finished:
-            time.sleep(0.2)
+
+        # block
+        finish_case = lambda: not command.finished() and listener.finished
+        blocking(finish_case, finish_case)
 
         command.exit()
 
+        # if not command.config.get('keep_log') and kwargs.get('log'):
+        #     pass
+            # TODO: remove output
+            # log.info('Deleted output. {}'.format(output))
+            # if os.path.exists(output):
+            #     os.remove(output)
 
-def init_listener(**kwargs):
-    global output
-    if kwargs.get('port'):
-        listener.port = kwargs.get('port')
-        listener.start()
-        assert kwargs.get('port') == listener.port
+    # FIXME: what's wrong with pyinstaller?
 
-        if output:
-            listener.set_output(output)
-
-        print('listen:', listener.port)
-
-        sys.stdout = None
+    sys.exit(0)
 
 
 def init_output(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     global output
     log_file_name = '-'.join((kwargs.get('command'), kwargs.get('scheme'), str(int(time.time())))[-4:]) + '.out'
 
@@ -157,11 +126,34 @@ def init_output(**kwargs):
     output = os.path.join(os.getcwd(), kwargs.get('scheme'), log_file_name)
 
     if kwargs.get('port') or kwargs.get('log'):
-        print('output:', output)
+        basic.info('output: {}'.format(output))
         set_log_file_name(output)
 
 
+def init_listener(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
+    global output
+    if kwargs.get('port'):
+        listener.port = kwargs.get('port')
+        listener.start()
+        assert kwargs.get('port') == listener.port
+
+        if output:
+            listener.set_output(output)
+
+        basic.info('listen: {}'.format(listener.port))
+
+        sys.stdout = None
+
+
 def wait(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     if kwargs.get('confirm'):
         if listener.is_alive():
             listener.wait_to_start()
@@ -169,16 +161,60 @@ def wait(**kwargs):
             input('press any key to continue.')
 
 
+def get_available_port() -> int:
+    start_port = 53000
+    while port_connect_test(start_port) and start_port < 53100:
+        start_port += 1
+
+    log.info('port: {}'.format(start_port))
+    return start_port
+
+
+def blocking(loop_case, inner_case=None, loop_delay=0.1):
+    """
+    Args:
+        loop_case:
+        inner_case:
+        loop_delay:
+    """
+    assert callable(loop_case), 'block case must be callable'
+    assert callable(inner_case), 'block case must be callable'
+
+    try:
+        while loop_case():
+            try:
+                while inner_case():
+                    time.sleep(loop_delay)
+            except KeyboardInterrupt as e:
+                print('paused.')
+                pass
+            # double ctrl-c delay
+            time.sleep(0.618)
+
+            # TODO: tail paused
+    except KeyboardInterrupt as ke:
+        # except another ctrl-c.
+        print('Aborted by two ctrl-c request.')
+
+
 def start_subprocess(command_name, scheme, port):
-    executable = r'C:\Python38\pythonw'
-
+    """
+    Args:
+        command_name:
+        scheme:
+        port:
+    """
     port = '--port=' + str(port)
-    cmd_list = [executable, command_name, scheme, port, '--no-background', '--log', '-c']
 
-    if 'python.exe' in sys.executable:
-        cmd_list.insert(1, 'trigger.py')
+    if getattr(sys, 'frozen', False):
+        cmd_list = [sys.executable, command_name, scheme, port, '--no-background', '--log', '-c']
+
+    else:
+        executable = sys.executable
+        cmd_list = [executable, 'trigger.py', command_name, scheme, port, '--no-background', '--log', '-c']
 
     print(cmd_list)
+
     p = subprocess.Popen(cmd_list,
                          shell=True,
                          # startupinfo=startupinfo,
@@ -194,14 +230,35 @@ def start_subprocess(command_name, scheme, port):
 
 
 def get_subprocess_output(port):
-    count = 0
+    """
+    Args:
+        port:
+    """
     output = get_output(port)
-    while count < 5 and not output:
-        print('failed to get output from port: {}'.format(str(port)))
-        count += 1
+    connect_count = 0
+    while connect_count < 5 and not output:
+        log.debug('failed to get output from port: {}'.format(str(port)))
+        connect_count += 1
+
         output = get_output(port)
+
     assert output, 'failed to get output.'
+    log.info('output: {}'.format(output))
+
     return output
+
+
+def check_output(output):
+    """
+    Args:
+        output:
+    """
+    exist_count = 0
+    while not os.path.exists(output) and exist_count < 6:
+        time.sleep(0.5)
+
+    assert os.path.exists(output), 'output file not exist.'
+    log.debug('output file checked.')
 
 
 if __name__ == '__main__':

@@ -9,25 +9,18 @@ from base.libs.threads import BaseThread
 class MyTestCase(unittest.TestCase):
 
     def test_property_is_alive(self):
-        """
-        start thread in __init__
-        threading.Thread property : alive
-        """
+        """start thread in __init__ threading.Thread property : alive"""
         base = BaseThread()
         assert base.is_alive() is True
 
     def test_property_daemon(self):
-        """
-        threading.Thread property : daemon
-        """
+        """threading.Thread property : daemon"""
 
         base = BaseThread()
         assert base.daemon is True
 
     def test_property_event_isset(self):
-        """
-        BaseThreading property : event
-        """
+        """BaseThreading property : event"""
         base = BaseThread()
         assert base.event.is_set() is False
 
@@ -39,9 +32,8 @@ class MyTestCase(unittest.TestCase):
         assert base.event.is_set() is False
 
     def test_init_event_default(self):
-        """
-        parameter : event
-        critical: same event. start and stop keep the same action.s
+        """parameter : event critical: same event. start and stop keep the same
+        action.s
         """
 
         base1 = BaseThread()
@@ -50,9 +42,7 @@ class MyTestCase(unittest.TestCase):
         assert id(base1.event) == id(base2.event)
 
     def test_init_event(self):
-        """
-        property : _stopped_event
-        """
+        """property : _stopped_event"""
         import threading
         event = threading.Event()
 
@@ -69,18 +59,13 @@ class MyTestCase(unittest.TestCase):
         assert 'need event instance.' in str(e.exception)
 
     def test_init_kw_name(self):
-        """
-        property kwargs : name
-        """
+        """property kwargs : name"""
         n = BaseThread(**{'name': 'custom_name'})
         assert n.getName() == 'custom_name'
 
     @unittest.skip
     def test_method_run(self):
-        """
-        stop at once.
-        TODO: fixme
-        """
+        """stop at once. TODO: fixme"""
 
         class Custom(BaseThread):
             def run(self):
@@ -98,9 +83,7 @@ class MyTestCase(unittest.TestCase):
         assert custom.is_alive() is False
 
     def test_method_stop(self):
-        """
-        block till stopped is True
-        """
+        """block till stopped is True"""
         base = BaseThread()
         base.start(True)
 

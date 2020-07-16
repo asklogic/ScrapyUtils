@@ -1,13 +1,18 @@
 from abc import abstractmethod
 from typing import List, Iterable
 
-from base.log import Wrapper as log
+from . import log
 
 
 class ComponentMeta(type):
 
     def __init__(cls, *args, **kwargs):
         # TODO: init in type
+        """
+        Args:
+            *args:
+            **kwargs:
+        """
         attr = args[2]
         cls._name = attr['_name']
         cls._active = attr['_active']
@@ -21,6 +26,12 @@ class ComponentMeta(type):
         return cls._active
 
     def __new__(mcs, name, bases, attrs: dict):
+        """
+        Args:
+            name:
+            bases:
+            attrs (dict):
+        """
         attrs["_name"] = name
 
         if attrs.get("_active") is None:
@@ -59,6 +70,11 @@ class ComponentSuit(object):
     config: dict = None
 
     def __init__(self, components: List[type(Component)], config: dict = None):
+        """
+        Args:
+            components:
+            config (dict):
+        """
         assert isinstance(components, Iterable)
         for component in components:
             # assert isinstance(processor, Processor), 'Processor must be init'
@@ -104,9 +120,17 @@ class ComponentSuit(object):
 
 
 def active(component_class: type(Component)):
+    """
+    Args:
+        component_class:
+    """
     component_class._active = True
     return component_class
 
 
 def set_active(component_class: type(Component)):
+    """
+    Args:
+        component_class:
+    """
     component_class._active = True

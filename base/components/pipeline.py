@@ -9,7 +9,7 @@ from .proceesor import Processor
 from .base import ComponentSuit
 from base.libs.model import Model
 
-from base.log import Wrapper as log
+from . import log
 
 
 class ProcessorSuit(ComponentSuit):
@@ -23,6 +23,10 @@ class ProcessorSuit(ComponentSuit):
         return self._components
 
     def process(self, model):
+        """
+        Args:
+            model:
+        """
         current = model
         next_model = None
         try:
@@ -52,6 +56,12 @@ class ProcessorSuit(ComponentSuit):
 class PipelineConsumer(Consumer):
 
     def __init__(self, failed: deque, suit: ProcessorSuit, **kwargs):
+        """
+        Args:
+            failed (deque):
+            suit (ProcessorSuit):
+            **kwargs:
+        """
         Consumer.__init__(self,
                           kwargs.pop('queue', Queue()),
                           kwargs.pop('delay', 1),
@@ -71,6 +81,10 @@ class PipelineConsumer(Consumer):
         return self._failed
 
     def consuming(self, model: Model):
+        """
+        Args:
+            model (Model):
+        """
         if not self.suit.process(model=model):
             self._failed.append(model)
 
@@ -83,6 +97,10 @@ class Pipeline(object):
     consumer: PipelineConsumer
 
     def __init__(self, suit: ProcessorSuit) -> None:
+        """
+        Args:
+            suit (ProcessorSuit):
+        """
         self._queue = Queue()
         self._failed = deque()
 
@@ -109,6 +127,10 @@ class Pipeline(object):
         return self._suit
 
     def push(self, obj):
+        """
+        Args:
+            obj:
+        """
         self.queue.put_nowait(obj)
 
     def size(self) -> int:
@@ -119,6 +141,10 @@ class Pipeline(object):
 
     def exit(self, timeout: int = 1):
 
+        """
+        Args:
+            timeout (int):
+        """
         while timeout > 0 and self.queue.qsize() > 0:
             timeout = timeout - 0.1
             time.sleep(0.1)

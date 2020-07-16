@@ -17,6 +17,10 @@ PROXY_URL = ''
 # generator your tasks in here.
 
 def generate_tasks(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     for i in range(20):
         t = Task(url='http://yoursite.com')
         yield t
@@ -25,6 +29,10 @@ def generate_tasks(**kwargs):
 # setting your scraper here.
 # default scraper is RequestScraper.
 def generate_scraper(**kwargs):
+    """
+    Args:
+        **kwargs:
+    """
     pass
 
 

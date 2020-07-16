@@ -58,9 +58,7 @@ class TestScraper(TestCase):
         assert 'success info' in content
 
     def test_request_property(self):
-        """
-        RequestScraper property
-        """
+        """RequestScraper property"""
         # ----------------------------------------------------------------------
         # property : activated
 
@@ -80,10 +78,8 @@ class TestScraper(TestCase):
 
     # http status
     def test_400_response(self):
-        """
-        http state: 400
-        raise Exception if http response status greater than status code in get method
-        default status is 300
+        """http state: 400 raise Exception if http response status greater than
+        status code in get method default status is 300
         """
         r = self.r
 

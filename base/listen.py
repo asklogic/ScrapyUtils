@@ -2,10 +2,16 @@ import socket
 import threading
 import time
 
-from base.log import Wrapper as logger
+from .log import common as log
 
 
 def _socket_connect(msg, port, timeout=0.1):
+    """
+    Args:
+        msg:
+        port:
+        timeout:
+    """
     msg = str(msg)
     assert isinstance(msg, str), 'msg must str'
 
@@ -26,11 +32,19 @@ def _socket_connect(msg, port, timeout=0.1):
 
 
 def change_state(port):
+    """
+    Args:
+        port:
+    """
     data = _socket_connect(msg=3, port=port)
     return bool(int(data))
 
 
 def start_listener(port):
+    """
+    Args:
+        port:
+    """
     data = _socket_connect(msg=1, port=port)
     if data == 'start listener.':
         return True
@@ -38,6 +52,10 @@ def start_listener(port):
 
 
 def stop_listener(port):
+    """
+    Args:
+        port:
+    """
     data = _socket_connect(msg=0, port=port)
 
     if data == 'stop listener.':
@@ -45,11 +63,19 @@ def stop_listener(port):
 
 
 def get_output(port) -> str or False:
+    """
+    Args:
+        port:
+    """
     data = _socket_connect(msg=2, port=port, timeout=1)
     return data
 
 
 def port_connect_test(port):
+    """
+    Args:
+        port:
+    """
     data = _socket_connect(msg=9, port=port)
     if isinstance(data, str):
         return True
@@ -57,6 +83,10 @@ def port_connect_test(port):
 
 
 def port_bind_test(port):
+    """
+    Args:
+        port:
+    """
     s = socket.socket()
     s.settimeout(0.1)
     host = '127.0.0.1'
@@ -81,6 +111,10 @@ class Listener(threading.Thread):
     wait: bool = False
 
     def __init__(self, port=52000):
+        """
+        Args:
+            port:
+        """
         threading.Thread.__init__(self)
 
         _socket = socket.socket()
@@ -103,9 +137,17 @@ class Listener(threading.Thread):
         return not self.socket._closed
 
     def set_output(self, output: str):
+        """
+        Args:
+            output (str):
+        """
         self.output = output
 
     def wait_to_start(self, timeout=100):
+        """
+        Args:
+            timeout:
+        """
         while not self.wait:
             timeout -= 1
             time.sleep(0.2)
@@ -113,13 +155,11 @@ class Listener(threading.Thread):
 
     @property
     def finished(self):
-        """
-        case 1: before thread start. is_alive -> False & active -> True
-        case 2: thread running. is_alive -> True & active -> True
-        case 3: thread done. is_alive -> False * active -> False
+        """case 1: before thread start. is_alive -> False & active -> True case
+        2: thread running. is_alive -> True & active -> True case 3: thread
+        done. is_alive -> False * active -> False
 
-        case 1 & 2 -> False.
-        case 3 -> True
+        case 1 & 2 -> False. case 3 -> True
         """
         if self.is_alive() or self.active:
             return True
@@ -138,25 +178,25 @@ class Listener(threading.Thread):
                 command = connect.recv(1024)
                 while True:
                     if command == b'0':
-                        logger.info('stop listener', 'Listener')
+                        log.info('stop listener', 'Listener')
                         connect.send(b'stop listener.')
                         break
                     elif command == b'9':
                         print('test_connect')
                         connect.send(b'scraping scheme')
                     elif command == b'2':
-                        logger.info('get output file', 'Listener')
+                        log.info('get output file', 'Listener')
                         connect.send(self.output.encode('utf-8'))
                     elif command == b'1':
                         self.wait = True
-                        logger.info('start listener', 'Listener')
+                        log.info('start listener', 'Listener')
                         connect.send(b'start listener.')
                     elif command == b'3':
                         self.state = not self.state
                         if self.state:
-                            logger.info('command paused. listener block state: {}'.format(self.state), 'Listener')
+                            log.info('command paused. listener block state: {}'.format(self.state), 'Listener')
                         else:
-                            logger.info('command start. listener block state: {}'.format(self.state), 'Listener')
+                            log.info('command start. listener block state: {}'.format(self.state), 'Listener')
 
                         connect.send(str(int(self.state)).encode('utf-8'))
                     else:

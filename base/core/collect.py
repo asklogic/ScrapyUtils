@@ -11,7 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from base.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline, ProcessorSuit
 from base.libs import Scraper, RequestScraper, Proxy, MultiProducer, Producer
-from base.log import Wrapper
+from base.log import common
+from base.log import basic
 
 # global:
 # *******************************************************************************
@@ -39,7 +40,7 @@ processor_suit: ProcessorSuit = None
 models_pipeline: Pipeline = None
 
 # others
-log = Wrapper
+log = basic
 
 
 # *******************************************************************************
@@ -99,45 +100,39 @@ def collect_scheme_initial(**kwargs):
 
     global tasks, scrapers, proxy, config, step_suits, processor_suit, models_pipeline
 
-    try:
-        thread_num = config.get('thread')
+    thread_num = config.get('thread')
 
-        # ----------------------------------------------------------------------
-        # task queue : tasks_callable
-        tasks = Queue()
-        for task in tasks_callable():
-            tasks.put(task)
+    # ----------------------------------------------------------------------
+    # task queue : tasks_callable
+    tasks = Queue()
+    for task in tasks_callable():
+        tasks.put(task)
 
-        # ----------------------------------------------------------------------
-        # processor suits : List[ProcessorSuit]
-        processor_suit = ProcessorSuit(processors_class, config)
-        models_pipeline = Pipeline(processor_suit)
+    # ----------------------------------------------------------------------
+    # processor suits : List[ProcessorSuit]
+    processor_suit = ProcessorSuit(processors_class, config)
+    models_pipeline = Pipeline(processor_suit)
 
-        # if kwargs.get('confirm'):
-        #     input('Press any key to continue.')
+    # if kwargs.get('confirm'):
+    #     input('Press any key to continue.')
 
-        # ----------------------------------------------------------------------
-        # scrapers* : list[Scraper]
-        gen = _default_scraper(scraper_callable)
-        scrapers = list_builder(gen, thread_num, timeout=30)
+    # ----------------------------------------------------------------------
+    # scrapers* : list[Scraper]
+    gen = _default_scraper(scraper_callable)
+    scrapers = list_builder(gen, thread_num, timeout=30)
 
-        # ----------------------------------------------------------------------
-        # step suits : List[StepSuit]
-        step_suits = [StepSuit(scrapers[i], steps_class) for i in range(thread_num)]
+    # ----------------------------------------------------------------------
+    # step suits : List[StepSuit]
+    step_suits = [StepSuit(scrapers[i], steps_class) for i in range(thread_num)]
 
-        # ----------------------------------------------------------------------
-        # suit suit_start
-        [x.suit_start() for x in step_suits]
-        processor_suit.suit_start()
+    # ----------------------------------------------------------------------
+    # suit suit_start
+    [x.suit_start() for x in step_suits]
+    processor_suit.suit_start()
 
-        # ----------------------------------------------------------------------
-        # proxy : producer
-        proxy = build_proxy(config)
-
-
-    except Exception as e:
-        log.exception('Collect Initial', e)
-        raise Exception('collect initial interrupt.')
+    # ----------------------------------------------------------------------
+    # proxy : producer
+    proxy = build_proxy(config)
 
 
 def collect_scheme(scheme: str):
@@ -237,6 +232,9 @@ def collect_settings(module: ModuleType):
     load setting.py as a dict.
     """
     current_config = {}
+
+    # command settings
+    current_config['keep_log'] = getattr(module, 'KEEP_LOG', False)
 
     # implicit settings
     current_config['scheme_path'] = path.dirname(module.__file__)

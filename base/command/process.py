@@ -7,18 +7,22 @@ from . import command_map
 
 from base.core import *
 from base.exception import CommandExit
-from base.log import set_syntax, Wrapper as log
 
 
 def trigger(command_name: str, **kwargs):
     # get command class
+    """
+    Args:
+        command_name (str):
+        **kwargs:
+    """
     command: ComponentMixin or Command = command_map[command_name]
 
     set_syntax(command.syntax())
 
     # register signal
     # TODO: windows and linux
-    # FIXME: signal in windows(ctrl + c）can not exit FirefoxScraper
+    # FIXME: signal in windows(ctrl + c锛塩an not exit FirefoxScraper
     signal.signal(signal.SIGTERM, command.signal_callback)
     signal.signal(signal.SIGINT, command.signal_callback)
 
@@ -53,7 +57,7 @@ def trigger(command_name: str, **kwargs):
             if task:
                 set_task_callable(task)
 
-            command.command_logout()
+            command.command_collect_logout()
             # initial scheme
             collect_scheme_initial(**kwargs)
 
@@ -95,4 +99,8 @@ def trigger(command_name: str, **kwargs):
 
 
 def sys_exit(exitcode: int):
+    """
+    Args:
+        exitcode (int):
+    """
     sys.exit(exitcode)

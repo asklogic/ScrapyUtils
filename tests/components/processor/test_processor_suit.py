@@ -9,15 +9,27 @@ from base.libs import Model, Field
 class Blank(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         pass
 
     def __init__(self, config: dict = None):
+        """
+        Args:
+            config (dict):
+        """
         super().__init__(config)
 
 
 class MockInitFailed(Processor):
 
     def __init__(self, config: dict = None):
+        """
+        Args:
+            config (dict):
+        """
         super().__init__(config)
         raise Exception('mock exception.')
 

@@ -26,6 +26,11 @@ class Command(object):
     @classmethod
     @abstractmethod
     def signal_callback(self, signum, frame):
+        """
+        Args:
+            signum:
+            frame:
+        """
         pass
 
     @classmethod

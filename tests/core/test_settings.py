@@ -13,6 +13,11 @@ os.path.join(schemes_path)
 
 
 def _load_profile(scheme_path, profile_name: str = 'profile.py'):
+    """
+    Args:
+        scheme_path:
+        profile_name (str):
+    """
     assert os.path.exists(scheme_path)
     assert os.path.isdir(scheme_path)
 
@@ -30,6 +35,11 @@ def _invoke_scraper():
 
 
 def collect_profile(scheme_path, profile_name: str = 'profile.py'):
+    """
+    Args:
+        scheme_path:
+        profile_name (str):
+    """
     module = _load_profile(scheme_path, profile_name)
     config = {}
 

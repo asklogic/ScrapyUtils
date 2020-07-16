@@ -19,4 +19,8 @@ command_map = {
 
 def get_command_type(command_name: str) -> Command:
     # TODO: exception
+    """
+    Args:
+        command_name (str):
+    """
     return command_map[command_name]

@@ -4,25 +4,28 @@ import copy
 
 
 class Field(object):
+    """The attribute of Model class.
+
+    add different Fields into Model to get custom Model.
+
+    Attributes:
+        attr1 (str): Description of `attr1`.
+        attr2 (:obj:`int`, optional): Description of `attr2`.
+
+    """
 
     def __init__(self, default=None, convert=None) -> None:
         self._default = default
-
-        # TODO convert lib （int/json/date...）
-
-        if convert is None:
-            self._convert = type(default)
-        else:
-            self._convert = convert
-
-        super().__init__()
+        self._convert = convert
 
     @property
     def default(self):
+        """The default value of Field."""
         return self._default
 
     @property
     def convert(self):
+        """The convert callable of Field."""
         return self._convert
 
 
@@ -36,16 +39,26 @@ class ModelMeta(type):
 
         # remove all Field attribute
         # now model get attribute by __getattr__ that get from pure_data dict
-        for key, value in list(attrs.items()):
+        for key, value in tuple(attrs.items()):
+            # if is Field instance.
             if isinstance(value, Field):
+                # remove attribute
                 attrs.pop(key)
+
+                # append data field into _fileds
                 _fields.append(key)
 
-                if value._convert is not type(None):
-                    _pure_data[key] = value._convert(value.default)
-                else:
-                    _pure_data[key] = value.default
-                _converts[key] = value._convert
+                if value.default and not value.convert:
+                    _converts[key] = tuple(value.default)
+                _converts[key] = value.convert
+
+                if not value.default and value.convert:
+                    _pure_data[key] = value._convert()
+                _pure_data[key] = value.default
+
+                if not value.default and not value.convert:
+                    _pure_data[key] = ''
+                    _converts[key] = None
 
         # add field info into model cls
         attrs['_fields'] = _fields
@@ -56,7 +69,21 @@ class ModelMeta(type):
 
 
 class Model(metaclass=ModelMeta):
-    # _name: str
+    """The data model that to save data.
+
+    If the class has public attributes, they may be documented here
+    in an ``Attributes`` section and follow the same formatting as a
+    function's ``Args`` section. Alternatively, attributes may be documented
+    inline with the attribute's declaration (see __init__ method below).
+
+    Properties created with the ``@property`` decorator should be documented
+    in the property's getter method.
+
+    Attributes:
+        attr1 (str): Description of `attr1`.
+        attr2 (:obj:`int`, optional): Description of `attr2`.
+
+    """
 
     def __new__(cls, **kwargs) -> Any:
         # Model must be extended
@@ -80,10 +107,10 @@ class Model(metaclass=ModelMeta):
 
         # TODO
         if name in self._fields:
-            if self._converts[name] is type(None):
-                self._pure_data[name] = value
-            else:
+            if self._converts[name]:
                 self._pure_data[name] = self._converts[name](value)
+            else:
+                self._pure_data[name] = value
         else:
             super().__setattr__(name, value)
 
@@ -94,14 +121,22 @@ class Model(metaclass=ModelMeta):
 
     @classmethod
     def get_name(cls):
+        """
+
+        Returns:
+
+        """
         return cls.__name__
 
     @property
-    def pure_data(self):
+    def pure_data(self) -> Dict:
+        """
+
+        Returns: The key-value data as python dict.
+
+        """
+
         return self._pure_data
-
-
-
 
 
 if __name__ == '__main__':

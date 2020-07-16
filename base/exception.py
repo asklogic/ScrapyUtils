@@ -9,6 +9,10 @@ class HTTPStatusException(Exception):
     # self.args = (status_code,title)
 
     def __init__(self, *args):
+        """
+        Args:
+            *args:
+        """
         self.args = ('custom',)
         self.status_code = args[0]
         self.title = args[1]
@@ -16,16 +20,28 @@ class HTTPStatusException(Exception):
 
 class ConfigureException(Exception):
     def __init__(self, *args: object) -> None:
+        """
+        Args:
+            *args (object):
+        """
         super().__init__(*args)
 
 
 class SchemeException(Exception):
     def __init__(self, *args: object) -> None:
+        """
+        Args:
+            *args (object):
+        """
         super().__init__(*args)
 
 
 class CmdRunException(Exception):
     def __init__(self, *args: object) -> None:
+        """
+        Args:
+            *args (object):
+        """
         super().__init__(*args)
 
 

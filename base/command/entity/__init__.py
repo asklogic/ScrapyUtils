@@ -1,10 +1,13 @@
 from abc import abstractmethod
 from queue import Queue
 from typing import List, Callable
+from time import sleep
 
-from base.components import StepSuit, Pipeline, log
+from base.components import StepSuit, Pipeline
 from base.libs import Producer
 from base.core import *
+
+from base.log import basic as log
 
 
 class Command(object):
@@ -24,46 +27,70 @@ class Command(object):
 
     @classmethod
     def command_config(cls, **kwargs):
-        """
-        alter command.config
+        """alter command.config
+
+        Args:
+            **kwargs:
         """
         pass
 
     @classmethod
     def command_components(cls, steps, processors, **kwargs):
-        """
-        alter command's components
+        """alter command's components
+
+        Args:
+            steps:
+            processors:
+            **kwargs:
         """
         return steps, processors
 
     @classmethod
     def command_scraper(cls, **kwargs) -> None or Callable:
-        """
-        alter command.scraper
+        """alter command.scraper
+
+        Args:
+            **kwargs:
         """
         return None
 
     @classmethod
     def command_task(cls, **kwargs) -> None or Callable:
-        """
-        alter command.tasks
+        """alter command.tasks
+
+        Args:
+            **kwargs:
         """
         return None
 
     @classmethod
-    def command_logout(cls):
-        log.info('########### suit components ##########', 'System')
-        log.info('### ' + ' - '.join([x.name for x in get_steps()]), 'System')
-        log.info('######## processor components ########', 'System')
-        log.info('### ' + ' - '.join([x.name for x in get_processors()]), 'System')
-        log.info('######################################', 'System')
+    def command_collect_logout(cls):
+        # log.info('========== suit components ===============')
+        log.info('Suit Component:')
+
+        steps = get_steps()
+        for i in range(len(steps)):
+            log.info('({}) - {}'.format(i + 1, steps[i].name))
+
+        # log.info('========== processor components ==========')
+        log.info('Processor Components:')
+
+        processors = get_processors()
+        for i in range(len(processors)):
+            log.info('({}) - {}'.format(i + 1, processors[i].name))
+
+        # log.info('==========================================')
 
     @classmethod
     def command_collect(cls, **kwargs):
-        log.info('collect command {}'.format(cls.__name__), 'collect')
-
+        """
+        Args:
+            **kwargs:
+        """
         if not cls.do_collect:
-            return
+            return True
+
+        log.info('-----------> collect start <-----------')
         try:
             collect_scheme_preload(kwargs.get('scheme'))
 
@@ -86,8 +113,7 @@ class Command(object):
             if task:
                 set_task_callable(task)
 
-            cls.command_logout()
-
+        # command collect failed:
         except AssertionError as ae:
             # TODO: assert error
             log.error("assert error in collecting of command '{}'. ".format(cls.__name__), 'collect')
@@ -96,19 +122,32 @@ class Command(object):
         except Exception as e:
             log.error("some error in collecting of command '{}'. ".format(cls.__name__), 'collect')
             log.exception('Command', e, 0)
+
+        # command collect success:
         else:
+            cls.command_collect_logout()
             return True
 
     @classmethod
     def command_initial(cls, **kwargs):
+        """
+        Args:
+            **kwargs:
+        """
+        if not cls.do_collect:
+            return True
+
+        log.info('-----------> initial start <-----------')
         try:
-            # initial scheme
             collect_scheme_initial(**kwargs)
+
+        # command initial failed:
         except AssertionError as ae:
             # TODO: assert error
             log.error("assert error in initializing of command '{}'. ".format(cls.__name__), 'initial')
             log.exception('Command', ae, 0)
 
+        # command initial success:
         except Exception as e:
             log.error("some error in initializing of command '{}'. ".format(cls.__name__), 'initial')
             log.exception('Command', e, 0)
@@ -124,42 +163,39 @@ class Command(object):
             return True
 
     @classmethod
-    def command_process(cls, **kwargs):
-        log.info('processing command {}'.format(cls.__name__), 'System')
-        try:
-
-            log.debug('command running...', 'Processing')
-
-            cls.run(kwargs)
-
-        except AssertionError as ae:
-            # TODO: assert error
-            log.error("assert error in processing of command '{}'. ".format(cls.__name__), 'process')
-            log.exception('Command', ae, 0)
-
-        except Exception as e:
-            log.error("some error in processing of command '{}'. ".format(cls.__name__), 'process')
-            log.exception('Command', e)
-        else:
-            return True
-
-    @classmethod
     def command_run(cls, **kwargs):
-        # TODO: need refactor.
-        if not cls.command_collect(**kwargs):
-            return False
+        """
+        Args:
+            **kwargs:
+        """
+        if cls.command_collect(**kwargs) and cls.command_initial(**kwargs):
+            try:
+                if kwargs.get('comfirm'):
+                    sleep(1)
+                    for i in range(3, 0, -1):
+                        log.info('command start at {}.'.format(i))
+                        sleep(1)
 
-        if not cls.command_initial(**kwargs):
-            return False
+                cls.run(kwargs)
+            except AssertionError as ae:
+                # TODO: assert error
+                log.error("assert error in processing of command '{}'. ".format(cls.__name__), 'process')
+                log.exception('Command', ae, 0)
 
-        if not cls.command_process(**kwargs):
-            return False
-
-        return True
+            except Exception as e:
+                log.error("some error in processing of command '{}'. ".format(cls.__name__), 'process')
+                log.exception('Command', e)
+            else:
+                return True
+        return False
 
     @classmethod
     @abstractmethod
     def run(cls, kw):
+        """
+        Args:
+            kw:
+        """
         pass
 
     @classmethod
@@ -175,6 +211,11 @@ class Command(object):
     @classmethod
     @abstractmethod
     def signal_callback(cls, signum, frame):
+        """
+        Args:
+            signum:
+            frame:
+        """
         pass
 
     @classmethod

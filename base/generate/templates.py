@@ -26,13 +26,15 @@ from base.components import ParseStep, active, set_active
 from .model import *
 
 from base.common import HiddenInputParse
-from base.tool import xpathParse, xpathParseList
+from base.tool import xpathParse, xpathParseList, XpathParser
 
 
 @active
 class ${class_name}Parse(ParseStep):
 
     def parsing(self) -> Model or Generator[Model]:
+        parser = XpathParser(self.content)
+        
         m = ${class_name}Model()
         m.filed = "filed content"
         yield m

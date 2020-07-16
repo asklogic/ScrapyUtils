@@ -2,6 +2,11 @@ import signal
 
 # Define signal handler function
 def myHandler(signum, frame):
+    """
+    Args:
+        signum:
+        frame:
+    """
     print("Now, it's the time")
     exit()
 

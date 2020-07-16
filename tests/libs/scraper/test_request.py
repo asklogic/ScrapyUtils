@@ -25,9 +25,7 @@ class RequestScraperTestCase(unittest.TestCase):
         self.r.scraper_activate()
 
     def test_case_default_header(self):
-        """
-        RequestScraper custom headers.
-        """
+        """RequestScraper custom headers."""
 
         # default header.
         assert len(self.r.headers) is 7
@@ -37,9 +35,7 @@ class RequestScraperTestCase(unittest.TestCase):
         assert self.r.headers is self.r.req.headers
 
     def test_case_get_header(self):
-        """
-        get true header that server will accept.
-        """
+        """get true header that server will accept."""
 
         print(self.r.headers)
 
@@ -49,9 +45,7 @@ class RequestScraperTestCase(unittest.TestCase):
         assert len(header) is 8
 
     def test_request_header_update(self):
-        """
-        add new header. Session update the header.
-        """
+        """add new header. Session update the header."""
 
         # update headers.
         self.r.headers = {'custom': 'custom value'}
@@ -64,9 +58,7 @@ class RequestScraperTestCase(unittest.TestCase):
         assert header.get('Custom') == 'custom value'
 
     def test_request_header_restart(self):
-        """
-        custom header activated when RequestScraper restart.
-        """
+        """custom header activated when RequestScraper restart."""
 
         self.r.headers = {}
 
@@ -81,9 +73,7 @@ class RequestScraperTestCase(unittest.TestCase):
 
     @unittest.skip
     def test_request_keep_alive(self):
-        """
-        property keep_alive. update scraper's header.
-        """
+        """property keep_alive. update scraper's header."""
 
         header: dict = json.loads(self.r.get('http://127.0.0.1:8090/mock/header'))
 

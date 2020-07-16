@@ -8,6 +8,10 @@ from threading import Lock
 
 class Custom(Consumer):
     def consuming(self, obj):
+        """
+        Args:
+            obj:
+        """
         time.sleep(0.3)
         print('done', obj, self.name)
 

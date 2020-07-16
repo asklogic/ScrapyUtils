@@ -16,4 +16,8 @@ class FoxParse(ParseStep):
         yield m
 
     def check(self, models: List[Model]):
+        """
+        Args:
+            models:
+        """
         pass

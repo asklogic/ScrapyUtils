@@ -41,6 +41,10 @@ class MockPersonParse(ParseStep):
 
 class SingleAction(ActionStep):
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         return self.scraper.get(task.url)
 
 
@@ -48,10 +52,20 @@ class Count(Processor):
     count = 0
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         self.count += 1
 
 
 def scrapy(suit: StepSuit, task: Task, pipeline: Pipeline):
+    """
+    Args:
+        suit (StepSuit):
+        task (Task):
+        pipeline (Pipeline):
+    """
     suit.scrapy(task)
 
     # TODO refact models deque

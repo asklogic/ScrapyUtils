@@ -16,4 +16,8 @@ class Proxy_testParse(ParseStep):
         yield m
 
     def check(self, models: List[Model]):
+        """
+        Args:
+            models:
+        """
         pass

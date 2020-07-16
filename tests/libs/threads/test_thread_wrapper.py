@@ -12,6 +12,13 @@ class _ThreadWrapper(Thread):
 
     def __init__(self, callable: Callable, args=None, kwargs=None, timeout=3):
         # thread property
+        """
+        Args:
+            callable (Callable):
+            args:
+            kwargs:
+            timeout:
+        """
         super(_ThreadWrapper, self).__init__()
         self.setDaemon(True)
 
@@ -47,6 +54,10 @@ class _ThreadWrapper(Thread):
 
 
 def inner(timeout):
+    """
+    Args:
+        timeout:
+    """
     time.sleep(timeout)
     print('#done#')
 

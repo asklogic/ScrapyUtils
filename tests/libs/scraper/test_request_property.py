@@ -4,22 +4,34 @@ import requests
 from base.libs import Scraper, RequestScraper, Proxy
 
 
-class MyTestCase(unittest.TestCase):
+class RequestScraperPropertyTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
-        proxy = Proxy(ip='1.1.1.1', port='336')
-        assert proxy.ip == '1.1.1.1'
+        proxy = Proxy(ip='101.101.101.101', port='336')
         self.proxy = proxy
 
         self.r = RequestScraper()
 
+    # scraper property:
+
     def test_property_activate(self):
+        """Scraper property activated."""
         self.r.scraper_activate()
 
         assert self.r.activated is True
 
     def test_property_activate_default(self):
+        """Scraper property activated default."""
         assert self.r.activated is False
+
+    def test_property_timeout(self):
+        """Scraper property timeout."""
+        self.r.timeout = 5
+        assert self.r.timeout == 5
+
+    def test_property_timeout_default(self):
+        """Scraper property timeout default."""
+        assert self.r.timeout == 10
 
     # TODO: proxy_setter and get_proxy
     def test_property_proxy_default(self):
@@ -29,15 +41,13 @@ class MyTestCase(unittest.TestCase):
         self.r.proxy = self.proxy
         assert self.r.proxy != {}
 
+    # Request Scraper property
+
     def test_property_header(self):
-        """
-        to test_request.py
-        """
+        """to test_request.py"""
 
     def test_property_keep_alive(self):
-        """
-        to test_request.py
-        """
+        """to test_request.py"""
 
     def test_property_req(self):
         assert self.r.req is None
@@ -84,45 +94,8 @@ class MyTestCase(unittest.TestCase):
 
         # def test_activate(self):
 
-    #     """
-    #     scraper methods
-    #     """
-    #     r = RequestScraper()
-    #
-    #     assert r.activated is False
-    #
-    #     with self.assertRaises(Exception) as e:
-    #         r.scraper_clear()
-    #
-    #     with self.assertRaises(Exception) as e:
-    #         r.scraper_quit()
-    #
-    #     with self.assertRaises(Exception) as e:
-    #         r.get('http://127.0.0.1:8090/mock/get')
-    #
-    #     # ----------------------------------------------------------------------
-    #
-    #     r.scraper_activate()
-    #     r.scraper_clear()
-    #     r.get('http://127.0.0.1:8090/mock/get')
-    #     r.scraper_quit()
-
-    # def test_property_keep_alive_modify(self):
-    #     r = RequestScraper()
-    #
-    #     r.keep_alive = False
-    #
-    #     assert r.keep_alive is False
-    #     assert r.headers.get('Connection') == 'close'
-    #
-    #     r.keep_alive = True
-    #     assert r.keep_alive is True
-    #     assert r.headers.get('Connection') == 'keep-alive'
-
     def test_method_quit(self):
-        """
-        TODO : session's adapter closed.
-        """
+        """TODO : session's adapter closed."""
         r: RequestScraper = RequestScraper()
         r.scraper_activate()
         r.scraper_quit()
@@ -130,7 +103,6 @@ class MyTestCase(unittest.TestCase):
         assert r.req is not None
 
     def test_method_quit_again(self):
-
         r = RequestScraper()
         r.scraper_activate()
 
@@ -152,6 +124,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_method_get_requests(self):
         assert self.r.get_requests() is self.r.req
+
 
 if __name__ == '__main__':
     unittest.main()

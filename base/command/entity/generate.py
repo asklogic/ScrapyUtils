@@ -7,7 +7,7 @@ import os
 
 from . import Command
 
-from base.log import Wrapper as log
+from base.log import common as log
 
 
 class Generate(Command):
@@ -17,6 +17,10 @@ class Generate(Command):
 
     @classmethod
     def run(cls, kw):
+        """
+        Args:
+            kw:
+        """
         scheme = kw.get('scheme', 'Default')
         relative_path = kw.get('path', core.PROJECT_PATH)
 
@@ -53,6 +57,11 @@ class Generate(Command):
 
     @classmethod
     def signal_callback(cls, signum, frame):
+        """
+        Args:
+            signum:
+            frame:
+        """
         pass
 
     @classmethod

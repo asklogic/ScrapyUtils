@@ -3,8 +3,7 @@ import types
 
 from typing import Any
 
-from base.libs import Model, Field
-from collections import namedtuple
+from base.libs import Model, Field, Task, Proxy
 
 
 class MockModel(Model):
@@ -19,35 +18,6 @@ class TestModelTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-
-    def test_exception_extended(self):
-        # must be extends
-        class MockTestType(object):
-            def __getattr__(self, item):
-                print('attr')
-
-            def __setattr__(self, name: str, value: Any) -> None:
-                print('setattr')
-
-                super().__setattr__(name, value)
-
-            def __getattribute__(self, name: str) -> Any:
-                print('attribute')
-                return super().__getattribute__(name)
-
-        class MockTest(MockTestType):
-            age = Field()
-
-            @property
-            def pure_data(self):
-                return 'pure_data'
-
-        m = MockTest()
-
-        # m.age = 10
-        # m.name = 20
-        # m.age
-        # m.name
 
     def test_attribute_pure_data(self):
         m1 = MockModel()
@@ -87,7 +57,7 @@ class TestModelTestCase(unittest.TestCase):
         assert m.pure_data == {'age': 10, 'name': 'test_name'}
 
     def test_function_init(self):
-        m = MockModel(name='this',age=12)
+        m = MockModel(name='this', age=12)
 
         assert m.pure_data == {'age': 12, 'name': 'this'}
 
@@ -101,10 +71,7 @@ class TestModelTestCase(unittest.TestCase):
         assert m.pure_data == {'name': 'no_name', 'segment': 'seg'}
 
     def test_set_value(self):
-        """
-        set value like a data model
-        get value from property
-        """
+        """set value like a data model get value from property"""
 
         class TestDataModel(Model):
             age = Field()
@@ -114,15 +81,64 @@ class TestModelTestCase(unittest.TestCase):
         m2 = TestDataModel()
 
         m1.age = 12
-        m1.name = 'Auir'
+        m1.name = 'Aiur'
         m2.age = 18
-
-        # self.assertNotEqual(id(m1.pure_data), id(m2.pure_data))
 
         self.assertEqual(m1.age, 12)
         self.assertEqual(m2.age, 18)
 
-        # self.assertEqual(m1.pure_data, {'age': 12, 'name': 'Auir'})
+    def test_field(self):
+        """Default field without default and convert argument."""
+        m = MockModel()
+        assert m.pure_data == {'name': '', 'age': ''}
 
-        # assert m1.get_name() == 'TestDataModel'
+    def test_field_demo(self):
+        """Default field without default and convert argument."""
+        m = MockModel()
+        m.age = 18
+        m.name = 'Test_Name'
+        assert m.pure_data == {'name': 'Test_Name', 'age': 18}
 
+    def test_field_convert_default(self):
+        """Default convert. Do not convert any object."""
+        m = MockModel()
+        m.age = 20
+        assert m.pure_data == {'name': '', 'age': 20}
+        m.age = '20'
+        assert m.pure_data == {'name': '', 'age': '20'}
+
+    def test_field_convert(self):
+        """Convert function in Field"""
+
+        class ConvertModel(Model):
+            count = Field(convert=int)
+
+        m = ConvertModel()
+        m.count = '12'
+
+        assert m.pure_data == {'count': 12}
+
+    def test_field_default(self):
+        """Default value in field."""
+
+        class DefaultModel(Model):
+            name = Field('John')
+
+        assert DefaultModel().pure_data == {'name': 'John'}
+
+    def test_common_model_Task(self):
+        """Common Model: Task"""
+        t = Task()
+        t.url = 'https://www.google.com/'
+        t.param = 'python object'
+
+        assert t.pure_data == {'url': 'https://www.google.com/', 'count': 0, 'param': 'python object'}
+
+    def test_common_model_Proxy(self):
+        """Common Model: Proxy"""
+        p = Proxy()
+
+
+
+if __name__ == '__main__':
+    unittest.main()

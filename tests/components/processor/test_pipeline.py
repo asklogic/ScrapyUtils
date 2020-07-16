@@ -15,6 +15,10 @@ class MockModel(Model):
 class Adult(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         if model.age >= 20:
             self.count += 1
 
@@ -22,6 +26,10 @@ class Adult(Processor):
 class Block(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         self.count += 1
         time.sleep(0.001)
 
@@ -53,9 +61,7 @@ class TestPipeline(unittest.TestCase):
 
     @unittest.skip
     def test_process_block(self):
-        """
-        block
-        """
+        """block"""
         pipeline = Pipeline(ProcessorSuit([Block]))
         [pipeline.push(x) for x in self.models[:2000]]
 

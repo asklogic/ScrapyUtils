@@ -8,6 +8,10 @@ from base.libs import threads, ItemPool, Proxy, Model
 
 
 def proxy_generate(number):
+    """
+    Args:
+        number:
+    """
     print('adding proxy,')
     time.sleep(0.5)
     print('done.')

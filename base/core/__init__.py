@@ -3,18 +3,34 @@ from . import collect
 
 
 def set_processors(processors):
+    """
+    Args:
+        processors:
+    """
     collect.processors_class = processors
 
 
 def set_steps(steps):
+    """
+    Args:
+        steps:
+    """
     collect.steps_class = steps
 
 
 def set_scraper_callable(scraper_callable):
+    """
+    Args:
+        scraper_callable:
+    """
     collect.scraper_callable = scraper_callable
 
 
 def set_task_callable(task_callable):
+    """
+    Args:
+        task_callable:
+    """
     collect.tasks_callable = task_callable
 
 

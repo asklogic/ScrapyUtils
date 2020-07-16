@@ -4,57 +4,87 @@ import linecache
 from os.path import basename
 from logging import DEBUG, INFO, WARNING, ERROR
 
-# global
-
-line = 3
-
-# ScrapyUtil Default logger
-sh = logging.StreamHandler()
-sh.setLevel(DEBUG)
-sh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%m/%d %H:%M:%S'))
-
-logger = logging.getLogger('Log')
-logger.setLevel(DEBUG)
-logger.addHandler(sh)
+common_format = logging.Formatter(r'%(asctime)s [%(levelname)s]|%(message)s', r'%H:%M:%S')
+basic_format = logging.Formatter(r" * %(message)s", r'%H:%M:%S')
 
 
-class Wrapper:
-    log = logger
-    syntax: str = '[Log]'
+class LogWrapper:
+    log: logging.Logger
+    syntax: str
     line: int = 3
 
-    @classmethod
-    def _msg(cls, msg, *args):
+    def __init__(self, log, syntax='[Log]', line=3):
+        """
+        Args:
+            log:
+            syntax:
+            line:
+        """
+        self.log = log
+        self.syntax = syntax
+        self.line = line
+
+    def _msg(self, msg, *args):
+        """
+        Args:
+            msg:
+            *args:
+        """
         component = ' - '.join(args)
         component_msg = ''.join(['<', component, '>']) if component else ''
-        message = ' '.join((x for x in (cls.syntax, component_msg, msg) if x))
+        message = ' '.join((x for x in (self.syntax, component_msg, msg) if x))
         return message
 
-    @classmethod
-    def info(cls, msg, *args, **kwargs):
-        cls.log.info(msg=cls._msg(msg, *args), **kwargs)
+    def info(self, msg, *args, **kwargs):
+        """
+        Args:
+            msg:
+            *args:
+            **kwargs:
+        """
+        self.log.info(msg=self._msg(msg, *args), **kwargs)
 
-    @classmethod
-    def debug(cls, msg, *args, **kwargs):
-        cls.log.debug(msg=cls._msg(msg, *args), **kwargs)
+    def debug(self, msg, *args, **kwargs):
+        """
+        Args:
+            msg:
+            *args:
+            **kwargs:
+        """
+        self.log.debug(msg=self._msg(msg, *args), **kwargs)
 
-    @classmethod
-    def warning(cls, msg, *args, **kwargs):
-        cls.log.warning(msg=cls._msg(msg, *args), **kwargs)
+    def warning(self, msg, *args, **kwargs):
+        """
+        Args:
+            msg:
+            *args:
+            **kwargs:
+        """
+        self.log.warning(msg=self._msg(msg, *args), **kwargs)
 
-    @classmethod
-    def error(cls, msg, *args, **kwargs):
-        cls.log.error(msg=cls._msg(msg, *args), **kwargs)
+    def error(self, msg, *args, **kwargs):
+        """
+        Args:
+            msg:
+            *args:
+            **kwargs:
+        """
+        self.log.error(msg=self._msg(msg, *args), **kwargs)
 
-    @classmethod
-    def exception(cls, component_name: str, exception: Exception, line: int = None):
+    def exception(self, component_name: str, exception: Exception, line: int = None):
+        """
+        Args:
+            component_name (str):
+            exception (Exception):
+            line (int):
+        """
         if not line:
-            line = cls.line
+            line = self.line
 
         exception_name = exception.__class__.__name__
         component_name = '<{}>'.format(component_name)
-        message = ' '.join([cls.syntax, component_name, exception_name, '-', str(exception)])
-        cls.log.error(message)
+        message = ' '.join([self.syntax, component_name, exception_name, '-', str(exception)])
+        self.log.error(message)
 
         current = exception.__traceback__
 
@@ -73,53 +103,73 @@ class Wrapper:
             if lines[line_index + line - 1].strip():
                 msg = ''.join(
                     ('Line: ', str(current.tb_lineno - line_index - line), ' |', lines[line_index + line - 1]))
-                cls.log.debug(msg)
+                self.log.debug(msg)
 
 
 def set_syntax(syntax):
-    Wrapper.syntax = syntax
+    """
+    Args:
+        syntax:
+    """
+    common.syntax = syntax
 
 
 def set_line(line):
-    Wrapper.line = line
+    """
+    Args:
+        line:
+    """
+    common.line = line
 
 
 def set_log_file_name(file_name):
-
+    """
+    Args:
+        file_name:
+    """
+    logger = common.log
     if not '.out' in file_name:
         file_name = file_name + '.out'
     fh = logging.FileHandler(filename=file_name)
     fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%m/%d %H:%M:%S'))
+    fh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%H:%M:%S'))
 
     logger.addHandler(fh)
 
 
-# class ThreadLog(Wrapper):
-#
-#     @classmethod
-#     def syntax(self):
-#         return '[Thread]'
+# build common
+logger = logging.getLogger('common')
+logger.setLevel(DEBUG)
 
+sh = logging.StreamHandler()
+sh.setLevel(DEBUG)
+sh.setFormatter(common_format)
+logger.addHandler(sh)
 
-default = Wrapper
-current = Wrapper
+common = LogWrapper(logger)
+common.syntax = '[Common]'
+
+# build basic
+logger = logging.getLogger('basic')
+logger.setLevel(DEBUG)
+
+sh = logging.StreamHandler()
+sh.setLevel(DEBUG)
+sh.setFormatter(basic_format)
+logger.addHandler(sh)
+
+basic = LogWrapper(logger)
+basic.syntax = ''
 
 if __name__ == '__main__':
     print('logger test!')
-    #
-    # StatusLog.info('info')
-    # StatusLog.warning('warning')
-    # StatusLog.debug('debug')
-    # StatusLog.error("error")
 
-    # ActLog.error("[Scheme] TestAction failed")
+    common.info('hello')
+    common.info('scraper', 'System')
+    common.info('listener', 'System')
+    common.info('success. temp text')
+    common.info('failed. temp text')
 
-    Wrapper.info('info', 'Core', 'Check')
-    Wrapper.info('info', 'Core')
-    Wrapper.info('info')
-
-    set_syntax('[Thread]')
-
-    Wrapper.info('thread')
-    Wrapper.info('thread', 'Core')
+    basic.info('basic')
+    basic.info('port: 1234')
+    basic.info('output: /base/log.py')

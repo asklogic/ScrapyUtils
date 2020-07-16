@@ -9,6 +9,10 @@ class Count(Processor):
     count = 0
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         self.count += 1
 
 

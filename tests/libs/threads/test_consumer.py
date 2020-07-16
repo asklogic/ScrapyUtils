@@ -9,6 +9,10 @@ from queue import Queue
 
 class Custom(Consumer):
     def consuming(self, obj):
+        """
+        Args:
+            obj:
+        """
         time.sleep(0.3)
 
 
@@ -20,10 +24,7 @@ class ComsumerTestCase(unittest.TestCase):
             self.queue.put(i)
 
     def test_property_queue(self):
-        """
-        Consumer property : queue
-        type: queue.Queue
-        """
+        """Consumer property : queue type: queue.Queue"""
 
         consuemr = Consumer(Queue())
 
@@ -35,10 +36,7 @@ class ComsumerTestCase(unittest.TestCase):
         assert the_queue is consuemr.queue
 
     def test_property_delay(self):
-        """
-        Consumer property : delay
-        type : number(int or float
-        """
+        """Consumer property : delay type : number(int or float"""
 
         consuemr = Consumer(Queue())
 
@@ -51,10 +49,7 @@ class ComsumerTestCase(unittest.TestCase):
         assert consuemr._delay == 1.5
 
     def test_property_lock(self):
-        """
-        Consuemr property : lock
-        type : theading.Lock
-        """
+        """Consuemr property : lock type : theading.Lock"""
         import threading
 
         consuemr = Consumer(Queue())
@@ -73,9 +68,7 @@ class ComsumerTestCase(unittest.TestCase):
         assert consuemr.stopped is True
 
     def test_method_start_and_stop(self):
-        """
-        method in BaseThread : start & stop
-        """
+        """method in BaseThread : start & stop"""
         custom = Custom(self.queue)
 
         # BaseThread
@@ -130,9 +123,7 @@ class ComsumerTestCase(unittest.TestCase):
         custom1.queue.join()
 
     def test_method_exit(self):
-        """
-        block till queue empty and stopped.
-        """
+        """block till queue empty and stopped."""
         start = time.time()
         queue = Queue()
         [queue.put(x) for x in range(3)]

@@ -10,6 +10,10 @@ from .model import *
 class Test_instableProcess(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         print(model.pure_data())
         return model
 
@@ -20,4 +24,8 @@ class Count(Processor):
     count = 0
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         self.count += 1

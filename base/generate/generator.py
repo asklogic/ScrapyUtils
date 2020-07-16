@@ -8,7 +8,6 @@ generator_mapper = {
     "parse.py": "parse_template",
     "processor.py": "process_template",
     "model.py": "model_template",
-    # "prepare.py": "prepare_template",
     "settings.py": "settings_template"
 
 }
@@ -24,10 +23,10 @@ config, tasks_callable, scraper_callable = collect_settings(settings)
 
 
 def create_folder(path: str):
-    """
-    create target folder and __init__.py file
+    """create target folder and __init__.py file
 
-    :param target: target name
+    Args:
+        path (str):
     """
 
     # create data folder
@@ -49,6 +48,10 @@ def create_folder(path: str):
 
 
 def create_components(path: str):
+    """
+    Args:
+        path (str):
+    """
     target = os.path.basename(path)
     for component in generator_mapper:
         component_path = os.path.join(path, component)
@@ -62,6 +65,10 @@ def create_components(path: str):
 
 
 def remove(target):
+    """
+    Args:
+        target:
+    """
     import os
 
     # files

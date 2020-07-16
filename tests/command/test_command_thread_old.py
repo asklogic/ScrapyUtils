@@ -11,34 +11,7 @@ from base.components import *
 from threading import Lock, Event
 
 
-class Thread(Command, ComponentMixin):
 
-    @classmethod
-    def run(self):
-        event = Event()
-        lock = Lock()
-
-        kws = [
-            {
-                'queue': self.tasks,
-                'delay': self.config.get('timeout'),
-                'suit': x,
-                'pipeline': self.pipeline,
-                'proxy': self.proxy,
-
-                'event': event,
-                'lock': lock,
-            }
-            for x in self.suits
-        ]
-        consumers = [ScrapyConsumer(**kw) for kw in kws]
-
-        event.set()
-
-        while self.tasks.qsize() != 0:
-            time.sleep(0.1)
-
-        [x.stop() for x in consumers]
 
 
 class CommandThread(unittest.TestCase):
@@ -57,6 +30,14 @@ class ScrapyConsumer(Consumer):
                  **kwargs):
 
         # assert
+        """
+        Args:
+            suit (StepSuit):
+            pipeline (Pipeline):
+            proxy (Producer):
+            timeout:
+            **kwargs:
+        """
         assert isinstance(pipeline, Pipeline), 'ScrapyConsumer need Pipeline.'
         assert isinstance(suit, StepSuit), 'ScrapyConsumer need StepSuit instance.'
 
@@ -93,6 +74,10 @@ class ScrapyConsumer(Consumer):
         # if self.proxy and not self.scraper.proxy:
         #     self.scraper.proxy = self.proxy.queue.get()
 
+        """
+        Args:
+            current (Task):
+        """
         func = self.suit.closure_scrapy()
 
         try:

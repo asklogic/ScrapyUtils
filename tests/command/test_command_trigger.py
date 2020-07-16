@@ -22,6 +22,11 @@ from base.core import *
 # mock
 def mock_trigger(command_name: str, **kwargs):
     # get command class
+    """
+    Args:
+        command_name (str):
+        **kwargs:
+    """
     if type(command_name) == str:
         command: Command = command_map.get(command_name)
     # mock: get command by command name

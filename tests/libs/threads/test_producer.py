@@ -21,6 +21,10 @@ class Custom(Producer):
 class ProxyMock(MultiProducer):
 
     def producing(self, increment):
+        """
+        Args:
+            increment:
+        """
         print('start get proxy')
         time.sleep(0.3)
         print('proxy done.')
@@ -65,10 +69,7 @@ class ProducerTestCase(unittest.TestCase):
         assert custom.queue.qsize() == 10
 
     def test_case_slow_producing(self):
-        """
-        slow producing.
-        by concurrent.ThreadPoolExecutor
-        """
+        """slow producing. by concurrent.ThreadPoolExecutor"""
 
         class Slow(Producer):
             def producing(self):

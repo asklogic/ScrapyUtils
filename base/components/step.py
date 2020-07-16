@@ -4,11 +4,18 @@ from typing import *
 from collections import deque
 from base.components.base import Component, ComponentMeta, ComponentSuit
 from base.libs import Scraper, Task, Model
-from base.log import Wrapper as log
+
+from . import log
 
 
 class StepMeta(ComponentMeta):
     def __new__(mcs, name, bases, attrs: dict):
+        """
+        Args:
+            name:
+            bases:
+            attrs (dict):
+        """
         return super().__new__(mcs, name, bases, attrs)
 
 
@@ -21,6 +28,10 @@ class Step(Component, metaclass=StepMeta):
     _suit = None
 
     def __init__(self, step_suit=None):
+        """
+        Args:
+            step_suit:
+        """
         self._suit: StepSuit = step_suit
 
     @property
@@ -37,10 +48,18 @@ class Step(Component, metaclass=StepMeta):
 
     @abstractmethod
     def check(self, content):
+        """
+        Args:
+            content:
+        """
         pass
 
     @abstractmethod
     def do(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         pass
 
 
@@ -49,13 +68,25 @@ class ActionStep(Step):
 
     @abstractmethod
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         pass
 
     @abstractmethod
     def check(self, content):
+        """
+        Args:
+            content:
+        """
         pass
 
     def do(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         try:
             content = self.scraping(task)
             if content:
@@ -78,9 +109,17 @@ class ParseStep(Step):
 
     @abstractmethod
     def check(self, models: Deque[Model]):
+        """
+        Args:
+            models:
+        """
         pass
 
     def do(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         try:
             models = deque()
             # FIXME: crit!
@@ -109,6 +148,12 @@ class StepSuit(ComponentSuit):
     _scraper: Scraper = None
 
     def __init__(self, scraper: Scraper, steps: List[type(Step)], config: dict = None):
+        """
+        Args:
+            scraper (Scraper):
+            steps:
+            config (dict):
+        """
         super(StepSuit, self).__init__(components=steps, config=config)
 
         assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
@@ -134,7 +179,6 @@ class StepSuit(ComponentSuit):
         # if self.scraper.activated:
         self.scraper.scraper_quit()
 
-
     # def scrapy(self, task: Task):
     #     # TODO: abort
     #
@@ -152,10 +196,7 @@ class StepSuit(ComponentSuit):
     #     return True
 
     def closure_scrapy(self):
-        """
-        case success. return models.
-        case failed. return task instance.
-        """
+        """case success. return models. case failed. return task instance."""
 
         self.models.clear()
         self.content = ''

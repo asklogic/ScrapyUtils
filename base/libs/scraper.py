@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any, Callable
-import typing
 from urllib3.exceptions import InsecureRequestWarning
 
 # from appium import webdriver
 from selenium.webdriver import Firefox, FirefoxOptions
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium.webdriver.support.ui import WebDriverWait
 
 import requests
 import time
@@ -81,7 +81,6 @@ class Scraper(object, metaclass=ScraperMeta):
         self._clear()
 
     def scraper_quit(self):
-        # TODO : need try-except?
         try:
             if self.activated:
                 self._quit()
@@ -129,12 +128,15 @@ class Scraper(object, metaclass=ScraperMeta):
     def activated(self):
         return self._activated
 
+    # ----------------------------------------------------------------------
+    # property setter
+
     @activated.setter
     def activated(self, value):
         self._activated = bool(value)
 
     # ----------------------------------------------------------------------
-    # abstract property
+    # abstract property setter
 
     @timeout.setter
     @abstractmethod
@@ -144,7 +146,6 @@ class Scraper(object, metaclass=ScraperMeta):
     @proxy.setter
     @abstractmethod
     def proxy(self, value: Proxy):
-
         pass
 
     # ----------------------------------------------------------------------
@@ -453,8 +454,15 @@ class FireFoxScraper(Scraper):
         return self.firefox
 
     def _get(self, url, **kwargs):
+        timeout_exec = kwargs.get('timeout_exec', True)
 
-        self.firefox.get(url)
+        if timeout_exec:
+            self.firefox.get(url)
+        else:
+            try:
+                self.firefox.get(url)
+            except TimeoutException as te:
+                return self.firefox.page_source
 
         return self.firefox.page_source
 
@@ -603,3 +611,23 @@ def block_mark(id: str, driver: Firefox, timeout: int = 5):
         except NoSuchElementException as e:
             pass
     raise Exception('block timeout')
+
+
+def wait_block(mark_class, wait_time, context, driver):
+    """
+    Args:
+        mark_class:
+        wait_time:
+        context:
+        driver:
+    """
+    if not context.get('mark'):
+        WebDriverWait(driver, wait_time).until(lambda d: d.find_element_by_class_name(mark_class))
+        context['mark'] = True
+
+    else:
+        WebDriverWait(driver, wait_time).until(
+            lambda d: d.find_element_by_class_name(mark_class).get_attribute('themark') != 'themark')
+
+    js = 'document.getElementsByClassName("{}")[0].setAttribute("themark","themark")'.format(mark_class)
+    driver.execute_script(js)

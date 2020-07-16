@@ -18,6 +18,10 @@ class Parsing(Thread):
 
     @classmethod
     def command_config(cls, **kwargs):
+        """
+        Args:
+            **kwargs:
+        """
         cls.config['thread'] = 1
         cls.config['timeout'] = 0
 
@@ -44,7 +48,7 @@ class Parsing(Thread):
         assert os.path.isdir(cls.download), 'download target {} not exist.'.format(cls.download)
 
     @classmethod
-    def command_logout(cls):
+    def command_collect_logout(cls):
         files = list(os.walk(cls.download))[0][2]
 
         log.info('parsing download path:', 'Command')
@@ -54,10 +58,14 @@ class Parsing(Thread):
         log.info('page count:', 'Command')
         log.info(str(len(files)), 'Command')
 
-        super().command_logout()
+        super().command_collect_logout()
 
     @classmethod
     def command_task(cls, **kwargs):
+        """
+        Args:
+            **kwargs:
+        """
         def inner():
             time.sleep(0.618)
             log.info('loading download files.')
@@ -78,6 +86,10 @@ class Parsing(Thread):
 
     @classmethod
     def command_scraper(cls, **kwargs):
+        """
+        Args:
+            **kwargs:
+        """
         def inner():
             return None
 
@@ -85,6 +97,12 @@ class Parsing(Thread):
 
     @classmethod
     def command_components(cls, steps, processors, **kwargs):
+        """
+        Args:
+            steps:
+            processors:
+            **kwargs:
+        """
         last_action = 0
 
         for index in range(len(steps)):
@@ -98,5 +116,9 @@ class Parsing(Thread):
 
 class ParsingLoadAction(ActionStep):
     def scraping(self, task: Task):
+        """
+        Args:
+            task (Task):
+        """
         self.context['page_name'] = task.url
         return task.param

@@ -10,5 +10,9 @@ from .model import *
 class Proxy_testProcess(Processor):
 
     def process_item(self, model: Model) -> Any:
+        """
+        Args:
+            model (Model):
+        """
         print(model.pure_data())
         return model        

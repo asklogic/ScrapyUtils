@@ -16,4 +16,8 @@ class Test_preload_failedParse(ParseStep):
         yield m
 
     def check(self, models: List[Model]):
+        """
+        Args:
+            models:
+        """
         pass

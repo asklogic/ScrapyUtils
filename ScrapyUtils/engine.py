@@ -25,8 +25,8 @@ def trigger(**kwargs):
         p = start_subprocess(kwargs.get('command'), kwargs.get('scheme'))
         options['stdout'] = p.stdout
 
-        command = get_command_type('watch')
-    else:
+        command = get_command_type('background')
+    elif options.get('log'):
         listener.start()
 
     # update options
@@ -128,7 +128,7 @@ def blocking(loop_case, inner_case=None, paused=lambda: True, loop_delay=0.1):
 
 def start_subprocess(command_name, scheme):
     if getattr(sys, 'frozen', False):
-        cmd_list = [sys.executable, command_name, scheme, '--no-background', '--log', '-c']
+        cmd_list = [sys.executable, command_name, scheme, '--no-background', '--log', '--confirm']
 
     else:
         executable = sys.executable

@@ -37,7 +37,7 @@ class Tail(Thread):
                         break
 
 
-class Watch(Command):
+class Background(Command):
     do_collect = False
 
     tail: Tail = None
@@ -61,6 +61,10 @@ class Watch(Command):
 
         while True:
             line = stdout.readline()
+
+            if 'some error' in line:
+                raise Exception('background error.')
+
             if line == ' * command start at 3.\n':
                 break
             lines.append(line)

@@ -118,7 +118,7 @@ class Command(object):
 
         # command collect success:
         cls.command_collect_logout()
-        
+
         # update options
         options.update(cls.config)
 
@@ -168,25 +168,34 @@ class Command(object):
         Returns:
 
         """
-        try:
-            if options.get('confirm'):
+
+        if options.get('confirm'):
+            sleep(1)
+            for i in range(3, 0, -1):
+                log.info('command start at {}.'.format(i))
                 sleep(1)
-                for i in range(3, 0, -1):
-                    log.info('command start at {}.'.format(i))
-                    sleep(1)
-            log.info('-----------> command start <-----------')
+        log.info('-----------> command start <-----------')
+        cls.run(options)
 
-            cls.run(options)
-        except AssertionError as ae:
-            # TODO: assert error
-            log.error("assert error in processing of command '{}'. ".format(cls.__name__), 'process')
-            log.exception('Command', ae, 0)
-
-        except Exception as e:
-            log.error("some error in processing of command '{}'. ".format(cls.__name__), 'process')
-            log.exception('Command', e)
-        else:
-            return True
+        # try:
+        #     if options.get('confirm'):
+        #         sleep(1)
+        #         for i in range(3, 0, -1):
+        #             log.info('command start at {}.'.format(i))
+        #             sleep(1)
+        #     log.info('-----------> command start <-----------')
+        #
+        #     cls.run(options)
+        # except AssertionError as ae:
+        #     # TODO: assert error
+        #     log.error("assert error in processing of command '{}'. ".format(cls.__name__), 'process')
+        #     log.exception('Command', ae, 0)
+        #
+        # except Exception as e:
+        #     log.error("some error in processing of command '{}'. ".format(cls.__name__), 'process')
+        #     log.exception('Command', e)
+        # else:
+        #     return True
 
     @classmethod
     @abstractmethod

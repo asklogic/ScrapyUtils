@@ -4,7 +4,7 @@ from ScrapyUtils.command.entity.single import Single
 from ScrapyUtils.command.entity.thread_ import Thread
 from ScrapyUtils.command.entity.download import Download
 from ScrapyUtils.command.entity.parsing import Parsing
-from ScrapyUtils.command.entity.watch import Watch
+from ScrapyUtils.command.entity.background import Background
 
 from ScrapyUtils.command.entity import Command
 
@@ -15,7 +15,7 @@ command_map = {
     'thread': Thread,
     'download': Download,
     'parsing': Parsing,
-    'watch': Watch,
+    'background': Background,
 }
 
 

@@ -234,7 +234,7 @@ def collect_settings(module: ModuleType):
     current_config = {}
 
     # command settings
-    current_config['keep_log'] = getattr(module, 'KEEP_LOG', False)
+    current_config['keep_log'] = getattr(module, 'KEEP_LOG', True)
 
     # implicit settings
     current_config['scheme_path'] = path.dirname(module.__file__)

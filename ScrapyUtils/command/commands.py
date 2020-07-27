@@ -12,12 +12,11 @@ def cli():
 @click.command()
 @click.argument('scheme')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
-@click.option('line', '--line', default=3)
 @click.option('-p', '--port', 'port', type=int)
 @click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
 @click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
-def thread(scheme: str, path, line, confirm, port, background, log):
+def thread(scheme: str, path, confirm, port, background, log):
     """
     Args:
         scheme (str):
@@ -28,7 +27,7 @@ def thread(scheme: str, path, line, confirm, port, background, log):
         background:
         log:
     """
-    trigger(command='thread', scheme=scheme, path=path, line=line, confirm=confirm, port=port, background=background,
+    trigger(command='thread', scheme=scheme, path=path, confirm=confirm, port=port, background=background,
             log=log)
 
 
@@ -44,13 +43,12 @@ def thread(scheme: str, path, line, confirm, port, background, log):
 @click.command()
 @click.argument('scheme')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
-@click.option('line', '--line', default=3)
 @click.option('download', '--download')
 @click.option('-p', '--port', 'port', type=int)
 @click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
 @click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
-def download(scheme: str, path, line, download, confirm, port, background, log):
+def download(scheme: str, path, download, confirm, port, background, log):
     """
     Args:
         scheme (str):
@@ -61,7 +59,7 @@ def download(scheme: str, path, line, download, confirm, port, background, log):
         background:
         log:
     """
-    trigger(command='download', scheme=scheme, path=path, download=download, line=line, confirm=confirm, port=port,
+    trigger(command='download', scheme=scheme, path=path, download=download, confirm=confirm, port=port,
             background=background,
             log=log)
 
@@ -79,27 +77,15 @@ def download(scheme: str, path, line, download, confirm, port, background, log):
 @click.command()
 @click.argument('scheme')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
-@click.option('line', '--line', default=3)
 @click.option('download', '--download')
 @click.option('index', '--index', default=-1)
 @click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
 @click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
-def parsing(scheme: str, path, line, download, index, confirm, background, log):
-    """
-    Args:
-        scheme (str):
-        path:
-        line:
-        download:
-        index:
-        confirm:
-        background:
-        log:
-    """
-    trigger(command='parsing', scheme=scheme, path=path, line=line, download=download, index=index, confirm=confirm,
+def parsing(scheme: str, path, download, index, confirm, background, log):
+    trigger(command='parsing', scheme=scheme, path=path, download=download, index=index, confirm=confirm,
             background=False,
-            log=log)
+            log=False)
 
 
 @click.command()

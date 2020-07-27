@@ -15,6 +15,8 @@ from ScrapyUtils.tool import xpathParse
 
 from ScrapyUtils.log import common as log
 
+import openpyxl
+
 
 class DefaultAction(Action):
     def scraping(self, task: Task, scraper: Scraper) -> str:
@@ -90,7 +92,6 @@ class CSVFileProcessor(FileProcessorMixin, Processor):
                 writer.writerow(list(i.values()))
 
 
-import openpyxl
 
 
 class ExeclFileProcessor(FileProcessorMixin, Processor):

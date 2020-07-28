@@ -68,7 +68,8 @@ redis/
 
 *.out
 
-*.log
+# virtual environment
+venv/
 
 #_*
 #_*.*

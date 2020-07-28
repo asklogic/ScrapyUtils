@@ -17,8 +17,7 @@ listener = Listener()
 
 
 def trigger(**kwargs):
-    options = {}
-    options['kwargs'] = kwargs
+    options = {'kwargs': kwargs}
 
     command_name = kwargs.get('command')
     scheme_name = kwargs.get('scheme')
@@ -34,8 +33,8 @@ def trigger(**kwargs):
     if kwargs.get('background'):
         p = start_subprocess(command_name, scheme_name)
         options['stdout'] = p.stdout
-
         command = get_command_type('background')
+
     elif kwargs.get('log'):
         listener.start()
         listener.output = init_output(options)
@@ -44,8 +43,6 @@ def trigger(**kwargs):
     wait(kwargs.get('confirm'))
 
     # update options
-
-
     if not command.start(options):
         sys.exit(0)
 
@@ -61,7 +58,7 @@ def trigger(**kwargs):
     # 1. existed log file.
     # 2. command finished.
     # 3. didn't have KEEP_LOG in setting.py
-    if options.get('log') and not options.get('keep_log') and command.finished():
+    if kwargs.get('log') and not kwargs.get('keep_log') and command.finished():
         logging.shutdown()
         os.remove(listener.output)
 

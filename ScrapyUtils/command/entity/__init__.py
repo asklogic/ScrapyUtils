@@ -14,7 +14,6 @@ from ScrapyUtils.log import basic as log
 class Command(object):
     exitcode: int = 0
     interrupt: bool = False
-    running: bool = False
 
     do_collect: bool = True
 
@@ -30,40 +29,40 @@ class Command(object):
         return '[Command]'
 
     @classmethod
-    def command_config(cls, **kwargs):
+    def command_config(cls, options):
         """alter command.config
 
         Args:
-            **kwargs:
+            **options:
         """
         pass
 
     @classmethod
-    def command_components(cls, steps, processors, **kwargs):
+    def command_components(cls, steps, processors, options):
         """alter command's components
 
         Args:
             steps:
             processors:
-            **kwargs:
+            **options:
         """
         return steps, processors
 
     @classmethod
-    def command_scraper(cls, **kwargs) -> None or Callable:
+    def command_scraper(cls, options) -> None or Callable:
         """alter command.scraper
 
         Args:
-            **kwargs:
+            **options:
         """
         return None
 
     @classmethod
-    def command_task(cls, **kwargs) -> None or Callable:
+    def command_task(cls, options) -> None or Callable:
         """alter command.tasks
 
         Args:
-            **kwargs:
+            **options:
         """
         return None
 
@@ -95,65 +94,46 @@ class Command(object):
 
         assert collect_scheme_preload(scheme), 'Interrupted in the scheme proload.'
 
-        # config
+        # alter config
         cls.config = get_config()
-        cls.command_config(**options)
+        cls.command_config(options)
 
         # alter components
-        steps, processors = cls.command_components(get_steps(), get_processors(), **options)
+        steps, processors = cls.command_components(get_steps(), get_processors(), options)
         set_steps(steps)
         set_processors(processors)
 
         # alter scraper
-        scraper = cls.command_scraper(**options)
+        scraper = cls.command_scraper(options)
         if scraper:
             set_scraper_callable(scraper)
 
         # alter task
-        task = cls.command_task(**options)
+        task = cls.command_task(options)
         if task:
             set_task_callable(task)
 
         # command collect success:
         cls.command_collect_logout()
 
-        # update options
-
     @classmethod
     def command_initial(cls, options):
-        """
-        Args:
-            **kwargs:
-        """
         if not cls.do_collect:
             return True
 
         log.info('-----------> initial start <-----------')
-        try:
-            collect_scheme_initial(**options)
+        collect_scheme_initial()
 
-        # command initial failed:
-        except AssertionError as ae:
-            # TODO: assert error
-            log.error("assert error in initializing of command '{}'. ".format(cls.__name__), 'initial')
-            log.exception(ae, 0)
-            raise Exception('initial failed.')
-        # command initial success:
-        except Exception as e:
-            log.error("some error in initializing of command '{}'. ".format(cls.__name__), 'initial')
-            log.exception(e, 0)
-            raise Exception('initial failed.')
+        # set the components from the global variable
+        cls.suits = get_suits()
+        cls.tasks = get_tasks()
+        cls.pipeline = get_pipeline()
+        cls.proxy = get_proxy()
 
-        else:
-            cls.suits = get_suits()
-            cls.tasks = get_tasks()
-            cls.pipeline = get_pipeline()
-            cls.proxy = get_proxy()
-
-            # TODO: proxy start.
-            if cls.proxy:
-                cls.proxy.start()
-            return True
+        # TODO: proxy start.
+        if cls.proxy:
+            cls.proxy.start()
+        return True
 
     @classmethod
     def start(cls, options):
@@ -171,22 +151,20 @@ class Command(object):
             cls.command_collect(options)
         except Exception as e:
             if exception:
-                log.error('Failed in the collecting of command.')
+                log.error('Failed in the collecting of command.', 'Collect')
                 log.exception(e, line=0)
             return False
         try:
             cls.command_initial(options)
         except Exception as e:
             if exception:
-                log.error('Failed in the initialing of command.')
+                log.error('Failed in the initialing of command.', 'Initial')
                 log.exception(e, line=0)
             return False
 
-        if options['kwargs'].get('confirm'):
-            sleep(1)
-            for i in range(3, 0, -1):
-                log.info('command start at {}.'.format(i))
-                sleep(1)
+        # for i in range(3, 0, -1):
+        #     log.info('command start at {}.'.format(i))
+        #     sleep(1)
 
         log.info('-----------> command start <-----------')
         try:
@@ -198,29 +176,9 @@ class Command(object):
             return False
         return True
 
-        # try:
-        #     if options.get('confirm'):
-        #         sleep(1)
-        #         for i in range(3, 0, -1):
-        #             log.info('command start at {}.'.format(i))
-        #             sleep(1)
-        #     log.info('-----------> command start <-----------')
-        #
-        #     cls.run(options)
-        # except AssertionError as ae:
-        #     # TODO: assert error
-        #     log.error("assert error in processing of command '{}'. ".format(cls.__name__), 'process')
-        #     log.exception('Command', ae, 0)
-        #
-        # except Exception as e:
-        #     log.error("some error in processing of command '{}'. ".format(cls.__name__), 'process')
-        #     log.exception('Command', e)
-        # else:
-        #     return True
-
     @classmethod
     @abstractmethod
-    def run(cls, kw):
+    def run(cls, options):
         pass
 
     @classmethod
@@ -236,11 +194,6 @@ class Command(object):
     @classmethod
     @abstractmethod
     def restart(cls):
-        pass
-
-    @classmethod
-    @abstractmethod
-    def signal_callback(cls, signum, frame):
         pass
 
     @classmethod

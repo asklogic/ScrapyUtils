@@ -97,7 +97,7 @@ def collect_scheme_preload(scheme: str):
     return True
 
 
-def collect_scheme_initial(**kwargs):
+def collect_scheme_initial():
     global tasks_callable, scraper_callable, steps_class, processors_class, config
 
     global tasks, scrapers, proxy, config, step_suits, processor_suit, models_pipeline

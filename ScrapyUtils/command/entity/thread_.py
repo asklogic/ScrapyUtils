@@ -23,7 +23,7 @@ class Thread(Command, ComponentMixin):
         return '[Thread]'
 
     @classmethod
-    def run(cls, kw):
+    def run(cls, options):
         event = Event()
         lock = Lock()
 
@@ -44,26 +44,8 @@ class Thread(Command, ComponentMixin):
 
         event.set()
 
-        cls.running = True
-
-        # TODO: refactor this
-
-        # empty_flag = False
-        #
-        # while not empty_flag:
-        #     [x.start() for x in cls.consumers]
-        #     while cls.tasks.qsize() != 0:
-        #         time.sleep(0.1)
-        #
-        #     [x.stop() for x in cls.consumers]
-        #
-        #     empty_flag = cls.tasks.empty()
-        #
-        # [x.stop() for x in cls.consumers]
-
     @classmethod
     def exit(cls):
-
         log.info('exit command {}'.format(cls.__name__), 'System')
 
         # suit exit
@@ -85,12 +67,10 @@ class Thread(Command, ComponentMixin):
     @classmethod
     def paused(cls):
         [x.stop(False) for x in cls.consumers]
-        cls.running = False
 
     @classmethod
     def restart(cls):
         [x.start() for x in cls.consumers]
-        cls.running = True
 
     @classmethod
     def signal_callback(cls, signum, frame):
@@ -108,6 +88,7 @@ class Thread(Command, ComponentMixin):
         case_empty = cls.tasks.qsize() == 0
         case_block = [None for consumer in cls.consumers if not consumer.block] == []
         return case_empty and case_block
+
         # return case_empty and not [None for consumer in cls.consumers if not consumer.block]
         # return not (cls.tasks.qsize() > 0 or [None for consumer in cls.consumers if not consumer.block])
 
@@ -175,7 +156,7 @@ class ScrapyConsumer(Consumer):
                 self.scraper.proxy = self.proxy.queue.get()
 
         else:
-            if result[0]:
+            if result:
                 for model in self.suit.models:
                     self.pipeline.push(model)
             else:

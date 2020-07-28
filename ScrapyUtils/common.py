@@ -34,17 +34,19 @@ class FileProcessorMixin(Processor):
     def __init__(self, config: dict = None):
         super().__init__(config)
 
-        # file's folder.
-        # default : /<scheme>/data
-        if not (hasattr(self, 'file_folder') and self.file_folder):
+        # File's folder.
+        # Default : /<scheme>/data
+        # Keep blank str will save into the work folder.
+        if not (hasattr(self, 'file_folder') and self.file_folder != None):
             self.file_folder = config.get('file_folder', self.config.get('file_folder'))
 
-        # file's name.
-        # default : timestamp
+        # File's name.
+        # Default : timestamp
         if not (hasattr(self, 'file_name') and self.file_name):
             self.file_name = config.get('file_name', str(int(time.time())))
 
-        # fixed path.
+        # Fixed file path.
+        # Default : /scheme/data
         if not (hasattr(self, 'file_path') and self.file_path):
             self.file_path = os.path.join(self.file_folder, self.file_name)
 
@@ -92,8 +94,6 @@ class CSVFileProcessor(FileProcessorMixin, Processor):
                 writer.writerow(list(i.values()))
 
 
-
-
 class ExeclFileProcessor(FileProcessorMixin, Processor):
     file_suffix = '.xlsx'
 
@@ -120,12 +120,6 @@ class ExeclFileProcessor(FileProcessorMixin, Processor):
             log.error('insert row failed', 'Execl')
 
     def on_exit(self):
-        # with open(self.file_path, 'w', encoding='utf-8', newline='' "") as f:
-        #     writer = csv.writer(f)
-        #
-        #     writer.writerow(list(self.data[0].keys()))
-        #     for i in self.data:
-        #         writer.writerow(list(i.values()))
 
         self.wb.save(self.file_path)
 

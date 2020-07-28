@@ -17,13 +17,15 @@ class Parsing(Thread):
         return '[Parsing]'
 
     @classmethod
-    def command_config(cls, **kwargs):
+    def command_config(cls, options):
         """
         Args:
-            **kwargs:
+            **options:
         """
         cls.config['thread'] = 1
         cls.config['timeout'] = 0
+
+        kwargs = options.get('kwargs')
 
         download = kwargs.get('download')
         index = int(kwargs.get('index', -1))
@@ -61,11 +63,7 @@ class Parsing(Thread):
         super().command_collect_logout()
 
     @classmethod
-    def command_task(cls, **kwargs):
-        """
-        Args:
-            **kwargs:
-        """
+    def command_task(cls, options):
         def inner():
             time.sleep(0.618)
             log.info('loading download files.')
@@ -85,10 +83,10 @@ class Parsing(Thread):
         return inner
 
     @classmethod
-    def command_scraper(cls, **kwargs):
+    def command_scraper(cls, options):
         """
         Args:
-            **kwargs:
+            **options:
         """
         def inner():
             return None
@@ -96,12 +94,12 @@ class Parsing(Thread):
         return inner
 
     @classmethod
-    def command_components(cls, steps, processors, **kwargs):
+    def command_components(cls, steps, processors, options):
         """
         Args:
             steps:
             processors:
-            **kwargs:
+            **options:
         """
         last_action = 0
 

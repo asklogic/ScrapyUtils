@@ -22,29 +22,22 @@ class Download(Thread):
         return '[Download]'
 
     @classmethod
-    def command_config(cls, **kwargs):
-
-        # TODO: refactor
-        """
-        Args:
-            **kwargs:
-        """
+    def command_config(cls, options):
         global file_type
+
+        kwargs = options.get('kwargs')
         if kwargs.get('file_type', 'html'):
-            file_type = str(kwargs.get('file_type', 'html'))
+            file_type = str(options.get('file_type', 'html'))
 
         if kwargs.get('download'):
-            cls.config['download_target'] = kwargs.get('download')
+            cls.config['download_target'] = options.get('download')
 
     @classmethod
-    def command_components(cls, steps: List[type(ActionStep)], processors: List[type(ParseStep)], **kwargs):
+    def command_components(cls, steps: List[type(ActionStep)], processors: List[type(ParseStep)], options):
+        """Remove other parsing steps.
 
         """
-        Args:
-            steps:
-            processors:
-            **kwargs:
-        """
+        # mark the last ActionStep.
         last_action = 0
 
         for index in range(len(steps)):
@@ -52,23 +45,23 @@ class Download(Thread):
                 last_action = index
 
         steps = steps[:last_action + 1]
+
+        # add the downalod steps.
         steps.append(DownloadAction)
         steps.append(DownloadParse)
 
+        # fixed processor.
         processors = [DownloadProcessor]
 
         return steps, processors
 
 
 class DownloadAction(ActionStep):
-    """add page_name"""
+    """Add page_name in the context."""
 
     def scraping(self, task: Task):
-        # if url. parse and get uri
-        """
-        Args:
-            task (Task):
-        """
+        """if url. parse and get uri"""
+
         path: str = urlparse(task.url).path
 
         if path.count(r'/') > 1:
@@ -85,7 +78,6 @@ class DownloadAction(ActionStep):
 
 
 class DownloadParse(ParseStep):
-
     def parsing(self):
         model = DownloadModel()
 
@@ -122,11 +114,10 @@ class DownloadProcessor(Processor):
         self.download_index = 0
         # assert False
 
-        log.info(os.path.basename(self.current_download_path), 'Target')
-        log.info(file_type, 'Suffix')
-        log.info(self.current_download_path, 'Path')
+        log.info('Target folder: ' + os.path.basename(self.current_download_path), 'Download')
+        log.info('suffix: ' + file_type, 'Download')
+        log.info('path: ' + self.current_download_path, 'Download')
 
-        # log.info('download path target: {}'.format(os.path.basename(self.current_download_path)), 'Download')
 
     def process_item(self, model: DownloadModel) -> Any:
         # name = os.path.join(self.current_download_path, str(model.page_name))

@@ -23,6 +23,9 @@ from ScrapyUtils.components.step import Step, ActionStep, ParseStep
 
 PROJECT_PATH = os.getcwd()
 
+if getattr(sys, 'frozen', False):
+    sys.path.append(os.path.dirname(sys.executable))
+
 
 def load_files(target_name: str) -> List[ModuleType]:
     target_modules: List[ModuleType] = []
@@ -71,9 +74,6 @@ def load_components(target_name: str = None) -> Tuple[List[Scheme], List[Model],
     return prepares, schemes, models, processors
 
 
-
-
-
 def build_schemes(scheme_list: List[type(Scheme)]) -> List[Scheme]:
     for scheme in scheme_list:
         assert issubclass(scheme, Scheme)
@@ -90,7 +90,6 @@ def load_context(task: Task, schemes: List[Scheme]):
     if task.param and type(task.param) is dict:
         for key, item in task.param.items():
             schemes[0].context[key] = item
-
 
 
 def build_thread_schemes(schemes: List[Scheme], thread: int) -> List[List[Scheme]]:
@@ -139,10 +138,6 @@ def _load_component(module, component: type) -> List[type]:
             # print(f)
             res.append(f)
     return res
-
-
-
-
 
 
 def do_action(scheme: Action, task, scraper):

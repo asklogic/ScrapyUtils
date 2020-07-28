@@ -4,7 +4,7 @@ import linecache
 from os.path import basename
 from logging import DEBUG, INFO, WARNING, ERROR
 
-common_format = logging.Formatter(r'%(asctime)s [%(levelname)s]|%(message)s', r'%H:%M:%S')
+common_format = logging.Formatter(r'%(asctime)s [%(levelname)s] %(message)s', r'%H:%M:%S')
 basic_format = logging.Formatter(r" * %(message)s", r'%H:%M:%S')
 
 
@@ -32,7 +32,8 @@ class LogWrapper:
         """
         component = ' - '.join(args)
         component_msg = ''.join(['<', component, '>']) if component else ''
-        message = ' '.join((x for x in (self.syntax, component_msg, msg) if x))
+        # message = ' '.join((x for x in (self.syntax, component_msg, msg) if x))
+        message = ' '.join((x for x in (component_msg, msg) if x))
         return message
 
     def info(self, msg, *args, **kwargs):
@@ -71,19 +72,20 @@ class LogWrapper:
         """
         self.log.error(msg=self._msg(msg, *args), **kwargs)
 
-    def exception(self, component_name: str, exception: Exception, line: int = None):
+    def exception(self, exception: Exception, line: int = None):
         """
         Args:
             component_name (str):
             exception (Exception):
             line (int):
         """
-        if not line:
+        if line is None:
             line = self.line
 
         exception_name = exception.__class__.__name__
-        component_name = '<{}>'.format(component_name)
-        message = ' '.join([self.syntax, component_name, exception_name, '-', str(exception)])
+        # component_name = '<{}>'.format(component_name)
+        # message = ' '.join([self.syntax, component_name, exception_name, '-', str(exception)])
+        message = ' '.join([exception_name, '-', str(exception)])
         self.log.error(message)
 
         current = exception.__traceback__
@@ -160,9 +162,6 @@ logger.addHandler(sh)
 
 basic = LogWrapper(logger)
 basic.syntax = ''
-
-
-
 
 if __name__ == '__main__':
     print('logger test!')

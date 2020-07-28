@@ -14,7 +14,7 @@ def cli():
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
 @click.option('-p', '--port', 'port', type=int)
 @click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
-@click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
+@click.option('-b', '--background/--no-background', 'background', is_flag=True, default=False)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
 def thread(scheme: str, path, confirm, port, background, log):
     """Default Mode."""
@@ -38,7 +38,7 @@ def thread(scheme: str, path, confirm, port, background, log):
 @click.option('download', '--download')
 @click.option('-p', '--port', 'port', type=int)
 @click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
-@click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
+@click.option('-b', '--background/--no-background', 'background', is_flag=True, default=False)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
 def download(scheme: str, path, download, confirm, port, background, log):
     """Download the HTML or other content."""

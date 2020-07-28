@@ -17,29 +17,37 @@ listener = Listener()
 
 
 def trigger(**kwargs):
-    options = kwargs.copy()
+    options = {}
+    options['kwargs'] = kwargs
 
-    command = get_command_type(options.get('command'))
+    command_name = kwargs.get('command')
+    scheme_name = kwargs.get('scheme')
 
-    if options.get('background'):
-        p = start_subprocess(kwargs.get('command'), kwargs.get('scheme'))
+    options['command'] = command_name
+    options['scheme'] = scheme_name
+
+    command = get_command_type(command_name)
+
+    # TEMP
+    options['exception'] = True
+
+    if kwargs.get('background'):
+        p = start_subprocess(command_name, scheme_name)
         options['stdout'] = p.stdout
 
         command = get_command_type('background')
-    elif options.get('log'):
+    elif kwargs.get('log'):
         listener.start()
-
-    # update options
-    command.command_collect(options)
-
-    listener.output = init_output(options)
+        listener.output = init_output(options)
 
     # wait
-    wait(options.get('confirm'))
+    wait(kwargs.get('confirm'))
 
-    command.command_initial(options)
+    # update options
 
-    command.start(options)
+
+    if not command.start(options):
+        sys.exit(0)
 
     # block
     loop_case = lambda: not command.finished()
@@ -71,15 +79,21 @@ def init_output(options):
 
     """
 
-    log_file_name = '-'.join((options.get('command'), options.get('scheme'), str(int(time.time())))[-4:]) + '.out'
+    kwargs = options.get('kwargs')
+    command = kwargs.get('command')
+    scheme = kwargs.get('scheme')
+
+    log = kwargs.get('log')
+
+    log_file_name = '-'.join((command, scheme, str(int(time.time())))[-4:]) + '.out'
 
     # TODO: get log file parameter
-    if options.get('log_file'):
-        pass
+    # if options.get('log_file'):
+    #     pass
 
-    output = os.path.join(os.getcwd(), options.get('scheme'), log_file_name)
+    output = os.path.join(os.getcwd(), scheme, log_file_name)
 
-    if options.get('port') or options.get('log'):
+    if log:
         basic.info('output: {}.'.format(output), 'Output')
         set_log_file_name(output)
         return output

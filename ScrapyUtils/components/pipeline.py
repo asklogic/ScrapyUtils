@@ -47,7 +47,7 @@ class ProcessorSuit(ComponentSuit):
                     break
         except Exception as e:
             # TODO: continue by config
-            log.exception('Processor', e, line=1)
+            log.exception(e, line=1)
             return False
         else:
             return True

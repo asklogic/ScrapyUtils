@@ -2,6 +2,7 @@ from abc import abstractmethod
 from queue import Queue
 from typing import List, Callable
 from time import sleep
+from sys import exit
 
 from ScrapyUtils.components import StepSuit, Pipeline
 from ScrapyUtils.libs import Producer
@@ -86,16 +87,13 @@ class Command(object):
 
     @classmethod
     def command_collect(cls, options):
-        """
-        Args:
-            **kwargs:
-        """
         if not cls.do_collect:
             return True
 
         log.info('-----------> collect start <-----------')
+        scheme = options['kwargs'].get('scheme')
 
-        collect_scheme_preload(options.get('scheme'))
+        assert collect_scheme_preload(scheme), 'Interrupted in the scheme proload.'
 
         # config
         cls.config = get_config()
@@ -120,7 +118,6 @@ class Command(object):
         cls.command_collect_logout()
 
         # update options
-        options.update(cls.config)
 
     @classmethod
     def command_initial(cls, options):
@@ -139,12 +136,12 @@ class Command(object):
         except AssertionError as ae:
             # TODO: assert error
             log.error("assert error in initializing of command '{}'. ".format(cls.__name__), 'initial')
-            log.exception('Command', ae, 0)
+            log.exception(ae, 0)
             raise Exception('initial failed.')
         # command initial success:
         except Exception as e:
             log.error("some error in initializing of command '{}'. ".format(cls.__name__), 'initial')
-            log.exception('Command', e, 0)
+            log.exception(e, 0)
             raise Exception('initial failed.')
 
         else:
@@ -168,14 +165,38 @@ class Command(object):
         Returns:
 
         """
+        exception = options.get('exception')
 
-        if options.get('confirm'):
+        try:
+            cls.command_collect(options)
+        except Exception as e:
+            if exception:
+                log.error('Failed in the collecting of command.')
+                log.exception(e, line=0)
+            return False
+        try:
+            cls.command_initial(options)
+        except Exception as e:
+            if exception:
+                log.error('Failed in the initialing of command.')
+                log.exception(e, line=0)
+            return False
+
+        if options['kwargs'].get('confirm'):
             sleep(1)
             for i in range(3, 0, -1):
                 log.info('command start at {}.'.format(i))
                 sleep(1)
+
         log.info('-----------> command start <-----------')
-        cls.run(options)
+        try:
+            cls.run(options)
+        except Exception as e:
+            if exception:
+                log.error('Failed in the initialing of command.')
+                log.exception(e, line=0)
+            return False
+        return True
 
         # try:
         #     if options.get('confirm'):

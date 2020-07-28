@@ -62,9 +62,9 @@ def collect_scheme_preload(scheme: str):
 
 
     except Exception as e:
-        log.exception('collect', e)
-        # TODO: interrupt
-        raise Exception('interrupt.')
+        # log.error()
+        log.exception(e, line=3)
+        return False
 
     # ----------------------------------------------------------------------
     # global setting
@@ -92,7 +92,9 @@ def collect_scheme_preload(scheme: str):
         log.info('no global setting.', 'System')
     except Exception as e:
         log.warning('load global settings failed', 'System')
-        log.exception('System', e)
+        log.exception(e, line=3)
+
+    return True
 
 
 def collect_scheme_initial(**kwargs):

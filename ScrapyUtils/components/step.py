@@ -95,7 +95,7 @@ class ActionStep(Step):
             return True
         except Exception as e:
             # TODO: log out
-            log.exception(self.name, e)
+            log.exception(e)
             # self.log.error('error', self.name)
             return False
 
@@ -136,7 +136,7 @@ class ParseStep(Step):
             return True
 
         except Exception as e:
-            log.exception(self.name, e)
+            log.exception(e)
 
             return False
 

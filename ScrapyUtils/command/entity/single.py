@@ -59,7 +59,7 @@ class Single(Command):
                     res = 'None' if res is None else res
                     self.log.info('Executed. output:' + str(res))
                 except Exception as e:
-                    self.log.exception('Execute', e)
+                    self.log.exception(e)
 
     def exit(self):
         self.log.info('exit.')

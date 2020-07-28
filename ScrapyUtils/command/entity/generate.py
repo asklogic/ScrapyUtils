@@ -16,18 +16,13 @@ class Generate(Command):
     do_collect = False
 
     @classmethod
-    def run(cls, kw):
-        """
-        Args:
-            kw:
-        """
-        scheme = kw.get('scheme', 'Default')
-        relative_path = kw.get('path', core.PROJECT_PATH)
+    def run(cls, kwargs):
+        scheme = kwargs.get('scheme', 'Default')
+        relative_path = kwargs.get('path', core.PROJECT_PATH)
 
         # necessary property
-
-        cls.path = os.path.join(relative_path, scheme)
-        path = cls.path
+        path = os.path.join(relative_path, scheme)
+        cls.path = path
 
         time.sleep(0.2)
         log.info('scheme name: ' + os.path.basename(path))

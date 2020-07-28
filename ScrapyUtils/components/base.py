@@ -90,7 +90,7 @@ class ComponentSuit(object):
                 current = component(config)
                 self._components.append(current)
             except Exception as e:
-                log.exception(self.__class__.__name__, e)
+                log.exception(e)
                 log.error('Component {} initial failed.'.format(component.name), self.__class__.__name__)
                 # TODO: raise exception?
 
@@ -103,7 +103,7 @@ class ComponentSuit(object):
             try:
                 component.on_start()
             except Exception as e:
-                log.exception(self.__class__.__name__, e)
+                log.exception(e)
                 log.error('component {} start failed.'.format(component.name), self.__class__.__name__)
                 # TODO: interrupt exception.
                 raise Exception('interrupt.')
@@ -113,7 +113,7 @@ class ComponentSuit(object):
             try:
                 component.on_exit()
             except Exception as e:
-                log.exception(self.__class__.__name__, e)
+                log.exception(e)
                 log.error('component {} exit failed.'.format(component.name), self.__class__.__name__)
                 # TODO: interrupt exception.
                 # raise Exception('interrupt.')

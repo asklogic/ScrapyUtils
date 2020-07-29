@@ -255,8 +255,11 @@ def collect_settings(module: ModuleType):
     current_config['file_folder'] = getattr(module, 'FILE_FOLDER', os.path.join(path.dirname(module.__file__), 'data'))
     current_config['file_name'] = getattr(module, 'FILE_NAME', str(int(time.time())))
 
+    # download settings
     current_config['download_folder'] = getattr(module, 'DOWNLOAD_FOLDER',
                                                 os.path.join(path.dirname(module.__file__), 'download'))
+    current_config['download_suffix'] = getattr(module, 'DOWNLOAD_SUFFIX', 'html')
+    current_config['download_path'] = getattr(module, 'DOWNLOAD_PATH', None)
 
     # proxy
     current_config['proxy'] = getattr(module, 'PROXY', False)

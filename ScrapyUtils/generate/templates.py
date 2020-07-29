@@ -146,4 +146,11 @@ def generate_tasks(**kwargs):
 # default scraper is RequestScraper.
 def generate_scraper(**kwargs):
     pass
+
+# from os.path import join, sep
+
+# DOWNLOAD_SUFFIX = 'html'
+# DOWNLOAD_FOLDER = join([sep, 'atom', 'download'])
+# DOWNLOAD_PATH =
+
 '''

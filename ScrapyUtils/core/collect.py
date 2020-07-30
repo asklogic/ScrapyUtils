@@ -136,7 +136,7 @@ def collect_scheme_initial():
     # proxy : producer
     proxy = build_proxy(config)
 
-
+# abort
 def collect_scheme(scheme: str):
     """
     load scheme.
@@ -256,6 +256,7 @@ def collect_settings(module: ModuleType):
     current_config['file_name'] = getattr(module, 'FILE_NAME', str(int(time.time())))
 
     # download settings
+    # TODO: Abort download_folder? Set download path manually.
     current_config['download_folder'] = getattr(module, 'DOWNLOAD_FOLDER',
                                                 os.path.join(path.dirname(module.__file__), 'download'))
     current_config['download_suffix'] = getattr(module, 'DOWNLOAD_SUFFIX', 'html')

@@ -90,8 +90,8 @@ class ComponentSuit(object):
                 current = component(config)
                 self._components.append(current)
             except Exception as e:
-                log.exception(e)
-                log.error('Component {} initial failed.'.format(component.name), self.__class__.__name__)
+                log.error('Component initial failed.', component.name)
+                log.exception(e, line=1)
                 # TODO: raise exception?
 
     @property
@@ -105,6 +105,8 @@ class ComponentSuit(object):
             except Exception as e:
                 log.exception(e)
                 log.error('component {} start failed.'.format(component.name), self.__class__.__name__)
+
+                self.components.remove(component)
                 # TODO: interrupt exception.
                 raise Exception('interrupt.')
 

@@ -154,6 +154,7 @@ class Command(object):
                 log.error('Failed in the collecting of command.', 'Collect')
                 log.exception(e, line=0)
             return False
+
         try:
             cls.command_initial(options)
         except Exception as e:

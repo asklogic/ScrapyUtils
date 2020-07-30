@@ -42,7 +42,6 @@ def trigger(**kwargs):
     # wait
     wait(kwargs.get('confirm'))
 
-    # update options
     if not command.start(options):
         sys.exit(0)
 

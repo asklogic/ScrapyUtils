@@ -17,7 +17,16 @@ def cli():
 @click.option('-b', '--background/--no-background', 'background', is_flag=True, default=False)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
 def thread(scheme: str, path, confirm, port, background, log):
-    """Default Mode."""
+    """Default Mode.
+
+    Args:
+        scheme (str):
+        path:
+        confirm:
+        port:
+        background:
+        log:
+    """
 
     trigger(command='thread', scheme=scheme, path=path, confirm=confirm, port=port, background=background,
             log=log)
@@ -41,7 +50,17 @@ def thread(scheme: str, path, confirm, port, background, log):
 @click.option('-b', '--background/--no-background', 'background', is_flag=True, default=False)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
 def download(scheme: str, path, download, confirm, port, background, log):
-    """Download the HTML or other content."""
+    """Download the HTML or other content.
+
+    Args:
+        scheme (str):
+        path:
+        download:
+        confirm:
+        port:
+        background:
+        log:
+    """
 
     trigger(command='download', scheme=scheme, path=path, download=download, confirm=confirm, port=port,
             background=background,
@@ -67,7 +86,17 @@ def download(scheme: str, path, download, confirm, port, background, log):
 @click.option('-b', '--background/--no-background', 'background', is_flag=True, default=True)
 @click.option('-l', '--log/--no-log', 'log', is_flag=True, default=False)
 def parsing(scheme: str, path, download, index, confirm, background, log):
-    """Parsing from the download folder."""
+    """Parsing from the download folder.
+
+    Args:
+        scheme (str):
+        path:
+        download:
+        index:
+        confirm:
+        background:
+        log:
+    """
     trigger(command='parsing', scheme=scheme, path=path, download=download, index=index, confirm=confirm,
             background=False,
             log=False)
@@ -77,7 +106,13 @@ def parsing(scheme: str, path, download, index, confirm, background, log):
 @click.argument('scheme')
 @click.option('path', '--path', default=os.getcwd(), type=click.Path())
 def single(scheme: str, path):
-    """[TODO]"""
+    """
+    [TODO]
+
+    Args:
+        scheme (str):
+        path:
+    """
     trigger('single', scheme=scheme, path=path)
 
 
@@ -85,14 +120,24 @@ def single(scheme: str, path):
 @click.argument('scheme')
 @click.option('-c', '--confirm/--no-confirm', 'confirm', is_flag=True, default=False)
 def generate(scheme: str, confirm):
-    """Generate a tempalte."""
+    """Generate a tempalte.
+
+    Args:
+        scheme (str):
+        confirm:
+    """
     trigger(command='generate', scheme=scheme, confirm=confirm, background=False)
 
 
 @click.command()
 @click.argument('target')
 def check(target: str):
-    """[TODO]"""
+    """
+    [TODO]
+
+    Args:
+        target (str):
+    """
     trigger('check', target=target)
 
 

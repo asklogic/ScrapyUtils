@@ -65,6 +65,10 @@ def stop_listener(port):
 
 
 def get_output(port) -> str or False:
+    """
+    Args:
+        port:
+    """
     data = _socket_connect(msg=2, port=port, timeout=1)
     return data
 
@@ -111,6 +115,11 @@ class Listener(threading.Thread):
 
     def __init__(self, port=52000, output: str = 'None'):
 
+        """
+        Args:
+            port:
+            output (str):
+        """
         threading.Thread.__init__(self)
 
         self.socket = socket.socket()
@@ -132,6 +141,11 @@ class Listener(threading.Thread):
 
     def block_to_start(self, block_state=True, timeout=300):
 
+        """
+        Args:
+            block_state:
+            timeout:
+        """
         while self.state == block_state and timeout != 0:
             timeout -= 1
             time.sleep(0.2)

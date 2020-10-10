@@ -16,7 +16,7 @@ class TestCommandThreadTestCase(unittest.TestCase):
         }
 
         command = Thread()
-        command.command_collect(**kwargs)
+        command.command_alter(**kwargs)
         command.command_initial(**kwargs)
         command.command_process(**kwargs)
 

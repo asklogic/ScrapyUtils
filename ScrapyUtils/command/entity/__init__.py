@@ -33,7 +33,7 @@ class Command(object):
         """alter command.config
 
         Args:
-            **options:
+            options:
         """
         pass
 
@@ -44,7 +44,7 @@ class Command(object):
         Args:
             steps:
             processors:
-            **options:
+            options:
         """
         return steps, processors
 
@@ -53,7 +53,7 @@ class Command(object):
         """alter command.scraper
 
         Args:
-            **options:
+            options:
         """
         return None
 
@@ -62,7 +62,7 @@ class Command(object):
         """alter command.tasks
 
         Args:
-            **options:
+            options:
         """
         return None
 
@@ -85,14 +85,9 @@ class Command(object):
         # log.info('==========================================')
 
     @classmethod
-    def command_collect(cls, options):
-        if not cls.do_collect:
-            return True
-
+    def command_alter(cls):
         log.info('-----------> collect start <-----------')
         scheme = options['kwargs'].get('scheme')
-
-        assert collect_scheme_preload(scheme), 'Interrupted in the scheme proload.'
 
         # alter config
         cls.config = get_config()
@@ -117,13 +112,7 @@ class Command(object):
         cls.command_collect_logout()
 
     @classmethod
-    def command_initial(cls, options):
-        if not cls.do_collect:
-            return True
-
-        log.info('-----------> initial start <-----------')
-        collect_scheme_initial()
-
+    def command_initial(cls):
         # set the components from the global variable
         cls.suits = get_suits()
         cls.tasks = get_tasks()
@@ -140,34 +129,21 @@ class Command(object):
         """command run without blocking.
 
         Args:
-            **kwargs:
-
-        Returns:
-
+            options:
         """
         exception = options.get('exception')
+        scheme = options['kwargs'].get('scheme')
 
-        try:
-            cls.command_collect(options)
-        except Exception as e:
-            if exception:
-                log.error('Failed in the collecting of command.', 'Collect')
-                log.exception(e, line=0)
-            return False
+        if cls.do_collect:
+            collect_scheme_preload(scheme)
 
-        try:
-            cls.command_initial(options)
-        except Exception as e:
-            if exception:
-                log.error('Failed in the initialing of command.', 'Initial')
-                log.exception(e, line=0)
-            return False
+            # TODO: command alter.
+            cls.command_alter()
 
-        # for i in range(3, 0, -1):
-        #     log.info('command start at {}.'.format(i))
-        #     sleep(1)
+            collect_scheme_initial()
 
-        log.info('-----------> command start <-----------')
+            cls.command_initial()
+
         try:
             cls.run(options)
         except Exception as e:
@@ -176,6 +152,39 @@ class Command(object):
                 log.exception(e, line=0)
             return False
         return True
+
+        # try:
+        #     cls.command_collect(options)
+        # except Exception as e:
+        #     if exception:
+        #         log.error('Failed in the collecting of command.', 'Collect')
+        #         log.exception(e, line=0)
+        #     return False
+        #
+        # try:
+        #     cls.command_initial(options)
+        # except Exception as e:
+        #     if exception:
+        #         log.error('Failed in the initialing of command.', 'Initial')
+        #         log.exception(e, line=0)
+        #     return False
+        #
+        # # refactor:
+        #
+        # if cls.do_collect:
+        #     # collect
+        #     # config
+        #     pass
+        #
+        # log.info('-----------> command start <-----------')
+        # try:
+        #     cls.run(options)
+        # except Exception as e:
+        #     if exception:
+        #         log.error('Failed in the initialing of command.')
+        #         log.exception(e, line=0)
+        #     return False
+        # return True
 
     @classmethod
     @abstractmethod

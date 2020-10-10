@@ -20,7 +20,7 @@ class Parsing(Thread):
     def command_config(cls, options):
         """
         Args:
-            **options:
+            options:
         """
         cls.config['thread'] = 1
         cls.config['timeout'] = 0
@@ -64,6 +64,10 @@ class Parsing(Thread):
 
     @classmethod
     def command_task(cls, options):
+        """
+        Args:
+            options:
+        """
         def inner():
             time.sleep(0.618)
             log.info('loading download files.')
@@ -86,7 +90,7 @@ class Parsing(Thread):
     def command_scraper(cls, options):
         """
         Args:
-            **options:
+            options:
         """
         def inner():
             return None
@@ -99,7 +103,7 @@ class Parsing(Thread):
         Args:
             steps:
             processors:
-            **options:
+            options:
         """
         last_action = 0
 

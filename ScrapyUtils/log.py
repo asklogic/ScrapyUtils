@@ -75,7 +75,6 @@ class LogWrapper:
     def exception(self, exception: Exception, line: int = None):
         """
         Args:
-            component_name (str):
             exception (Exception):
             line (int):
         """

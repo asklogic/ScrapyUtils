@@ -17,7 +17,7 @@ class MyTestCase(unittest.TestCase):
         }
 
         command = Command()
-        command.command_collect(**kwargs)
+        command.command_alter(**kwargs)
 
 
 if __name__ == '__main__':

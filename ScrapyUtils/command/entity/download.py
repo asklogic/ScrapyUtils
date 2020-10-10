@@ -22,6 +22,10 @@ class Download(Thread):
     @classmethod
     def command_config(cls, options):
 
+        """
+        Args:
+            options:
+        """
         kwargs = options.get('kwargs')
 
         if kwargs.get('download'):
@@ -31,6 +35,10 @@ class Download(Thread):
     def command_components(cls, steps: List[type(ActionStep)], processors: List[type(ParseStep)], options):
         """Remove other parsing steps.
 
+        Args:
+            steps:
+            processors:
+            options:
         """
         # mark the last ActionStep.
         last_action = 0
@@ -55,7 +63,11 @@ class DownloadAction(ActionStep):
     """Add page_name in the context."""
 
     def scraping(self, task: Task):
-        """if url. parse and get uri"""
+        """if url. parse and get uri
+
+        Args:
+            task (Task):
+        """
 
         path: str = urlparse(task.url).path
 
@@ -149,15 +161,21 @@ class DownloadProcessor(Processor):
         log.info('path: ' + os.path.join(os.getcwd(), self.current_path), 'Download')
 
     def process_item(self, model: DownloadModel) -> Any:
+        """
+        Args:
+            model (DownloadModel):
+        """
         page_name = str(model.page_name)
+        if page_name.startswith('/'):
+            page_name = page_name[1:]
         page_content = model.page_content
 
         # check if the suffix in the page_name.
         with_suffix = self.suffix in page_name and page_name[-len(self.suffix):] == self.suffix
         if with_suffix:
-            name = os.path.join(self.current_path, ''.join((str(model.page_name))))
+            name = os.path.join(self.current_path, ''.join((str(page_name))))
         else:
-            name = os.path.join(self.current_path, ''.join((str(model.page_name), '.', self.suffix)))
+            name = os.path.join(self.current_path, ''.join((str(page_name), '.', self.suffix)))
 
         # TODO: refactor name
 
@@ -169,11 +187,11 @@ class DownloadProcessor(Processor):
 
         if type(page_content) is bytes:
             with open(name, 'wb') as f:
-                f.write(model.page_content)
+                f.write(page_content)
 
         elif type(page_content) is str:
             with open(name, 'w', encoding='utf-8') as f:
-                f.write(model.page_content)
+                f.write(page_content)
 
     def on_start(self):
         pass

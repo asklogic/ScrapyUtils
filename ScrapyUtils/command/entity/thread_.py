@@ -12,6 +12,7 @@ from ScrapyUtils.components import *
 from ScrapyUtils.libs import Task, Consumer, Producer
 from ScrapyUtils.core import get_scraper
 
+from ScrapyUtils.core import configure
 
 class Thread(Command, ComponentMixin):
     do_collect = True
@@ -24,13 +25,17 @@ class Thread(Command, ComponentMixin):
 
     @classmethod
     def run(cls, options):
+        """
+        Args:
+            options:
+        """
         event = Event()
         lock = Lock()
 
         kws = [
             {
                 'queue': cls.tasks,
-                'delay': cls.config.get('timeout'),
+                'delay': configure.TIMEOUT,
                 'suit': x,
                 'pipeline': cls.pipeline,
                 'proxy': cls.proxy,
@@ -76,6 +81,11 @@ class Thread(Command, ComponentMixin):
     def signal_callback(cls, signum, frame):
         # [x.stop() for x in cls.consumers]
 
+        """
+        Args:
+            signum:
+            frame:
+        """
         log.warning('thread signal callback exit!.', 'Interrupt')
 
         # while not cls.tasks.empty():
@@ -103,6 +113,14 @@ class ScrapyConsumer(Consumer):
                  **kwargs):
 
         # assert
+        """
+        Args:
+            suit (StepSuit):
+            pipeline (Pipeline):
+            proxy (Producer):
+            timeout:
+            **kwargs:
+        """
         assert isinstance(pipeline, Pipeline), 'ScrapyConsumer need Pipeline.'
         assert isinstance(suit, StepSuit), 'ScrapyConsumer need StepSuit instance.'
 
@@ -139,6 +157,10 @@ class ScrapyConsumer(Consumer):
         # if self.proxy and not self.scraper.proxy:
         #     self.scraper.proxy = self.proxy.queue.get()
 
+        """
+        Args:
+            current (Task):
+        """
         func = self.suit.closure_scrapy()
 
         try:

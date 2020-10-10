@@ -30,6 +30,7 @@ def trigger(**kwargs):
     # TEMP
     options['exception'] = True
 
+    # background
     if kwargs.get('background'):
         p = start_subprocess(command_name, scheme_name)
         options['stdout'] = p.stdout
@@ -42,6 +43,8 @@ def trigger(**kwargs):
     # wait
     wait(kwargs.get('confirm'))
 
+    # if false: broken down in the command start, sys exit .
+    # if true: continue command.
     if not command.start(options):
         sys.exit(0)
 
@@ -65,14 +68,12 @@ def trigger(**kwargs):
 
 
 def init_output(options):
-    """initial the log's output.
-    generate a output name
-
-    Args:
-        options: options dict.
+    """initial the log's output. generate a output name
 
     Returns: the path of the output file.
 
+    Args:
+        options: options dict.
     """
 
     kwargs = options.get('kwargs')
@@ -99,6 +100,10 @@ def init_output(options):
 
 def wait(confirm: bool):
     # TODO: refactor
+    """
+    Args:
+        confirm (bool):
+    """
     if confirm:
         basic.info('===== wait to start =====')
     listener.state = confirm
@@ -111,6 +116,7 @@ def blocking(loop_case, inner_case=None, paused=lambda: True, loop_delay=0.1):
     Args:
         loop_case:
         inner_case:
+        paused:
         loop_delay:
     """
     assert callable(loop_case), 'block case must be callable'
@@ -137,6 +143,11 @@ def blocking(loop_case, inner_case=None, paused=lambda: True, loop_delay=0.1):
 
 
 def start_subprocess(command_name, scheme):
+    """
+    Args:
+        command_name:
+        scheme:
+    """
     if getattr(sys, 'frozen', False):
         cmd_list = [sys.executable, command_name, scheme, '--no-background', '--log', '--confirm']
 

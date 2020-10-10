@@ -1,4 +1,5 @@
-from ScrapyUtils.core.collect import collect_scheme, collect_scheme_initial, collect_scheme_preload
+from .collect import collect_scheme, collect_scheme_initial, collect_scheme_preload, initial_configure
+
 from . import collect
 
 

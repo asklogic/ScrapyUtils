@@ -14,6 +14,8 @@ from ScrapyUtils.libs import Scraper, RequestScraper, Proxy, MultiProducer, Prod
 from ScrapyUtils.log import common
 from ScrapyUtils.log import basic
 
+from . import configure
+
 # global:
 # *******************************************************************************
 
@@ -44,6 +46,33 @@ log = basic
 
 
 # *******************************************************************************
+
+#
+
+def initial_configure(settings_module: ModuleType):
+    global tasks_callable, scraper_callable
+    for key in configure.registered_keys:
+        if hasattr(settings_module, key):
+            # globals()[key] = getattr(settings_module, key)
+            setattr(configure, key, getattr(settings_module, key))
+
+    # globals()['SCHEME_PATH'] = path.dirname(settings_module.__file__)
+    configure.SCHEME_PATH =  path.dirname(settings_module.__file__)
+
+    # tasks
+    tasks_callable = getattr(settings_module, 'generate_tasks')
+    assert callable(tasks_callable), "profile's generate_tasks must be callable."
+
+    # scraper
+    scraper_callable = getattr(settings_module, 'generate_scraper')
+    assert callable(scraper_callable), "profile's generate_scraper must be callable."
+
+    # set_scraper_callable(scraper_callable)
+    # set_task_callable(tasks_callable)
+
+
+
+
 
 def collect_scheme_preload(scheme: str):
     global tasks_callable, scraper_callable, steps_class, processors_class, config
@@ -96,13 +125,22 @@ def collect_scheme_preload(scheme: str):
 
     return True
 
+def collect_scheme_preload(scheme: str):
+    module = import_module(scheme)
+
+    global steps_class, processors_class, tasks_callable, scraper_callable
+
+    steps_class = module.steps_class
+    processors_class = module.processors_class
 
 def collect_scheme_initial():
     global tasks_callable, scraper_callable, steps_class, processors_class, config
 
     global tasks, scrapers, proxy, config, step_suits, processor_suit, models_pipeline
 
-    thread_num = config.get('thread')
+    # thread_num = config.get('thread')
+    # TODO: TEMP empty config.
+    config = {}
 
     # ----------------------------------------------------------------------
     # task queue : tasks_callable
@@ -121,11 +159,11 @@ def collect_scheme_initial():
     # ----------------------------------------------------------------------
     # scrapers* : list[Scraper]
     gen = _default_scraper(scraper_callable)
-    scrapers = list_builder(gen, thread_num, timeout=30)
+    scrapers = list_builder(gen, configure.THREAD, timeout=30)
 
     # ----------------------------------------------------------------------
     # step suits : List[StepSuit]
-    step_suits = [StepSuit(scrapers[i], steps_class) for i in range(thread_num)]
+    step_suits = [StepSuit(scrapers[i], steps_class) for i in range(configure.THREAD)]
 
     # ----------------------------------------------------------------------
     # suit suit_start
@@ -134,7 +172,8 @@ def collect_scheme_initial():
 
     # ----------------------------------------------------------------------
     # proxy : producer
-    proxy = build_proxy(config)
+    # proxy = build_proxy(config)
+
 
 # abort
 def collect_scheme(scheme: str):

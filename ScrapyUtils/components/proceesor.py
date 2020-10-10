@@ -28,6 +28,10 @@ class Processor(Component, metaclass=ProcessorMeta):
     config: dict = None
 
     def __init__(self, config: dict = None):
+        """
+        Args:
+            config (dict):
+        """
         self.count: int = 0
         self.data = []
 

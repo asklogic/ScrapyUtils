@@ -47,12 +47,20 @@ class XpathParser(object):
     single: bool = False
 
     def __init__(self, html):
+        """
+        Args:
+            html:
+        """
         assert html, "empty content."
         assert type(html) == str, "html content must be str."
 
         self.etree = etree.HTML(html)
 
     def xpath(self, xpath):
+        """
+        Args:
+            xpath:
+        """
         assert xpath, "empty xpath."
         assert type(xpath) == str, "xpath content must be str."
 
@@ -72,6 +80,10 @@ class XpathParser(object):
         return pure_data
 
     def origin_xpath(self, xpath):
+        """
+        Args:
+            xpath:
+        """
         return self.etree.xpath(xpath)
 
 

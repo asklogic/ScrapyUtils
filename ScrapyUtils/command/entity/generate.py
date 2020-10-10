@@ -17,6 +17,10 @@ class Generate(Command):
 
     @classmethod
     def run(cls, kwargs):
+        """
+        Args:
+            kwargs:
+        """
         scheme = kwargs.get('scheme', 'Default')
         relative_path = kwargs.get('path', core.PROJECT_PATH)
 

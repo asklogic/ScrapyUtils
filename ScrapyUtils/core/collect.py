@@ -57,7 +57,11 @@ def initial_configure(settings_module: ModuleType):
             setattr(configure, key, getattr(settings_module, key))
 
     # globals()['SCHEME_PATH'] = path.dirname(settings_module.__file__)
-    configure.SCHEME_PATH =  path.dirname(settings_module.__file__)
+    configure.SCHEME_PATH = path.dirname(settings_module.__file__)
+
+    # initial download configure items
+    configure.DOWNLOAD_FOLDER_PATH = path.join(path.dirname(settings_module.__file__), 'download')
+    configure.DOWNLOAD_SUFFIX = 'html'
 
     # tasks
     tasks_callable = getattr(settings_module, 'generate_tasks')
@@ -69,9 +73,6 @@ def initial_configure(settings_module: ModuleType):
 
     # set_scraper_callable(scraper_callable)
     # set_task_callable(tasks_callable)
-
-
-
 
 
 def collect_scheme_preload(scheme: str):
@@ -125,13 +126,19 @@ def collect_scheme_preload(scheme: str):
 
     return True
 
+
 def collect_scheme_preload(scheme: str):
-    module = import_module(scheme)
+    try:
+        module = import_module(scheme)
 
-    global steps_class, processors_class, tasks_callable, scraper_callable
+        global steps_class, processors_class, tasks_callable, scraper_callable
 
-    steps_class = module.steps_class
-    processors_class = module.processors_class
+        steps_class = module.steps_class
+        processors_class = module.processors_class
+    except Exception as e:
+        log.exception(e)
+        raise Exception('Failed in scheme preload.')
+
 
 def collect_scheme_initial():
     global tasks_callable, scraper_callable, steps_class, processors_class, config

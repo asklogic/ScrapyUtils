@@ -61,7 +61,7 @@ GLOBAL_KEY = False
 GLOBAL_TASK = False
 GLOBAL_SCRAPER = False
 
-DOWNLOAD_FOLDER = None
+DOWNLOAD_FOLDER_PATH = None
 DOWNLOAD_SUFFIX = None
 DOWNLOAD_PATH = None
 
@@ -99,6 +99,10 @@ def initial_configure(settings_module: ModuleType):
             globals()[key] = getattr(settings_module, key)
 
     globals()['SCHEME_PATH'] = path.dirname(settings_module.__file__)
+
+    # initial download configure items
+    globals()['DOWNLOAD_FOLDER_PATH'] = path.join(path.dirname(settings_module.__file__), 'download')
+    globals()['DOWNLOAD_SUFFIX'] = 'html'
 
     # tasks
     tasks_callable = getattr(settings_module, 'generate_tasks')

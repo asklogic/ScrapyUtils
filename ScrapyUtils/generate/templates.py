@@ -154,3 +154,12 @@ def generate_scraper(**kwargs):
 # DOWNLOAD_PATH =
 
 '''
+
+init_template = """from ScrapyUtils.core.collect import collect_steps, collect_processors, initial_configure
+
+from . import action, parse, processor, settings
+
+steps_class = collect_steps(action, parse)
+processors_class = collect_processors(processor)
+initial_configure(settings)
+"""

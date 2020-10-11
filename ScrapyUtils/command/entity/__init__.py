@@ -17,8 +17,6 @@ class Command(object):
 
     do_collect: bool = True
 
-    config = dict()
-
     # def __init__(self):
     #     self.exitcode: int = 0
     #     self.interrupt: bool = False
@@ -85,31 +83,34 @@ class Command(object):
         # log.info('==========================================')
 
     @classmethod
-    def command_alter(cls):
+    def command_alter(cls, options):
         log.info('-----------> collect start <-----------')
-        scheme = options['kwargs'].get('scheme')
 
-        # alter config
-        cls.config = get_config()
-        cls.command_config(options)
+        try:
+            # alter config
+            cls.config = get_config()
+            cls.command_config(options)
 
-        # alter components
-        steps, processors = cls.command_components(get_steps(), get_processors(), options)
-        set_steps(steps)
-        set_processors(processors)
+            # alter components
+            steps, processors = cls.command_components(get_steps(), get_processors(), options)
+            set_steps(steps)
+            set_processors(processors)
 
-        # alter scraper
-        scraper = cls.command_scraper(options)
-        if scraper:
-            set_scraper_callable(scraper)
+            # alter scraper
+            scraper = cls.command_scraper(options)
+            if scraper:
+                set_scraper_callable(scraper)
 
-        # alter task
-        task = cls.command_task(options)
-        if task:
-            set_task_callable(task)
+            # alter task
+            task = cls.command_task(options)
+            if task:
+                set_task_callable(task)
 
-        # command collect success:
-        cls.command_collect_logout()
+            # command collect success:
+            cls.command_collect_logout()
+        except Exception as e:
+            log.exception(e, line=3)
+            raise Exception('Failed in the initialing of command.')
 
     @classmethod
     def command_initial(cls):
@@ -138,7 +139,7 @@ class Command(object):
             collect_scheme_preload(scheme)
 
             # TODO: command alter.
-            cls.command_alter()
+            cls.command_alter(options)
 
             collect_scheme_initial()
 
@@ -148,8 +149,8 @@ class Command(object):
             cls.run(options)
         except Exception as e:
             if exception:
-                log.error('Failed in the initialing of command.')
-                log.exception(e, line=0)
+                log.error('Failed in the running of command.')
+                log.exception(e, line=3)
             return False
         return True
 
@@ -213,7 +214,6 @@ class Command(object):
 
 
 class ComponentMixin(object):
-    config: dict = None
     tasks: Queue = None
     suits: List[StepSuit] = []
     pipeline: Pipeline = None

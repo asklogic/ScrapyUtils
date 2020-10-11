@@ -6,6 +6,7 @@ from .thread_ import Thread
 
 from ScrapyUtils.libs import Task
 from ScrapyUtils.components import *
+from ScrapyUtils.core import configure
 
 
 class Parsing(Thread):
@@ -18,12 +19,8 @@ class Parsing(Thread):
 
     @classmethod
     def command_config(cls, options):
-        """
-        Args:
-            options:
-        """
-        cls.config['thread'] = 1
-        cls.config['timeout'] = 0
+        configure.TIMEOUT = 0
+        configure.THREAD = 1
 
         kwargs = options.get('kwargs')
 
@@ -31,7 +28,7 @@ class Parsing(Thread):
         index = int(kwargs.get('index', -1))
 
         # TODO: fixed download folder path
-        download_folder = cls.config.get('download_folder')
+        download_folder = configure.DOWNLOAD_FOLDER_PATH
 
         # list download target.
         dirs = os.listdir(download_folder)
@@ -64,10 +61,6 @@ class Parsing(Thread):
 
     @classmethod
     def command_task(cls, options):
-        """
-        Args:
-            options:
-        """
         def inner():
             time.sleep(0.618)
             log.info('loading download files.')
@@ -92,6 +85,7 @@ class Parsing(Thread):
         Args:
             options:
         """
+
         def inner():
             return None
 

@@ -5,6 +5,7 @@ import time
 from ScrapyUtils.command.entity.thread_ import Thread
 from ScrapyUtils.components import *
 from ScrapyUtils.libs import Model, Field, Task
+from ScrapyUtils.core import configure
 
 from urllib.parse import urlparse, urlencode
 
@@ -94,6 +95,21 @@ class DownloadParse(ParseStep):
         yield model
 
 
+def safe_create_path(abs_path: str) -> str:
+    # case 1: Exist path.
+    # case 2: Exist duplicate file.
+    # case 3: Not exist.
+    if os.path.isdir(abs_path):
+        return abs_path
+    elif os.path.isfile(abs_path):
+        raise Exception('Exist file named: {}'.format(abs_path))
+    else:
+        os.mkdir(abs_path)
+
+    assert os.path.isdir(abs_path), f'Assert failed in safe_create_path. Path: {abs_path}'
+    return abs_path
+
+
 class DownloadProcessor(Processor):
     target = DownloadModel
 
@@ -110,50 +126,29 @@ class DownloadProcessor(Processor):
         """
         super().__init__(config)
 
-        download_path = config.get('download_path')
-        download_folder = config.get('download_folder')
+        download_path = configure.DOWNLOAD_PATH
+        download_folder = configure.DOWNLOAD_FOLDER_PATH
 
+        # fixed download path:
         if download_path:
-            # case 1: Exist path.
-            # case 2: Exist duplicate file.
-            # case 3: Not exist.
-            if os.path.isdir(download_path):
-                self.current_path = download_path
-            elif os.path.isfile(download_path):
-                raise Exception('Exist file named: {}'.format(download_path))
-            else:
-                os.mkdir(download_path)
-                self.current_path = download_path
+            safe_create_path(download_path)
+            self.current_path = download_path
 
-            assert os.path.isdir(download_path), 'Assert failed download_path {}'.format(download_path)
-
+        # no fixed download path:
         else:
-            # create the folder of download.
-            if os.path.isfile(download_folder):
-                raise Exception('Exist file named: {}'.format(download_folder))
-            elif not os.path.isdir(download_folder):
-                os.mkdir(download_folder)
-
-            assert os.path.isdir(download_folder), 'Assert failed download_folder {}'.format(download_folder)
+            safe_create_path(download_folder)
 
             # TODO: from command kwargs
             # create download target folder.
             self.download_target = config.get('download_target', str(int(time.time())))
             download_path = os.path.join(download_folder, self.download_target)
 
-            if not os.path.isdir(download_path):
-                os.mkdir(download_path)
-
-            assert os.path.isdir(download_path), 'Assert failed download_path {}'.format(download_path)
+            safe_create_path(download_path)
             self.current_path = download_path
-
-        # relative path to absolute path
-        if os.path.isabs(self.current_path):
-            self.current_path = self.current_path
 
         # settings
         # Download suffix.
-        self.suffix = config.get('download_suffix', 'html')
+        self.suffix = configure.DOWNLOAD_SUFFIX
 
         if self.download_target:
             log.info('Target folder: ' + self.download_target, 'Download')
@@ -161,10 +156,6 @@ class DownloadProcessor(Processor):
         log.info('path: ' + os.path.join(os.getcwd(), self.current_path), 'Download')
 
     def process_item(self, model: DownloadModel) -> Any:
-        """
-        Args:
-            model (DownloadModel):
-        """
         page_name = str(model.page_name)
         if page_name.startswith('/'):
             page_name = page_name[1:]

@@ -8,11 +8,11 @@ generator_mapper = {
     "parse.py": "parse_template",
     "processor.py": "process_template",
     "model.py": "model_template",
-    "settings.py": "settings_template"
-
+    "settings.py": "settings_template",
+    '__init__.py': 'init_template',
 }
 
-init_template = """from ScrapyUtils.core.collect import collect_steps, collect_processors, collect_settings
+init_template = """from ScrapyUtils.core.collect import collect_steps, collect_processors, initial_configure
 
 from . import action, parse, processor, settings
 
@@ -20,6 +20,9 @@ steps_class = collect_steps(action, parse)
 processors_class = collect_processors(processor)
 config, tasks_callable, scraper_callable = collect_settings(settings)
 """
+
+for key, value in generator_mapper.items():
+    generator_mapper[key] = getattr(templates, value)
 
 
 def create_folder(path: str):
@@ -44,7 +47,7 @@ def create_folder(path: str):
 
     # init file
     with open(os.path.join(path, "__init__.py"), "w") as f:
-        f.writelines(init_template)
+        f.writelines(generator_mapper['__init__.py'])
 
 
 def create_components(path: str):
@@ -58,7 +61,8 @@ def create_components(path: str):
 
         if not os.path.isfile(component_path):
             with open(os.path.join(path, component), "w") as f:
-                template = Template(getattr(templates, generator_mapper[component]))
+                # template = Template(getattr(templates, generator_mapper[component]))
+                template = Template(generator_mapper[component])
 
                 code = template.substitute(class_name=target.capitalize())
                 f.writelines(code)

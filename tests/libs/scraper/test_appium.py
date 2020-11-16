@@ -5,7 +5,7 @@ from ScrapyUtils.libs import Scraper, AppiumScraper
 
 desired_caps = {}
 desired_caps["platformName"] = "Android"
-desired_caps["platformVersion"] = "5.1.1"
+desired_caps["platformVersion"] = "7.1.2"
 desired_caps["deviceName"] = "127.0.0.1:62001"
 desired_caps["newCommandTimeout"] = "3000"
 desired_caps["noReset"] = "True"

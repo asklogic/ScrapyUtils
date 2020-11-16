@@ -4,7 +4,7 @@
 # action
 
 action_template = """from ScrapyUtils.components import ActionStep, active
-from ScrapyUtils.libs import Scraper
+from ScrapyUtils.libs import Scraper, RequestScraper, FirefoxScraper
 from ScrapyUtils.common import Task
 
 
@@ -57,7 +57,7 @@ class ${class_name}Model(Model):
 process_template = """from typing import Any
 
 from ScrapyUtils.components import Processor, active, set_active
-from ScrapyUtils.common import DumpInPeeweeProcessor, DuplicateProcessor, JsonFileProcessor, CSVFileProcessor
+from ScrapyUtils.common import DuplicateProcessor, JsonFileProcessor, CSVFileProcessor, ExeclFileProcessor
 
 from .model import *
 
@@ -150,7 +150,7 @@ def generate_scraper(**kwargs):
 # from os.path import join, sep
 
 # DOWNLOAD_SUFFIX = 'html'
-# DOWNLOAD_FOLDER = join([sep, 'atom', 'download'])
+# DOWNLOAD_FOLDER = join('{class_name}', 'download')
 # DOWNLOAD_PATH =
 
 '''

@@ -6,11 +6,10 @@ from collections import deque
 
 import csv
 
-from ScrapyUtils.libs import Model, Field
+from ScrapyUtils.core import configure
+from ScrapyUtils.libs import Model, Field, Task, Scraper
 from ScrapyUtils.components.proceesor import Processor
-from ScrapyUtils.libs.scraper import Scraper
 from ScrapyUtils.components.scheme import Action, Parse
-from ScrapyUtils.libs.task import Task
 from ScrapyUtils.tool import xpathParse
 
 from ScrapyUtils.log import common as log
@@ -38,26 +37,26 @@ class FileProcessorMixin(Processor):
         # Default : /<scheme>/data
         # Keep blank str will save into the work folder.
         if not (hasattr(self, 'file_folder') and self.file_folder != None):
-            self.file_folder = config.get('file_folder', self.config.get('file_folder'))
+            self.file_folder = configure.FILE_FOLDER_PATH
 
         # File's name.
         # Default : timestamp
         if not (hasattr(self, 'file_name') and self.file_name):
-            self.file_name = config.get('file_name', str(int(time.time())))
+            self.file_name = str(int(time.time()))
 
         # Fixed file path.
         # Default : /scheme/data
         if not (hasattr(self, 'file_path') and self.file_path):
             self.file_path = os.path.join(self.file_folder, self.file_name)
 
-        # add suffix
+        # add suffix in the file path
         if not (self.file_suffix in self.file_path):
             self.file_path = self.file_path + self.file_suffix
 
         self.data = deque()
 
-        log.info('folder: {}'.format(self.file_folder), self.name)
-        log.info('file name: {}'.format(self.file_name), self.name)
+        # log.info('folder: {}'.format(self.file_folder), self.name)
+        # log.info('file name: {}'.format(self.file_name), self.name)
         log.info('path: {}'.format(self.file_path), self.name)
 
     def on_start(self):

@@ -1,6 +1,6 @@
 import unittest
 
-from base.components.step import StepSuit, ActionStep, ParseStep
+from ScrapyUtils.components.step import StepSuit, ActionStep, ParseStep
 from base.libs import RequestScraper, Task, Model, Field
 
 from base.tool import xpathParse

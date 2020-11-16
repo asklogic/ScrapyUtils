@@ -10,6 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 import requests
 import time
+import os
 from .proxy import Proxy
 
 # Request common setting
@@ -581,13 +582,24 @@ class FireFoxScraper(Scraper):
 
 origin_desired_caps = {
     "platformName": "Android",
-    "platformVersion": "5.1.1",
+    "platformVersion": "7.1.2",
     "deviceName": "127.0.0.1:62001",
     "newCommandTimeout": "3000",
     'noReset': "True",
-    # "appPackage": "com.youpin.comic",
-    # "appActivity": "com.youpin.comic.welcomepage.WelcomeActivity",
+
+    # "appPackage": "package",
+    # "appActivity": "Activity",
 }
+
+
+def get_devices():
+    with os.popen('adb devices') as p:
+        content = p.read()
+    addresses = [x.split('\t')[0] for x in content.split('\n') if x][1:]
+
+    port = [x.split(':')[1] for x in addresses]
+
+    return addresses, port
 
 
 class AppiumScraper(Scraper):
@@ -650,7 +662,8 @@ class FirefoxHttpMixin(object):
     firefox: Firefox
 
     def get(self, url: str):
-        return self.firefox.get(url)
+        self.firefox.get(url)
+        return self.firefox.page_source
 
 
 class FirefoxTimeoutMixin(TimeoutMixin):
@@ -735,7 +748,7 @@ class FirefoxSettingMixin(object):
             self.options.set_preference("javascript.enabled", False)
 
 
-class FirefoxScraper(FirefoxSettingMixin, FirefoxProxyMixin, FirefoxTimeoutMixin, Scraper):
+class FirefoxScraper(FirefoxSettingMixin, FirefoxProxyMixin, FirefoxTimeoutMixin, FirefoxHttpMixin, Scraper):
     """
     The Scraper of FirefoxWebdriver.
 
@@ -825,7 +838,8 @@ class RequestHttpMixin(HttpMixin):
         # response = self.req.get(url=url, timeout=timeout, headers=self.headers, proxies=proxy,
         #                         params=params, stream=False, verify=False)
 
-        response = self.req.get(url=url, timeout=timeout, proxies=self.request_proxy_dict(), params=params, stream=False, verify=False)
+        response = self.req.get(url=url, timeout=timeout, proxies=self.request_proxy_dict(), params=params,
+                                stream=False, verify=False)
         self.current = response
 
         if response.status_code / 100 > status_limit / 100:

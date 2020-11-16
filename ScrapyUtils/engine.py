@@ -12,6 +12,7 @@ from ScrapyUtils import common
 from ScrapyUtils.log import common as log
 from ScrapyUtils.log import basic
 from ScrapyUtils.listen import Listener
+from ScrapyUtils.core import scheme_preload, scheme_initial, scheme_start, scheme_exit
 
 listener = Listener()
 
@@ -30,6 +31,9 @@ def trigger(**kwargs):
     # TEMP
     options['exception'] = True
 
+    # basic output
+    basic.info(f'start command {command_name} process')
+
     # background
     if kwargs.get('background'):
         p = start_subprocess(command_name, scheme_name)
@@ -43,6 +47,12 @@ def trigger(**kwargs):
     # wait
     wait(kwargs.get('confirm'))
 
+    if command.do_collect:
+        scheme_preload(options['kwargs'].get('scheme'))
+        command.command_alter(options)
+        scheme_initial(options)
+        scheme_start()
+
     # if false: broken down in the command start, sys exit .
     # if true: continue command.
     if not command.start(options):
@@ -54,6 +64,10 @@ def trigger(**kwargs):
 
     blocking(loop_case, inner_case)
 
+    if command.do_collect:
+        scheme_exit()
+
+    # TODO: paused and temporary exit.
     command.exit()
 
     # remove log file if

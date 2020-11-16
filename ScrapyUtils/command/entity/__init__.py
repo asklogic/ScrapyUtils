@@ -65,27 +65,7 @@ class Command(object):
         return None
 
     @classmethod
-    def command_collect_logout(cls):
-        # log.info('========== suit components ===============')
-        log.info('Suit Component:')
-
-        steps = get_steps()
-        for i in range(len(steps)):
-            log.info('({}) - {}'.format(i + 1, steps[i].name))
-
-        # log.info('========== processor components ==========')
-        log.info('Processor Components:')
-
-        processors = get_processors()
-        for i in range(len(processors)):
-            log.info('({}) - {}'.format(i + 1, processors[i].name))
-
-        # log.info('==========================================')
-
-    @classmethod
     def command_alter(cls, options):
-        log.info('-----------> collect start <-----------')
-
         try:
             # alter config
             cls.config = get_config()
@@ -106,24 +86,9 @@ class Command(object):
             if task:
                 set_task_callable(task)
 
-            # command collect success:
-            cls.command_collect_logout()
         except Exception as e:
             log.exception(e, line=3)
             raise Exception('Failed in the initialing of command.')
-
-    @classmethod
-    def command_initial(cls):
-        # set the components from the global variable
-        cls.suits = get_suits()
-        cls.tasks = get_tasks()
-        cls.pipeline = get_pipeline()
-        cls.proxy = get_proxy()
-
-        # TODO: proxy start.
-        if cls.proxy:
-            cls.proxy.start()
-        return True
 
     @classmethod
     def start(cls, options):
@@ -133,17 +98,14 @@ class Command(object):
             options:
         """
         exception = options.get('exception')
-        scheme = options['kwargs'].get('scheme')
 
-        if cls.do_collect:
-            collect_scheme_preload(scheme)
-
-            # TODO: command alter.
-            cls.command_alter(options)
-
-            collect_scheme_initial()
-
-            cls.command_initial()
+        # TODO: the delay
+        log.info('scraping mission starts in 3 second.')
+        sleep(1)
+        log.info('scraping mission starts in 2 second.')
+        sleep(1)
+        log.info('scraping mission starts in 1 second.')
+        sleep(1)
 
         try:
             cls.run(options)

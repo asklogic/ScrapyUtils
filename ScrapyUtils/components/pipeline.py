@@ -23,10 +23,6 @@ class ProcessorSuit(ComponentSuit):
         return self._components
 
     def process(self, model):
-        """
-        Args:
-            model:
-        """
         current = model
         next_model = None
         try:
@@ -97,10 +93,6 @@ class Pipeline(object):
     consumer: PipelineConsumer
 
     def __init__(self, suit: ProcessorSuit) -> None:
-        """
-        Args:
-            suit (ProcessorSuit):
-        """
         self._queue = Queue()
         self._failed = deque()
 

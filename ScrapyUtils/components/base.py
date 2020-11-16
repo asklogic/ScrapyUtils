@@ -47,12 +47,12 @@ class Component(object, metaclass=ComponentMeta):
     priority: int = 500
 
     @property
-    def name(cls):
-        return cls._name
+    def name(self):
+        return self._name
 
     @property
-    def active(cls):
-        return cls._active
+    def active(self):
+        return self._active
 
     @abstractmethod
     def on_start(self):
@@ -90,9 +90,9 @@ class ComponentSuit(object):
                 current = component(config)
                 self._components.append(current)
             except Exception as e:
-                log.error('Component initial failed.', component.name)
                 log.exception(e, line=1)
                 # TODO: raise exception?
+                raise Exception(f'Component {component.name} initial failed.')
 
     @property
     def components(self):

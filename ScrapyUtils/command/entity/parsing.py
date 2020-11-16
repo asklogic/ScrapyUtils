@@ -50,12 +50,12 @@ class Parsing(Thread):
     def command_collect_logout(cls):
         files = list(os.walk(cls.download))[0][2]
 
-        log.info('parsing download path:', 'Command')
-        log.info(cls.download, 'Command')
-        log.info('download target name:', 'Command')
-        log.info(os.path.basename(cls.download), 'Command')
-        log.info('page count:', 'Command')
-        log.info(str(len(files)), 'Command')
+        log.info('Parsing from: ' + cls.download)
+        # log.info(cls.download, 'Command')
+        log.info('Download target name: ' + os.path.basename(cls.download))
+        # log.info(os.path.basename(cls.download), 'Command')
+        log.info('Page count: ' + str(len(files)))
+        # log.info(str(len(files)), 'Command')
 
         super().command_collect_logout()
 
@@ -63,9 +63,11 @@ class Parsing(Thread):
     def command_task(cls, options):
         def inner():
             time.sleep(0.618)
-            log.info('loading download files.')
+
             dirs = [os.path.join(cls.download, x) for x in os.listdir(cls.download)]
             dirs = [x for x in dirs if os.path.isfile(x)]
+            log.info('Load download files.')
+            log.info(f'Files number:{len(dirs)}, from {cls.download}')
 
             for file in dirs:
                 with open(file, 'r', encoding='utf8') as f:

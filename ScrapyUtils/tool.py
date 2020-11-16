@@ -56,7 +56,7 @@ class XpathParser(object):
 
         self.etree = etree.HTML(html)
 
-    def xpath(self, xpath):
+    def xpath(self, xpath, child_text=False):
         """
         Args:
             xpath:
@@ -72,8 +72,12 @@ class XpathParser(object):
                 el = str(el)
                 pure_data.append(el)
             elif isinstance(el, etree._Element):
-                el = str(el.text)
-                pure_data.append(el)
+                if child_text:
+                    el = str(list(filter(None, el.xpath('text()')))[-1])
+                    pure_data.append(el)
+                else:
+                    el = str(el.text)
+                    pure_data.append(el)
             else:
                 pure_data.append(el)
 

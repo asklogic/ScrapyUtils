@@ -62,6 +62,7 @@ class Download(Thread):
 
 class DownloadAction(ActionStep):
     """Add page_name in the context."""
+    page_name = None
 
     def scraping(self, task: Task):
         """if url. parse and get uri
@@ -72,17 +73,13 @@ class DownloadAction(ActionStep):
 
         path: str = urlparse(task.url).path
 
-        if path.count(r'/') > 1:
-            uri_name = path.split('/')[-1]
-        else:
-            uri_name = path
+        uri_name = '.'.join(list(filter(None, path.split('/')))[-2:])
 
-        # TODO: task.param in uri
-        param = urlencode(task.param)
-        if param:
-            self.context['page_name'] = ''.join((uri_name, '.', param))
-        else:
-            self.context['page_name'] = uri_name
+        if not self.context.get('page_name'):
+            if uri_name == '':
+                self.context['page_name'] = ''.join(('.'.join(task.param.values())))
+            else:
+                self.context['page_name'] = uri_name
 
 
 class DownloadParse(ParseStep):
@@ -91,6 +88,8 @@ class DownloadParse(ParseStep):
 
         model.page_name = self.context['page_name']
         model.page_content = self.content
+
+        self.context.pop('page_name')
 
         yield model
 
@@ -161,20 +160,12 @@ class DownloadProcessor(Processor):
             page_name = page_name[1:]
         page_content = model.page_content
 
-        # check if the suffix in the page_name.
-        with_suffix = self.suffix in page_name and page_name[-len(self.suffix):] == self.suffix
-        if with_suffix:
-            name = os.path.join(self.current_path, ''.join((str(page_name))))
-        else:
-            name = os.path.join(self.current_path, ''.join((str(page_name), '.', self.suffix)))
+        name = os.path.join(self.current_path, ''.join((str(page_name), '.', self.suffix)))
 
-        # TODO: refactor name
-
-        # Check if existed name. If existed, add file index.
         while os.path.exists(name):
             self.download_index += 1
             name = os.path.join(self.current_path,
-                                ''.join((page_name, str(self.download_index), '.', self.suffix)))
+                                ''.join((str(page_name), str(self.download_index), '.', self.suffix)))
 
         if type(page_content) is bytes:
             with open(name, 'wb') as f:

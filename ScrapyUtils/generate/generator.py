@@ -12,14 +12,14 @@ generator_mapper = {
     '__init__.py': 'init_template',
 }
 
-init_template = """from ScrapyUtils.core.collect import collect_steps, collect_processors, initial_configure
-
-from . import action, parse, processor, settings
-
-steps_class = collect_steps(action, parse)
-processors_class = collect_processors(processor)
-config, tasks_callable, scraper_callable = collect_settings(settings)
-"""
+# init_template = """from ScrapyUtils.core.collect import collect_steps, collect_processors, initial_configure
+#
+# from . import action, parse, processor, settings
+#
+# steps_class = collect_steps(action, parse)
+# processors_class = collect_processors(processor)
+# config, tasks_callable, scraper_callable = collect_settings(settings)
+# """
 
 for key, value in generator_mapper.items():
     generator_mapper[key] = getattr(templates, value)
@@ -65,6 +65,7 @@ def create_components(path: str):
                 template = Template(generator_mapper[component])
 
                 code = template.substitute(class_name=target.capitalize())
+                code = template.substitute(class_name=target)
                 f.writelines(code)
 
 

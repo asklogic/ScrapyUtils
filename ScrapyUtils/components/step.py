@@ -65,6 +65,7 @@ class Step(Component, metaclass=StepMeta):
 
 class ActionStep(Step):
     priority = 600
+    step_type = 'Action'
 
     @abstractmethod
     def scraping(self, task: Task):
@@ -102,6 +103,7 @@ class ActionStep(Step):
 
 class ParseStep(Step):
     priority = 400
+    step_type = 'Parse'
 
     @abstractmethod
     def parsing(self):
@@ -147,7 +149,7 @@ class StepSuit(ComponentSuit):
 
     _scraper: Scraper = None
 
-    def __init__(self, scraper: Scraper, steps: List[type(Step)], config: dict = None):
+    def __init__(self, scraper: Scraper = None, steps: List[type(Step)] = None, config: dict = None):
         """
         Args:
             scraper (Scraper):
@@ -156,7 +158,7 @@ class StepSuit(ComponentSuit):
         """
         super(StepSuit, self).__init__(components=steps, config=config)
 
-        assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
+        # assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
 
         # suit property
         for step in self.steps:

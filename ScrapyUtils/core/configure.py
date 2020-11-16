@@ -49,7 +49,7 @@ models_pipeline: Pipeline = None
 
 KEEP_LOG = True
 
-SCHEME_PATH = None
+SCHEME_PATH = path.sep
 
 THREAD = 5
 TIMEOUT = 1.5
@@ -61,11 +61,18 @@ GLOBAL_KEY = False
 GLOBAL_TASK = False
 GLOBAL_SCRAPER = False
 
-DOWNLOAD_FOLDER_PATH = None
-DOWNLOAD_SUFFIX = None
+DOWNLOAD_FOLDER_PATH = 'download'
+DOWNLOAD_SUFFIX = '.html'
+
 DOWNLOAD_PATH = None
 
-registered_keys = ['KEEP_LOG', 'THREAD', 'TIMEOUT']
+FILE_FOLDER_PATH = path.join('data')
+
+# system
+
+SCRAPER_TIMEOUT = 30
+
+registered_keys = ['KEEP_LOG', 'THREAD', 'TIMEOUT', 'DOWNLOAD_FOLDER_PATH']
 
 
 # callable

@@ -10,9 +10,10 @@ from . import Command, ComponentMixin
 
 from ScrapyUtils.components import *
 from ScrapyUtils.libs import Task, Consumer, Producer
-from ScrapyUtils.core import get_scraper
+from ScrapyUtils.core import *
 
 from ScrapyUtils.core import configure
+
 
 class Thread(Command, ComponentMixin):
     do_collect = True
@@ -24,26 +25,45 @@ class Thread(Command, ComponentMixin):
         return '[Thread]'
 
     @classmethod
+    def logout(cls):
+        # output
+        time.sleep(1)
+        log.info('Scheme basic info:')
+
+        log.info('Task number: {}.'.format(get_tasks().qsize()))
+        # log.info(f'Task number: <{tasks.qsize()}> - ')
+        log.info('Threads number : {}'.format(configure.THREAD))
+
+        log.info(' ---------- Activated Steps List ----------')
+        for i in range(len(get_steps())):
+            # log.info(f'<{i + 1}> - {steps_class[i].name} - {steps_class[i].step_type}')
+            log.info(f'({get_steps()[i].priority}) - <{get_steps()[i].name}> - {get_steps()[i].step_type}')
+
+        # log.info('Processor Components:')
+        log.info(' ---------- Activated Processors List ----------')
+        for i in range(len(get_processors())):
+            log.info(f'({get_processors()[i].priority}) - <{get_processors()[i].name}>')
+
+    @classmethod
     def run(cls, options):
-        """
-        Args:
-            options:
-        """
+
+        cls.logout()
+
         event = Event()
         lock = Lock()
 
         kws = [
             {
-                'queue': cls.tasks,
+                'queue': get_tasks(),
                 'delay': configure.TIMEOUT,
                 'suit': x,
-                'pipeline': cls.pipeline,
-                'proxy': cls.proxy,
+                'pipeline': get_pipeline(),
+                'proxy': get_proxy(),
 
                 'event': event,
                 'lock': lock,
             }
-            for x in cls.suits
+            for x in get_suits()
         ]
         cls.consumers = [ScrapyConsumer(**kw) for kw in kws]
 
@@ -51,18 +71,17 @@ class Thread(Command, ComponentMixin):
 
     @classmethod
     def exit(cls):
-        log.info('exit command {}'.format(cls.__name__), 'System')
+        cls.consumers[0].stop(block=True)
 
-        # suit exit
-        [suit.suit_exit() for suit in cls.suits]
+        log.info('exit command {}'.format(cls.__name__), 'System')
 
         if cls.pipeline:
             cls.pipeline.suit.suit_exit()
             # TODO: wait to pipeline.
             cls.pipeline.exit()
 
-        log.info('tasks remain: {}'.format(cls.tasks.qsize()), 'Exit')
-        log.info('models remain: {}'.format(len(cls.pipeline.failed)), 'Exit')
+        log.info('tasks remain: {}'.format(get_tasks().qsize()), 'Exit')
+        log.info('models remain: {}'.format(len(get_pipeline().failed)), 'Exit')
 
         log.info('command finished.')
 
@@ -95,7 +114,7 @@ class Thread(Command, ComponentMixin):
 
     @classmethod
     def finished(cls):
-        case_empty = cls.tasks.qsize() == 0
+        case_empty = get_tasks().qsize() == 0
         case_block = [None for consumer in cls.consumers if not consumer.block] == []
         return case_empty and case_block
 
@@ -179,6 +198,12 @@ class ScrapyConsumer(Consumer):
 
         else:
             if result:
+                # for task in [model for model in self.suit.models if isinstance(model, Task)]:
+                #     self.queue.put(task)
+                #
+                # for model in [model for model in self.suit.models if not isinstance(model, Task)]:
+                #     self.pipeline.push(model)
+
                 for model in self.suit.models:
                     self.pipeline.push(model)
             else:

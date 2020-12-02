@@ -128,7 +128,7 @@ def initial_configure(settings_module: ModuleType):
 
 
 def scheme_preload(scheme: str):
-    w = Watcher(start_content='scheme preloading')
+    # w = Watcher(start_content='scheme preloading')
     try:
         module = import_module(scheme)
 
@@ -139,8 +139,8 @@ def scheme_preload(scheme: str):
     except Exception as e:
         log.exception(e)
         raise Exception('Failed in scheme preload.')
-    finally:
-        w.exit_watch()
+    # finally:
+    #     w.exit_watch()
 
 
 def collect_scheme_initial(command_kwargs: dict = None):

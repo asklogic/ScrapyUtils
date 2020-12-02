@@ -649,7 +649,7 @@ class AppiumScraper(Scraper):
     def _quit(self) -> None:
         self.driver.quit()
 
-    def get_instance(self) -> webdriver.Remote:
+    def get_instance(self):
         """
         Get the instance of webdriver.Remote.
 

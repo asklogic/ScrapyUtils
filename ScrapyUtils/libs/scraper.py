@@ -2,7 +2,6 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Any, Callable
 from urllib3.exceptions import InsecureRequestWarning
 
-from appium import webdriver
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
@@ -625,7 +624,7 @@ class AppiumScraper(Scraper):
     _no_reset: bool = True
 
     # instance
-    driver: webdriver.Remote = None
+    driver = None
 
     def __init__(self, port: int or str, entry: Tuple[str, str], **kwargs):
         self.desired_caps = origin_desired_caps.copy()
@@ -639,6 +638,8 @@ class AppiumScraper(Scraper):
         super(AppiumScraper, self).__init__(**kwargs)
 
     def _activate(self) -> None:
+        from appium import webdriver
+
         self.driver = webdriver.Remote("http://127.0.0.1:4723/wd/hub", self.desired_caps)
 
     def _clear(self) -> None:

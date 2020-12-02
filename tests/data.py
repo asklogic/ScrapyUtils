@@ -192,3 +192,51 @@ if __name__ == '__main__':
 # w.exit_watch(True)
 #
 # print('End here.')
+
+import subprocess
+import os
+import cmd2
+
+current_folders = list(os.walk(os.getcwd()))[0][1]
+
+for i in range(len(current_folders)):
+    print(f'index: {i} - {current_folders[i]}')
+
+select = input('select folder:')
+
+target_folder = os.path.join(os.getcwd(), current_folders[select])
+
+# trans
+
+files = list(os.walk(target_folder))[0][2]
+
+pdf_files = [os.path.join(target_folder, x) for x in files if x.endswith('.pdf')]
+
+for pdf_file in pdf_files:
+    html_file = pdf_file.replace(".pdf", ".html")
+    subprocess.run(["pdf2htmlEX", pdf_files, html_file])
+
+# outputFilename = outputDir + filename.replace(".pdf", ".html")
+def demo():
+    import subprocess
+    import os
+    import cmd2
+
+    current_folders = list(os.walk(os.getcwd()))[0][1]
+
+    for i in range(len(current_folders)):
+        print(f'index: {i} - {current_folders[i]}')
+
+    select = input('select folder:')
+
+    target_folder = os.path.join(os.getcwd(), current_folders[int(select)])
+
+    # trans
+
+    files = list(os.walk(target_folder))[0][2]
+
+    pdf_files = [os.path.join(target_folder, x) for x in files if x.endswith('.pdf')]
+
+    for pdf_file in pdf_files:
+        html_file = pdf_file.replace(".pdf", ".html")
+        subprocess.run(["pdf2htmlEX", pdf_files, html_file])

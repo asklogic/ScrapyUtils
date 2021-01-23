@@ -76,6 +76,12 @@ class CommonComponentsTestCase(unittest.TestCase):
 
         assert get_suits()[0].steps[0].count == 10
 
+    def test_simple_suit(self):
+        suit = StepSuit(MyCustomStep)
+
+        url = 'https://www.google.com/'
+        suit.simple_task(url)
+
 
 if __name__ == '__main__':
     unittest.main()

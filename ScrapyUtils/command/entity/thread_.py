@@ -128,7 +128,7 @@ class ScrapyConsumer(Consumer):
     _proxy: Producer = None
 
     def __init__(self, suit: StepSuit, pipeline: Pipeline, proxy: Producer = None,
-                 timeout=20,
+                 timeout=100,
                  **kwargs):
 
         # assert

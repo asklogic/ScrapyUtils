@@ -2,21 +2,43 @@ import unittest
 
 from ScrapyUtils.components.step import BaseStepSuit, BaseActionStep, BaseParseStep
 
+from ScrapyUtils.components.step import StepSuit, ActionStep, ParseStep
 
-class CountAction(BaseActionStep):
 
-    def scraping(self, task):
+class CountAction(ActionStep):
+
+    def scraping(self, task, scraper):
         return 'The mock content.'
 
 
-class SimpleParser(BaseParseStep):
+class SimpleParser(ParseStep):
 
-    def parsing(self):
+    def parsing(self, content):
         for i in range(2):
-            yield {'data': self.content[-5:]}
+            yield {'data': content[-5:]}
 
 
 class StepSuitTestCase(unittest.TestCase):
+
+    def test_normal_inital(self):
+        suit = StepSuit([], {})
+
+        # log out.
+        suit.suit_start()
+
+        # configure
+        # check the scraper and start it.
+        # suit.set_scraper()
+
+        # callback = suit.closure_scrapy()
+
+        # callback(object)
+
+        # log out
+        suit.suit_exit()
+
+        pass
+
     def test_initial(self):
         suit = BaseStepSuit()
 
@@ -34,7 +56,6 @@ class StepSuitTestCase(unittest.TestCase):
         suit.simple_task('url')
 
         assert suit.models and len(suit.models) == 2
-        assert suit.content == 'The mock content.'
 
         suit.simple_task('url')
         suit.simple_task('url')

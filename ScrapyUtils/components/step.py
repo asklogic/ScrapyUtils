@@ -1,321 +1,69 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import *
 
 from collections import deque
-from ScrapyUtils.components.base import Component, ComponentMeta, ComponentSuit
-from ScrapyUtils.libs import Scraper, Task, Model
-
-from . import log
+from ScrapyUtils.components.base import Component, ComponentSuit
+from ScrapyUtils.libs import Scraper, Task
 
 
-class StepMeta(ComponentMeta):
-    """ """
-    def __new__(mcs, name, bases, attrs: dict):
-        return super().__new__(mcs, name, bases, attrs)
-
-class Step(Component, metaclass=StepMeta):
-    """ """
-    # property
-    # _context: dict
-    # _scraper: Scraper
-    # _models: List[Model]
-
-    _suit = None
-
-    def __init__(self, step_suit=None):
-        self._suit: StepSuit = step_suit
-
-    @property
-    def context(self) -> dict:
-        """ """
-
-        return self._suit.context
-
-    @property
-    def scraper(self) -> Scraper:
-        """ """
-
-        return self._suit.scraper
-
-    @property
-    def content(self):
-        """ """
-        return self._suit.content
-
-    @abstractmethod
-    def check(self, content):
-        """
-
-        Args:
-          content: 
-
-        Returns:
-
-        """
-        pass
+class BaseStep(object):
+    """
+    Note:
+        To class Step.
+    """
 
     @abstractmethod
     def do(self, task: Task):
-        """
+        """Override method by ActionStep and ParseStep.
+
 
         Args:
-          task: Task:
-          task: Task:
-          task: Task: 
-
-        Returns:
-
-        """
-
-        pass
-
-
-class ActionStep(Step):
-    """ """
-    priority = 600
-    step_type = 'Action'
-
-    @abstractmethod
-    def scraping(self, task: Task):
-        """
-
-        Args:
-          task: Task:
-          task: Task:
-          task: Task: 
-
-        Returns:
-
-        """
-
-        pass
-
-    @abstractmethod
-    def check(self, content):
-        """
-
-        Args:
-          content: 
-
-        Returns:
+             task (Task): The task that need to be executed in suit.
 
         """
         pass
 
-    def do(self, task: Task):
-        """
 
-        Args:
-          task: Task:
-          task: Task: 
+class Step(Component, BaseStep):
+    """The node of a StepSuit.
 
-        Returns:
+    Split the crawling/scraping action.
 
-        """
+    Include two specified sub-class: ActionStep and BaseStep.
 
-        try:
-            content = self.scraping(task)
-            if content:
-                self.check(content)
-                self._suit.content = content
-            return True
-        except Exception as e:
-            # TODO: log out
-            log.exception(e)
-            # self.log.error('error', self.name)
-            return False
+    Attributes:
+        suit (str): The common suit instance.
+        context (dict): The common context of suit.
+    """
 
+    suit = None
 
-class ParseStep(Step):
-    """ """
-    priority = 400
-    step_type = 'Parse'
-
-    @abstractmethod
-    def parsing(self):
-        """ """
-        pass
-
-    @abstractmethod
-    def check(self, models: Deque[Model]):
-        """
-
-        Args:
-          models: Deque[Model]: 
-
-        Returns:
-
-        """
-
-        pass
-
-    def do(self, task: Task):
-        """
-
-        Args:
-          task: Task: 
-
-        Returns:
-
-        """
-
-
-        try:
-            models = deque()
-            # FIXME: crit!
-
-            parsed = self.parsing()
-            if not parsed:
-                return True
-            for model in parsed:
-                models.append(model)
-            # models = list(self.parsing())
-            self.check(models)
-
-            self._suit.models.extend(models)
-            return True
-
-        except Exception as e:
-            log.exception(e)
-
-            return False
-
-
-class StepSuit(ComponentSuit):
-    """ """
-    # mounted
-    target_components = Step
-
-    _scraper: Scraper = None
-
-    # def __init__(self, scraper: Scraper = None, steps: List[type(Step)] = None, config: dict = None):
-    #     super(StepSuit, self).__init__(components=steps, config=config)
-    #
-    #     # assert scraper and isinstance(scraper, Scraper), 'StepSuit need a Scraper Instance.'
-    #
-    #     # suit property
-    #     for step in self.steps:
-    #         step._suit = self
-    #
-    #     self._scraper = scraper
-    #
-    #     # step property
-    #     self.content: str = ''
-    #     self.context: dict = {}
-    #     self.models: Deque = deque()
-
-    def __init__(self, *steps: List[Step] or Step):
-
-        # single
-        if type(steps) is list:
-            for step in steps:
-                assert issubclass(step, Step), 'StepSuit need Step type.'
-
-        else:
-            assert issubclass(steps, Step), 'StepSuit need Step type.'
-            steps = List(steps)
-
-        super(StepSuit, self).__init__(components=steps)
-
-    def simple_task(self, url):
-        """
-
-        Args:
-          url: 
-
-        Returns:
-
-        """
-        task = Task(url=url)
-
-        callback = self.closure_scrapy()
-
-        callback(task)
-
-    def suit_start(self):
-        """ """
-        super().suit_start()
-        if not self.scraper.activated:
-            self.scraper.scraper_activate()
-
-    def suit_exit(self):
-        """ """
-        super().suit_exit()
-        # if self.scraper.activated:
-        self.scraper.scraper_quit()
-
-    # def scrapy(self, task: Task):
-    #     # TODO: abort
-    #
-    #     # self.models.clear()
-    #     self.content = ''
-    #
-    #     for step in self.steps:
-    #
-    #         if not step.do(task):
-    #             # error and log out
-    #             logger.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
-    #             return False
-    #
-    #     logger.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
-    #     return True
-
-    def closure_scrapy(self):
-        """case success. return models. case failed. return task instance."""
-
-        self.models.clear()
-        self.content = ''
-
-        def scrapy_inline(task: Task):
-            """
-
-            Args:
-              task: Task:
-              task: Task:
-              task: Task:
-              task: Task:
-              task: Task:
-              task: Task:
-              task: Task:
-              task: Task: 
-
-            Returns:
-
-            """
-
-            for step in self.steps:
-
-                if not step.do(task):
-                    # error and log out
-                    log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
-                    return False
-
-            # log.info('success. url: {0}, param: {1}, models: {2}.'.format(task.url, str(task.param), len(self.models)))
-            log.info('success. url: {0}, models: {2}.'.format(task.url, str(task.param), len(self.models)))
-            return True
-
-        return scrapy_inline
+    def set_suit(self, suit):
+        self.suit = suit
 
     @property
-    def scraper(self) -> Scraper:
-        """ """
-        return self._scraper
-
-    @property
-    def steps(self) -> List[Step]:
-        """ """
-        return self._components
+    def context(self):
+        return self.suit.context
 
 
 class BaseStepSuit(object):
-    """ """
+    """A collection of steps and execute a singe mission(as task model).
+
+    Just for a simple_task.
+
+    The __init__ will be override in StepSuit.
+
+    """
     steps: List = None
-    content: str = None
     models: deque = None
 
     def __init__(self, *steps):
+        """Initialed step classes.
+
+        Args:
+            *steps:
+        """
         self.steps = []
-        self.content = ''
         self.models = deque()
 
         if len(steps) == 1 and type(steps[0]) == list:
@@ -324,181 +72,206 @@ class BaseStepSuit(object):
         for step in steps:
             assert isinstance(step, type) and issubclass(step, BaseStep), 'StepSuit need Step type.'
             instance = step()
-            instance.suit = self
             self.steps.append(instance)
 
-    def simple_task(self, url):
-        """
+    def simple_task(self, url: str, scraper: Scraper = None):
+        """Execute task model without initial and other modules.
+
+        The url will be wrapped as a task instance.
 
         Args:
-          url: 
-
-        Returns:
+            url (str): String of url.
+            scraper (Scraper): Scraper or not.
 
         """
         task = Task(url=url)
 
+        content = ''
+
         for step in self.steps:
-            step.do(task)
+            if isinstance(step, ActionStep) or isinstance(step, BaseActionStep):
+                content = step.scraping(task, scraper)
+            elif isinstance(step, ParseStep) or isinstance(step, BaseParseStep):
+                parsed = step.parsing(content)
+                if parsed:
+                    for model in parsed:
+                        self.models.append(model)
 
 
-class BaseStep(object):
-    """ """
-    suit: BaseStepSuit = None
+class StepSuit(ComponentSuit, BaseStepSuit):
+    """A collection of steps and execute Task.
 
-    @property
-    def content(self):
-        """ """
-        return self.suit.content
+    Collect the action and step components and start a task mission.
+    """
 
-    @abstractmethod
-    def do(self, task: Task):
-        """
+    steps: List[Step] = None
+
+    context: dict = None
+    scraper: Scraper = None
+
+    def __init__(self, steps: List[type(Step)], config: dict):
+        """TODO: refactor it.
 
         Args:
-          task: Task:
-          task: Task:
-          task: Task:
-          task: Task:
-          task: Task:
-          task: Task:
-          task: Task:
-          task: Task: 
+            steps ():
+            config ():
+        """
+        for step in steps:
+            assert issubclass(step, Step), 'StepSuit need step class.'
+
+        # initial steps.
+        self.steps = [x() for x in steps]
+        self.context = dict()
+
+        # TODO: refacotr
+        self._components = steps
+
+    def set_scraper(self, scraper: Scraper):
+        """Set the scraper of suit.
+
+        Methods will activated scraper.
+
+        Args:
+            scraper (Scraper): Scraper instance.
+        """
+        self.scraper = scraper
+        if not self.scraper.activated:
+            self.scraper.scraper_activate()
+
+    def closure_scrapy(self):
+        """Generate a callable that cloud be executed in ThreadPoolExecutor.
+
+        The ThreadPoolExecutor will have timeout and raise any exception when step execute .
+
 
         Returns:
+            scrapy_inline (function): The callable to execute the task.
 
         """
-        pass
+
+        self.models.clear()
+
+        def scrapy_inline(task: Task):
+            content = ''
+
+            for step in self.steps:
+                if isinstance(step, ActionStep):
+                    content = step.scraping(task, step.scraper)
+                elif isinstance(step, ParseStep):
+                    parsed = step.parsing(content)
+                    if parsed:
+                        for model in parsed:
+                            self.models.append(model)
+
+            return True
+
+        return scrapy_inline
 
 
 class BaseActionStep(BaseStep):
-    """ """
+    """Basic action steps that can work alone.
 
-    def do(self, task: Task):
-        """
+    Put the code of HTTP and other web action in the scraping method.
 
-        Args:
-          task(TaskModel): task instance.
-
-        Returns:
-
-        """
-
-        # TODO: try - catch statement
-        content = self.scraping(task)
-        self.suit.content = content
+    Note:
+        Extend the ActionStep instead of BaseActionStep.
+    """
 
     @abstractmethod
-    def scraping(self, task):
-        """
+    def scraping(self, task, scraper):
+        """The overriding method should return the result of a web page.
 
         Args:
-          task(TaskModel): task instance.
+            scraper (Scraper): The Scraper instance of suit.
+            task (TaskModel): A task instance.
 
         Returns:
-          The content of pages.
-
+            The content of pages.
         """
         pass
+
+"""
+Notes:
+    test notes: 
+"""
+
+class ActionStep(Step, BaseActionStep):
+    """The node of action.
+
+    Put the code of HTTP and other web action in the scraping method.
+
+    Attributes:
+        priority (int): The priority step.
+        scraper (Scraper): The common scraper of suit.
+
+    """
+    priority = 600
+
+    @property
+    def scraper(self):
+        return self.scraper
+
+    # def do(self, task: Task):
+    #     """The common method in StepSuit.
+    #
+    #     Note:
+    #         Do not override it!
+    #
+    #     Args:
+    #         task (TaskModel): Task instance.
+    #
+    #     """
+    #     content = self.scraping(task, self.scraper)
+    #     # TODO: check method.
+    #     return content
 
 
 class BaseParseStep(BaseStep):
-    """ """
+    """Basic action steps that can work alone.
 
-    def do(self, task: Task):
-        """
+    Put the code of parsing in the parsing method.
 
-        Args:
-          task: Task: 
-
-        Returns:
-
-        """
-
-        models = deque()
-        parsed = self.parsing()
-
-        if parsed:
-            for model in parsed:
-                models.append(model)
-
-        self.suit.models.extend(models)
+    Note:
+        Extend the ParseStep instead of BaseParseStep.
+    """
 
     @abstractmethod
-    def parsing(self):
-        """ """
+    def parsing(self, content):
+        """The overriding method should pared the web page and should return the result.
+
+        Args:
+            content : The content of the web page.
+
+        Returns:
+            The result of parsing.
+        """
         pass
 
-# class _StepSuit(object):
-#     # property
-#     steps: List[Step]
-#
-#     content: str = None
-#     context: dict
-#     models: List[Model]
-#     scraper: Scraper
-#     log: log
-#
-#     def __init__(self, steps: List[type(Step)], scraper: Scraper, pool: ItemPool = None, log=log, models=None):
-#         # assert
-#
-#         for step in steps:
-#             assert isinstance(step, type), 'StepSuit need Step class.'
-#             assert issubclass(step, Step), 'StepSuit need Step class.'
-#
-#         assert scraper and isinstance(scraper, Scraper)
-#
-#         # step property
-#         self.content = ''
-#         self.context = {}
-#         self.scraper = scraper
-#         self.models = models if models else list()
-#
-#         # suit property
-#         self._log = log
-#         self._pool = pool
-#
-#         # init step objects
-#         self.steps = [x(self) for x in steps]
-#
-#         # scraper active
-#         # if not self.scraper.activated:
-#         #     self.scraper.scraper_activate()
-#
-#         # pool
-#         # if self.pool:
-#         #     self.scraper.proxy = self.pool.get()
-#
-#     def scrapy(self, task: Task) -> bool:
-#         """
-#         :param task: current task
-#         :return: current status. True means passed.
-#         """
-#         self.models.clear()
-#         self.content = ''
-#
-#         for step in self.steps:
-#             # TODO: refact
-#             if not step.do(task):
-#
-#                 if self.pool:
-#                     self.scraper.proxy = self.pool.get()
-#
-#                 self.log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
-#                 return False
-#         self.log.info('success. url: {0}, models: {1}.'.format(task.url, len(self.models)))
-#         return True
-#
-#     def closure_scrapy(self):
-#
-#         def inline():
-#             return
-#             pass
-#
-#     @property
-#     def log(self):
-#         return self._log
-#
-#     @property
-#     def pool(self):
-#         return self._pool
+
+class ParseStep(Step, BaseParseStep):
+    """The Step parse the web page and yield the models.
+
+    Note:
+        Yield or return a iterable.
+
+    Attributes:
+        priority (int): The priority step.
+        scraper (Scraper): The common scraper of suit.
+
+    """
+    priority = 400
+
+    # def do(self, task: Task):
+    #     """The common method in StepSuit.
+    #
+    #     Note:
+    #         Do not override it!
+    #
+    #     Args:
+    #         task (TaskModel): Task instance.
+    #     """
+    #     models = deque()
+    #     parsed = self.parsing(self.suit)
+    #     if parsed:
+    #         for model in parsed:
+    #             self.suit

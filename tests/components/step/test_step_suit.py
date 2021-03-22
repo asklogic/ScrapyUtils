@@ -2,7 +2,7 @@ import unittest
 
 from ScrapyUtils.components.step import BaseStepSuit, BaseActionStep, BaseParseStep
 
-from ScrapyUtils.components.step import StepSuit, ActionStep, ParseStep
+from ScrapyUtils.components.step import StepSuit, ActionStep, ParseStep, Task
 
 
 class CountAction(ActionStep):
@@ -13,14 +13,14 @@ class CountAction(ActionStep):
 
 class SimpleParser(ParseStep):
 
-    def parsing(self, content):
+    def parsing(self, content: str):
         for i in range(2):
             yield {'data': content[-5:]}
 
 
 class StepSuitTestCase(unittest.TestCase):
 
-    def test_normal_inital(self):
+    def test_suit_initial(self):
         suit = StepSuit([], {})
 
         # log out.
@@ -28,16 +28,14 @@ class StepSuitTestCase(unittest.TestCase):
 
         # configure
         # check the scraper and start it.
-        # suit.set_scraper()
+        # suit.set_scraper(None)
 
-        # callback = suit.closure_scrapy()
+        callback = suit.closure_scrapy()
 
-        # callback(object)
+        callback(Task())
 
         # log out
         suit.suit_exit()
-
-        pass
 
     def test_initial(self):
         suit = BaseStepSuit()
@@ -61,6 +59,24 @@ class StepSuitTestCase(unittest.TestCase):
         suit.simple_task('url')
 
         assert suit.models and len(suit.models) == 6
+
+    def test_suit_run(self):
+        from ScrapyUtils.libs import RequestScraper
+
+        r = RequestScraper()
+
+        class SimpleAction(ActionStep):
+
+            def scraping(self, task, scraper: RequestScraper):
+                return scraper.get('https://ip.cn/')
+
+        suit = StepSuit([SimpleAction, SimpleParser])
+        suit.set_scraper(r)
+
+        callback = suit.closure_scrapy()
+        callback(Task())
+
+        assert len(suit.models) == 2
 
 
 if __name__ == '__main__':

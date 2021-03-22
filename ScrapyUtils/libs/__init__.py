@@ -1,4 +1,6 @@
-from .scraper import Scraper, RequestScraper, FirefoxScraper, AppiumScraper, wait_block
+# from .scraper import Scraper, FirefoxScraper, AppiumScraper, wait_block
+from .scraper import Scraper
+from .scraper.request_scraper import RequestScraper
 
 from .model import Model, Field
 

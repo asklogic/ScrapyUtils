@@ -31,7 +31,7 @@ class FirefoxPropertyTestCase(unittest.TestCase):
         assert f.timeout == 10
         assert f._timeout == 10
         assert f.activated is False
-        assert f._activated is False
+        assert f._attached is False
 
         # firefox
 

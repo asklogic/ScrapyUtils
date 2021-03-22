@@ -20,7 +20,6 @@ class TestCollectInitialTestCase(unittest.TestCase):
 
         time.sleep(0.1)
 
-        collect_scheme_initial()
 
         scheme_exit()
 

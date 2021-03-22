@@ -143,46 +143,7 @@ def scheme_preload(scheme: str):
     #     w.exit_watch()
 
 
-def collect_scheme_initial(command_kwargs: dict = None):
-    global tasks_callable, scraper_callable, steps_class, processors_class, config
-    global tasks, scrapers, proxy, config, step_suits, processor_suit, models_pipeline
-
-    log.info('Scheme initialing...')
-
-    # ----------------------------------------------------------------------
-    # task queue : tasks_callable
-    tasks = Queue()
-    for task in tasks_callable():
-        tasks.put(task)
-
-    # ----------------------------------------------------------------------
-    # processor suits : List[ProcessorSuit]
-    processor_suit = ProcessorSuit(processors_class, command_kwargs)
-    models_pipeline = Pipeline(processor_suit)
-
-    # if kwargs.get('confirm'):
-    #     input('Press any key to continue.')
-
-    # ----------------------------------------------------------------------
-    # scrapers* : list[Scraper]
-    gen = _default_scraper(scraper_callable)
-    scrapers = list_builder(gen, configure.THREAD, timeout=30)
-
-    # ----------------------------------------------------------------------
-    # step suits : List[StepSuit]
-    step_suits = [StepSuit(scrapers[i], steps_class) for i in range(configure.THREAD)]
-
-    # ----------------------------------------------------------------------
-    # suit suit_start
-    [x.suit_start() for x in step_suits]
-    processor_suit.suit_start()
-
-    # ----------------------------------------------------------------------
-    # proxy : producer
-    # proxy = build_proxy(config)
-
-
-def scheme_initial(command_kwargs={}):
+def scheme_initial(command_kwargs):
     global step_suits, processor_suit
 
     w = Watcher(start_content='scheme initialing')
@@ -191,7 +152,7 @@ def scheme_initial(command_kwargs={}):
 
     # build suits
     step_suits = [StepSuit(steps=steps_class) for i in range(configure.THREAD)]
-    processor_suit = ProcessorSuit(processors_class, command_kwargs)
+    processor_suit = ProcessorSuit(processors_class)
 
     w.exit_watch()
 
@@ -213,7 +174,7 @@ def scheme_start():
     scrapers = list_builder(gen, configure.THREAD, timeout=configure.SCRAPER_TIMEOUT)
 
     for index in range(configure.THREAD):
-        step_suits[index]._scraper = scrapers[index]
+        step_suits[index].scraper = scrapers[index]
 
     # ----------------------------------------------------------------------
     # start models pipeline.
@@ -236,8 +197,10 @@ def scheme_exit():
 
     w = Watcher(start_content='scheme exiting')
 
-    processor_suit.suit_exit()
+    for scraper in scrapers:
+        scraper.scraper_quit()
 
+    processor_suit.suit_exit()
     for step_suit in step_suits:
         step_suit.suit_exit()
 

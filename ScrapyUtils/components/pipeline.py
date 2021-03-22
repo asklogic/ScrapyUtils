@@ -9,7 +9,7 @@ from .proceesor import Processor
 from .base import ComponentSuit
 from ScrapyUtils.libs.model import Model
 
-from . import log
+from . import component_log
 
 
 class ProcessorSuit(ComponentSuit):
@@ -43,7 +43,7 @@ class ProcessorSuit(ComponentSuit):
                     break
         except Exception as e:
             # TODO: continue by config
-            log.exception(e, line=1)
+            component_log.exception(e, line=1)
             return False
         else:
             return True

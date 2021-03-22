@@ -14,6 +14,8 @@ from ScrapyUtils.core import *
 
 from ScrapyUtils.core import configure
 
+from . import log
+
 
 class Thread(Command, ComponentMixin):
     do_collect = True
@@ -37,7 +39,9 @@ class Thread(Command, ComponentMixin):
         log.info(' ---------- Activated Steps List ----------')
         for i in range(len(get_steps())):
             # log.info(f'<{i + 1}> - {steps_class[i].name} - {steps_class[i].step_type}')
-            log.info(f'({get_steps()[i].priority}) - <{get_steps()[i].name}> - {get_steps()[i].step_type}')
+            log.info(
+                f'({get_steps()[i].priority}) - <{get_steps()[i].name}> - '
+                f'{"Action" if isinstance(get_steps()[i], ActionStep) else "Parser"}')
 
         # log.info('Processor Components:')
         log.info(' ---------- Activated Processors List ----------')
@@ -186,33 +190,32 @@ class ScrapyConsumer(Consumer):
             with ThreadPoolExecutor(1) as pool:
                 future = pool.submit(func, current)
                 result = future.result(self.timeout)
-        except ConcurrentTimeout as CT:
-            # TODO: rebuild
-            pass
-
+        # except ConcurrentTimeout as CT:
+        #     # TODO: rebuild
+        #     pass
+        #
+        #     current.count += 1
+        #     if current.count <= 5:
+        #         self.queue.put(current)
+        #     if self.proxy:
+        #         self.scraper.proxy = self.proxy.queue.get()
+        except Exception as e:
+            # failed.
             current.count += 1
-            if current.count <= 5:
+
+            # TODO: custom retry count.
+            if current.count <= 3:
                 self.queue.put(current)
+
             if self.proxy:
                 self.scraper.proxy = self.proxy.queue.get()
 
+            log.error(f'failed in {current.url}')
+            log.exception(e, line=2)
+
         else:
-            if result:
-                # for task in [model for model in self.suit.models if isinstance(model, Task)]:
-                #     self.queue.put(task)
-                #
-                # for model in [model for model in self.suit.models if not isinstance(model, Task)]:
-                #     self.pipeline.push(model)
+            # success
+            for model in self.suit.models:
+                self.pipeline.push(model)
 
-                for model in self.suit.models:
-                    self.pipeline.push(model)
-            else:
-                # res is False, retry.
-                current.count += 1
-
-                # TODO: custom retry count.
-                if current.count <= 3:
-                    self.queue.put(current)
-
-                if self.proxy:
-                    self.scraper.proxy = self.proxy.queue.get()
+            log.info(f'success in {current.url}')

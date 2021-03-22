@@ -9,6 +9,8 @@ from ScrapyUtils.core import configure
 
 from urllib.parse import urlparse, urlencode
 
+from ScrapyUtils.log import common as log
+
 
 class DownloadModel(Model):
     page_name = Field()
@@ -30,7 +32,8 @@ class Download(Thread):
         kwargs = options.get('kwargs')
 
         if kwargs.get('download'):
-            cls.config['download_target'] = options.get('download')
+            # cls.config['download_target'] = options.get('download')
+            pass
 
     @classmethod
     def command_components(cls, steps: List[type(ActionStep)], processors: List[type(ParseStep)], options):
@@ -64,31 +67,27 @@ class DownloadAction(ActionStep):
     """Add page_name in the context."""
     page_name = None
 
-    def scraping(self, task: Task):
-        """if url. parse and get uri
-
-        Args:
-            task (Task):
-        """
-
+    def scraping(self, task, scraper):
         path: str = urlparse(task.url).path
 
         uri_name = '.'.join(list(filter(None, path.split('/')))[-2:])
 
         if not self.context.get('page_name'):
-            if uri_name == '':
-                self.context['page_name'] = ''.join(('.'.join(task.param.values())))
-            else:
-                self.context['page_name'] = uri_name
+            self.context['page_name'] = '1'
+            # if uri_name == '':
+            #     self.context['page_name'] = ''.join(('.'.join(task.param.values())))
+            # else:
+            #     self.context['page_name'] = uri_name
 
 
 class DownloadParse(ParseStep):
-    def parsing(self):
+    def parsing(self, content):
         model = DownloadModel()
 
         model.page_name = self.context['page_name']
-        model.page_content = self.content
+        model.page_content = content
 
+        # TODO: refactor. remove page name?
         self.context.pop('page_name')
 
         yield model
@@ -118,12 +117,12 @@ class DownloadProcessor(Processor):
 
     download_target: str = None
 
-    def __init__(self, config: dict = None):
+    def __init__(self):
         """
         Args:
             config (dict):
         """
-        super().__init__(config)
+        super().__init__()
 
         download_path = configure.DOWNLOAD_PATH
         download_folder = configure.DOWNLOAD_FOLDER_PATH
@@ -139,7 +138,7 @@ class DownloadProcessor(Processor):
 
             # TODO: from command kwargs
             # create download target folder.
-            self.download_target = config.get('download_target', str(int(time.time())))
+            self.download_target = str(int(time.time()))
             download_path = os.path.join(download_folder, self.download_target)
 
             safe_create_path(download_path)

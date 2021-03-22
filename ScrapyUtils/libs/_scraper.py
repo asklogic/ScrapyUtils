@@ -851,10 +851,14 @@ class RequestHttpMixin(HttpMixin):
     def post(self, url: str, params: Dict = None, data: Dict = None, json=None, timeout: int = None,
              status_limit: int = 300):
         timeout = timeout if timeout else self.timeout
-        proxy = {
-            "http": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
-            "https": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
-        }
+
+        if self.proxy:
+            proxy = {
+                "http": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
+                "https": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
+            }
+        else:
+            proxy = {}
 
         response = self.req.post(url=url, data=data, json=json, timeout=timeout, proxies=proxy, params=params,
                                  stream=False, verify=False)

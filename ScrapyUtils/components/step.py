@@ -99,32 +99,35 @@ class BaseStepSuit(object):
 
 
 class StepSuit(ComponentSuit, BaseStepSuit):
-    """A collection of steps and execute Task.
+    """A component suit of steps.
 
-    Collect the action and step components and start a task mission.
+    Collect the action and step component instance and run a task mission.
+
+    Attributes:
+        scraper (Scraper): The common scraper of suit.
+        context (dict): The common context of suit.
+        steps (list(steps)): The step instances.
+
     """
+    target_components = Step
 
-    steps: List[Step] = None
-
-    context: dict = None
     scraper: Scraper = None
+    context: dict = None
+    models: deque = None
 
-    def __init__(self, steps: List[type(Step)], config: dict):
-        """TODO: refactor it.
-
+    def __init__(self, steps: List[type(Step)], config: dict = None):
+        """
         Args:
             steps ():
             config ():
         """
-        for step in steps:
-            assert issubclass(step, Step), 'StepSuit need step class.'
+        super(StepSuit, self).__init__(steps)
 
-        # initial steps.
-        self.steps = [x() for x in steps]
+        for step in self.components:
+            step.set_suit(self)
+
         self.context = dict()
-
-        # TODO: refacotr
-        self._components = steps
+        self.models = deque()
 
     def set_scraper(self, scraper: Scraper):
         """Set the scraper of suit.
@@ -156,7 +159,9 @@ class StepSuit(ComponentSuit, BaseStepSuit):
 
             for step in self.steps:
                 if isinstance(step, ActionStep):
-                    content = step.scraping(task, step.scraper)
+                    current_content = step.scraping(task, self.scraper)
+                    if current_content:
+                        content = current_content
                 elif isinstance(step, ParseStep):
                     parsed = step.parsing(content)
                     if parsed:
@@ -166,6 +171,10 @@ class StepSuit(ComponentSuit, BaseStepSuit):
             return True
 
         return scrapy_inline
+
+    @property
+    def steps(self):
+        return self._components
 
 
 class BaseActionStep(BaseStep):
@@ -190,10 +199,6 @@ class BaseActionStep(BaseStep):
         """
         pass
 
-"""
-Notes:
-    test notes: 
-"""
 
 class ActionStep(Step, BaseActionStep):
     """The node of action.
@@ -206,10 +211,6 @@ class ActionStep(Step, BaseActionStep):
 
     """
     priority = 600
-
-    @property
-    def scraper(self):
-        return self.scraper
 
     # def do(self, task: Task):
     #     """The common method in StepSuit.
@@ -260,18 +261,3 @@ class ParseStep(Step, BaseParseStep):
 
     """
     priority = 400
-
-    # def do(self, task: Task):
-    #     """The common method in StepSuit.
-    #
-    #     Note:
-    #         Do not override it!
-    #
-    #     Args:
-    #         task (TaskModel): Task instance.
-    #     """
-    #     models = deque()
-    #     parsed = self.parsing(self.suit)
-    #     if parsed:
-    #         for model in parsed:
-    #             self.suit

@@ -10,9 +10,10 @@ from ScrapyUtils.common import Task
 
 @active
 class ${class_name}Action(ActionStep):
-    def scraping(self, task: Task):
-        scraper: Scraper = self.scraper
-        return scraper.get(url=task.url)
+    def scraping(self, task, scraper):
+        content = scraper.get(url=task.url)
+
+        return content
 
     def check(self, content):
         pass
@@ -32,8 +33,8 @@ from ScrapyUtils.tool import xpathParse, xpathParseList, XpathParser
 @active
 class ${class_name}Parse(ParseStep):
 
-    def parsing(self) -> Model or Generator[Model]:
-        parser = XpathParser(self.content)
+    def parsing(self, content: str) -> Model or Generator[Model]:
+        parser = XpathParser(content)
         
         m = ${class_name}Model()
         m.filed = "filed content"
@@ -49,7 +50,7 @@ model_template = """from ScrapyUtils.libs import Model, Field
 
 
 class ${class_name}Model(Model):
-    filed = Field()
+    field = Field()
 """
 
 # process

@@ -8,6 +8,8 @@ from ScrapyUtils.libs import Task
 from ScrapyUtils.components import *
 from ScrapyUtils.core import configure
 
+from . import log
+
 
 class Parsing(Thread):
     download: str = None
@@ -113,7 +115,7 @@ class Parsing(Thread):
 
 
 class ParsingLoadAction(ActionStep):
-    def scraping(self, task: Task):
+    def scraping(self, task: Task, content):
         """
         Args:
             task (Task):

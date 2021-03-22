@@ -1,8 +1,7 @@
 from abc import abstractmethod
 from typing import List, Iterable
 
-from . import log
-
+from . import component_log
 
 class ComponentMeta(type):
 
@@ -64,35 +63,22 @@ class Component(object, metaclass=ComponentMeta):
 
 
 class ComponentSuit(object):
-    _components: List[Component] = None
+    _components: List[type(Component)] = None
     target_components: type(Component) = Component
 
-    config: dict = None
+    def __init__(self, components: List[type(Component)]):
+        # assert
 
-    def __init__(self, components: List[type(Component)], config: dict = None):
-        """
-        Args:
-            components:
-            config (dict):
-        """
         assert isinstance(components, Iterable)
         for component in components:
-            # assert isinstance(processor, Processor), 'Processor must be init'
-            assert issubclass(component, self.target_components), 'Suit need type {}.'.format(
-                self.target_components.name)
+            assert issubclass(component, self.target_components), f'Suit need type {self.target_components.name}.'
 
-        self.config = config if config else {}
+        # initial components
         self._components = []
 
-        # TODO: two for-loop
         for component in components:
-            try:
-                current = component(config)
-                self._components.append(current)
-            except Exception as e:
-                log.exception(e, line=1)
-                # TODO: raise exception?
-                raise Exception(f'Component {component.name} initial failed.')
+            current = component()
+            self.components.append(current)
 
     @property
     def components(self):
@@ -103,8 +89,8 @@ class ComponentSuit(object):
             try:
                 component.on_start()
             except Exception as e:
-                log.exception(e)
-                log.error('component {} start failed.'.format(component.name), self.__class__.__name__)
+                component_log.exception(e)
+                component_log.error('component {} start failed.'.format(component.name), self.__class__.__name__)
 
                 self.components.remove(component)
                 # TODO: interrupt exception.
@@ -115,8 +101,8 @@ class ComponentSuit(object):
             try:
                 component.on_exit()
             except Exception as e:
-                log.exception(e)
-                log.error('component {} exit failed.'.format(component.name), self.__class__.__name__)
+                component_log.exception(e)
+                component_log.error('component {} exit failed.'.format(component.name), self.__class__.__name__)
                 # TODO: interrupt exception.
                 # raise Exception('interrupt.')
 

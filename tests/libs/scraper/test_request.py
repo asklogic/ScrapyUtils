@@ -1,7 +1,5 @@
 import unittest
 
-
-
 from ScrapyUtils.libs import RequestScraper
 import json
 
@@ -25,6 +23,15 @@ class RequestScraperTestCase(unittest.TestCase):
 
     def test_initial(self):
         RequestScraper()
+
+    def test_initial_param_header(self):
+        mock_headers = {
+            'key_0': 'value_0'
+        }
+
+        r = RequestScraper(headers=mock_headers)
+
+
 
     # def test_case_default_header(self):
     #     """RequestScraper custom headers."""

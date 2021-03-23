@@ -1,9 +1,32 @@
+# -*- coding: utf-8 -*-
+"""Request scraper module.
+
+RequestScraper Bases on Requests.Session and support some common methods.
+
+RequestScraper is the default scraper of ScrapyUtils.
+
+默认Scraper，如果不设置自定义Scraper将默认启动RequestScraper.
+
+Todo:
+    * log out.
+    * RequestsScraper proxy, timeout mixin.
+    * unittest.
+
+"""
+
 from typing import *
 
-from ScrapyUtils.libs import Scraper
+from ScrapyUtils.libs.scraper import Scraper, TimeoutMixin
 
 try:
     from requests import Session, Response
+
+    from requests import adapters, packages
+    from urllib3.exceptions import InsecureRequestWarning
+
+    # default common setting.
+    adapters.DEFAULT_RETRIES = 5
+    packages.urllib3.disable_warnings(InsecureRequestWarning)
 except ImportError as e:
     # TODO: libs log
     pass
@@ -23,6 +46,11 @@ default_headers = {
 class RequestSettingMixin(object):
     _headers: Dict[str, str] = None
     _keep_alive: bool = True
+
+    def __init__(self, headers: dict = None, **kwargs):
+        self.headers = headers if headers else default_headers.copy()
+
+        super().__init__(**kwargs)
 
     @property
     def headers(self) -> dict:
@@ -50,14 +78,12 @@ class RequestSettingMixin(object):
             self._keep_alive = False
 
 
-class RequestScraper(Scraper, RequestSettingMixin):
+class RequestScraper(
+    RequestSettingMixin,
+    Scraper
+):
     current: Response = None
     req: Session = None
-
-    def __init__(self, headers: dict = None, **kwargs):
-        self.headers = headers if headers else default_headers.copy()
-
-        super(RequestScraper, self).__init__(**kwargs)
 
     def _attach(self) -> NoReturn:
         """

@@ -741,8 +741,8 @@ class FirefoxSettingMixin(object):
     def js(self, value):
         if value:
             self._js = True
-            # self.options.set_preference("browser.download.folderList", 2)
-            # self.options.set_preference("javascript.enabled", False)
+            # self.options.set_preference("browser.download.folderList", 0)
+            self.options.set_preference("javascript.enabled", True)
         else:
             self._js = False
             self.options.set_preference("browser.download.folderList", 2)

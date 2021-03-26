@@ -1,5 +1,4 @@
 import time
-import os
 from types import ModuleType
 from typing import List, Callable
 
@@ -12,10 +11,9 @@ from threading import Thread
 
 from ScrapyUtils.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline, ProcessorSuit
 from ScrapyUtils.libs import Scraper, RequestScraper, Proxy, MultiProducer, Producer
-from ScrapyUtils.log import common
 from ScrapyUtils.log import basic
 
-from . import configure
+from .. import configure
 
 # global:
 # *******************************************************************************
@@ -53,13 +51,12 @@ def initial_configure(settings_module: ModuleType):
     global tasks_callable, scraper_callable
 
     # globals()['SCHEME_PATH'] = path.dirname(settings_module.__file__)
-    configure.FILE_FOLDER_PATH = path.join(path.dirname(settings_module.__file__), 'data')
+    configure.DATA_FOLDER_PATH = path.join(path.dirname(settings_module.__file__), 'data')
 
     configure.SCHEME_PATH = path.dirname(settings_module.__file__)
 
     # initial download configure items
     configure.DOWNLOAD_FOLDER_PATH = path.join(path.dirname(settings_module.__file__), 'download')
-    configure.DOWNLOAD_SUFFIX = 'html'
 
     for key in configure.registered_keys:
         if hasattr(settings_module, key):
@@ -128,7 +125,6 @@ def initial_configure(settings_module: ModuleType):
 
 
 def scheme_preload(scheme: str):
-    # w = Watcher(start_content='scheme preloading')
     try:
         module = import_module(scheme)
 
@@ -139,11 +135,9 @@ def scheme_preload(scheme: str):
     except Exception as e:
         log.exception(e)
         raise Exception('Failed in scheme preload.')
-    # finally:
-    #     w.exit_watch()
 
 
-def scheme_initial(command_kwargs):
+def scheme_initial(**command_kwargs):
     global step_suits, processor_suit
 
     w = Watcher(start_content='scheme initialing')
@@ -259,16 +253,10 @@ def scheme_exit():
 
 
 def _load_components(module: ModuleType, component: type(Component)):
-    """
-    Load the specified subclass from module
-    :param module: the module
-    :param component: the super class(type)
-    :return: subclass list
-    """
     components: List[Component] = []
     for attr in dir(module):
         attribute = getattr(module, attr)
-        # 短路判断类
+        # 短路判断
         if isinstance(attribute, type) and issubclass(attribute, component) and attribute is not component:
             components.append(attribute)
     return components
@@ -480,7 +468,6 @@ def list_builder(invoker, number, timeout=10):
     # log.info('Thread build done.')
 
     return res_list
-
 
 class Watcher(Thread):
 

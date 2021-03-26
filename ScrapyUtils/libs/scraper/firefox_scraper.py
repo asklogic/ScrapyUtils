@@ -9,8 +9,6 @@ Todo:
     * unittest.
     * driver block function.
     * parameter driver/binary path
-
-
 """
 
 import os
@@ -39,11 +37,29 @@ driver_path = ''.join(['firefox', os.sep, 'geckodriver', platform_suffix])
 # setter function
 
 def set_firefox_path(path: str):
+    """Set the global varibale firefox_path.
+
+    The firefox will attach the browser by this path.
+
+    Default value is "project/firefox/firefox"
+
+    Args:
+        path (str): The path of browser.
+    """
     global firefox_path
     firefox_path = path
 
 
 def set_driver_path(path: str):
+    """Set the gloabl variable driver_path.
+
+    The dirver_path is the path of webdriver.
+
+    Default value is "project/firefox/geckodriver"
+
+    Args:
+        path (str): The path of geckodriver
+    """
     global driver_path
     driver_path = driver_path
 
@@ -51,6 +67,23 @@ def set_driver_path(path: str):
 # mixin
 
 class FireFoxSettingMixin(object):
+    """Firefox setting mixin.
+
+    Firefox的设置，包含了浏览器通用设置，图片、无头和禁用js属性控制。
+    attach之后不能修改浏览器属性，因为设置属性只修改了option的值，需要重启才能应用修改。
+
+    Attributes:
+        image (bool): Image state, Flase means no image.
+        headless (bool): Headless state, Flase means headless.
+        js (bool): Javascripts state, Flase means no js.
+
+        driver_path (str): Current driver_path.
+        binary (FirefoxBinary): Current bianry(browser).
+
+        options (FirefoxOptions): Current options.
+
+    """
+    
     # firefox property
     _image: bool = False
     _headless: bool = True

@@ -6,7 +6,7 @@ from collections import deque
 
 import csv
 
-from ScrapyUtils.core import configure
+from ScrapyUtils import configure
 from ScrapyUtils.libs import Model, Field, Task, Scraper
 from ScrapyUtils.components.proceesor import Processor
 from ScrapyUtils.components.scheme import Action, Parse
@@ -37,7 +37,7 @@ class FileProcessorMixin(Processor):
         # Default : /<scheme>/data
         # Keep blank str will save into the work folder.
         if not (hasattr(self, 'file_folder') and self.file_folder != None):
-            self.file_folder = configure.FILE_FOLDER_PATH
+            self.file_folder = configure.DATA_FOLDER_PATH
 
         # File's name.
         # Default : timestamp

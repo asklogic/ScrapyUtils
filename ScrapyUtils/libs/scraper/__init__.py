@@ -8,7 +8,7 @@ from typing import *
 def check_property(property_name: str, value: Any):
     """Check the property when the method be invoked.
 
-    属性检查装饰器，调用时检查属性。
+    属性检查装饰器，调用时检查属性,不正确将会抛出异常。
 
     If the property's value isn't equal to value raise Exception.
     """
@@ -28,6 +28,16 @@ def check_property(property_name: str, value: Any):
 
 
 class TimeoutMixin(object):
+    """Common Mixin: Timeout
+
+    提供了基本的timeout属性，默认值为10。
+
+    通过 @TimeoutMixin.timeout.setter 来重写setter。
+    Attributes:
+        timeout (int): Default timeout value(int).
+
+    """
+
     _timeout: int = 10
 
     @property
@@ -36,7 +46,10 @@ class TimeoutMixin(object):
 
     @timeout.setter
     def timeout(self, value):
-        """Overwrite setter.
+        """Default timeout setter
+
+        Args:
+            value (int): Value of Timeout.
         """
         self._timeout = value
 

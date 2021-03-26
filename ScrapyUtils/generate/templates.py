@@ -4,7 +4,7 @@
 # action
 
 action_template = """from ScrapyUtils.components import ActionStep, active
-from ScrapyUtils.libs import Scraper, RequestScraper, FirefoxScraper
+from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper
 from ScrapyUtils.common import Task
 
 

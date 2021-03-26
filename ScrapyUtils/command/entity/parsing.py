@@ -1,4 +1,3 @@
-from typing import List, Any
 import os
 import time
 
@@ -6,7 +5,7 @@ from .thread_ import Thread
 
 from ScrapyUtils.libs import Task
 from ScrapyUtils.components import *
-from ScrapyUtils.core import configure
+from ... import configure
 
 from . import log
 

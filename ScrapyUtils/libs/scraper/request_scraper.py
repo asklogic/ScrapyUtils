@@ -16,7 +16,7 @@ Todo:
 
 from typing import *
 
-from ScrapyUtils.libs.scraper import Scraper, TimeoutMixin
+from ScrapyUtils.libs.scraper import Scraper
 
 try:
     from requests import Session, Response
@@ -78,12 +78,50 @@ class RequestSettingMixin(object):
             self._keep_alive = False
 
 
-class RequestScraper(
-    RequestSettingMixin,
-    Scraper
-):
+class RequestHttpMixin(object):
     current: Response = None
     req: Session = None
+
+    def get(self, url: str, params: Dict = None, timeout: int = None, status_limit: int = 300):
+        timeout = timeout if timeout else self.timeout
+        # proxy = {
+        #     "http": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
+        #     "https": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
+        # }
+
+        # TODO: proxy
+        # response = self.req.get(url=url, timeout=timeout, proxies=self.request_proxy_dict(), params=params,
+        #                         stream=False, verify=False)
+        response = self.req.get(url=url, timeout=timeout, params=params, headers=self.headers,
+                                stream=False, verify=False)
+
+        self.current = response
+
+        if response.status_code / 100 > status_limit / 100:
+            raise Exception('RequestScraper http status Exception. status code: ' + str(response.status_code))
+
+        return response.text
+
+    def post(self, url: str, params: Dict = None, data: Dict = None, json=None, timeout: int = None,
+             status_limit: int = 300):
+        timeout = timeout if timeout else self.timeout
+
+        # TODO: proxy
+        response = self.req.post(url=url, data=data, json=json, timeout=timeout, params=params, headers=self.headers,
+                                 stream=False, verify=False)
+        self.current = response
+
+        if response.status_code / 100 > status_limit / 100:
+            raise Exception('RequestScraper http status Exception. status code: ' + str(response.status_code))
+
+        return response.text
+
+
+class RequestScraper(
+    RequestSettingMixin,
+    RequestHttpMixin,
+    Scraper
+):
 
     def _attach(self) -> NoReturn:
         """

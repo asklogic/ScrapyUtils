@@ -1,10 +1,8 @@
 import time
-from concurrent.futures._base import TimeoutError as ConcurrentTimeout
 from concurrent.futures.thread import ThreadPoolExecutor
 from threading import Lock, Event
 from typing import List
 
-from ScrapyUtils.components import *
 from ScrapyUtils.exception import CommandExit
 from . import Command, ComponentMixin
 
@@ -12,7 +10,7 @@ from ScrapyUtils.components import *
 from ScrapyUtils.libs import Task, Consumer, Producer
 from ScrapyUtils.core import *
 
-from ScrapyUtils.core import configure
+from ... import configure
 
 from . import log
 

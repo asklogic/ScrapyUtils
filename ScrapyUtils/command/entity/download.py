@@ -4,10 +4,10 @@ import time
 
 from ScrapyUtils.command.entity.thread_ import Thread
 from ScrapyUtils.components import *
-from ScrapyUtils.libs import Model, Field, Task
-from ScrapyUtils.core import configure
+from ScrapyUtils.libs import Model, Field
+from ScrapyUtils import configure
 
-from urllib.parse import urlparse, urlencode
+from urllib.parse import urlparse
 
 from ScrapyUtils.log import common as log
 

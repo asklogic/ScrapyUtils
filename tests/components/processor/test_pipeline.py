@@ -56,8 +56,8 @@ class TestPipeline(unittest.TestCase):
         pipeline.consumer.start()
         time.sleep(0.1)
         assert pipeline.queue.qsize() == 0
-        assert pipeline.suit.components[0].count > 4700
-        assert pipeline.suit.components[0].count < 5300
+        assert pipeline.suit.components[0].mock_count > 4700
+        assert pipeline.suit.components[0].mock_count < 5300
 
     @unittest.skip
     def test_process_block(self):
@@ -79,7 +79,7 @@ class TestPipeline(unittest.TestCase):
         # print(len(pipeline.failed))
         # print(pipeline.suit.components[0].count)
 
-        assert pipeline.suit.components[0].count + len(pipeline.failed) == 2000
+        assert pipeline.suit.components[0].mock_count + len(pipeline.failed) == 2000
 
     def test_property_suit(self):
         pass

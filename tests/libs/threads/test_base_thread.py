@@ -3,135 +3,141 @@ import sys
 import threading
 import time
 
-from base.libs.threads import BaseThread
+from threading import Event
+from time import sleep
+
+from ScrapyUtils.libs.threads.base_thread import BaseThread
 
 
-class MyTestCase(unittest.TestCase):
+class Count(BaseThread):
+    mock_count = 0
 
-    def test_property_is_alive(self):
-        """start thread in __init__ threading.Thread property : alive"""
-        base = BaseThread()
-        assert base.is_alive() is True
+    def __init__(self, **kwargs):
+        self.mock_count = 0
+        super(Count, self).__init__(**kwargs)
+
+    def run(self) -> None:
+        while True:
+            self.event.wait()
+            # self.count += 1
+            self.mock_count = self.mock_count + 1
+            time.sleep(0.2)
+
+
+class BaseThreadTestCase(unittest.TestCase):
+
+    def test_samples_count(self):
+        """The sample count thread.
+
+        Count类每次工作时间花费0.2秒。
+
+        只要开启线程，并且event没有阻塞，就会进入一次工作。
+
+        此时调用stop方法，线程暂停，当前工作结束后将会被event阻塞。
+        """
+        count = Count()
+        assert count.mock_count == 0
+        count.start()
+        sleep(0.1)
+        count.stop()
+        assert count.mock_count == 1
+
+    def test_sample_multi_count(self):
+        """Shared event in multi thread.
+
+        多个线程共用event。
+
+        多个count可以共用一个event，通过控制event来控制多个count的启停。
+        """
+        event = threading.Event()
+        counter0 = Count(event=event)
+        counter1 = Count(event=event)
+        counter2 = Count(event=event)
+        counter3 = Count()
+
+        counter0.start()
+        counter1.start()
+        counter2.start()
+        counter3.start()
+
+        # 三次计数
+        time.sleep(0.5)
+
+        # 暂停
+        counter0.stop()
+        # event.clear()
+
+        time.sleep(0.5)
+
+        assert counter0.event is counter1.event is counter2.event
+
+        assert counter0.mock_count == 3
+        assert counter1.mock_count == 3
+        assert counter2.mock_count == 3
+        assert counter3.mock_count == 5
+
+    def test_class_thread(self):
+        """The subclass of threading.Thread
+        """
+        assert issubclass(BaseThread, threading.Thread)
+        assert issubclass(Count, threading.Thread)
 
     def test_property_daemon(self):
-        """threading.Thread property : daemon"""
-
+        """The property daemon default value is True.
+        """
         base = BaseThread()
         assert base.daemon is True
 
-    def test_property_event_isset(self):
-        """BaseThreading property : event"""
-        base = BaseThread()
-        assert base.event.is_set() is False
+    def test_property_is_alive(self):
+        """The thread will not start after initial.
 
-        base.event.set()
-
-        assert base.event.is_set() is True
-
-        base.event.clear()
-        assert base.event.is_set() is False
-
-    def test_init_event_default(self):
-        """parameter : event critical: same event. start and stop keep the same
-        action.s
+        初始化后不会自动运行线程。
         """
+        base = BaseThread()
+        assert base.is_alive() is False
 
-        base1 = BaseThread()
-        base2 = BaseThread()
+    def test_argument_event(self):
+        """The argument event: to get a shared event.
 
-        assert id(base1.event) == id(base2.event)
+        可以传入event对象，默认为false状态。
 
-    def test_init_event(self):
-        """property : _stopped_event"""
-        import threading
+        如果没有传，将会自动生成一个event。
+        """
         event = threading.Event()
-
         base = BaseThread(event)
 
         assert base.event is event
-        assert base._stopped_event is event
-        assert id(base.event) == id(event)
 
-    def test_init_event_assert(self):
-        with self.assertRaises(Exception) as e:
-            BaseThread(object())
+    # def test_parameter_start_thread(self):
+    #     """
+    #     初始化参数start_thread默认为False，设置为False后将不会自动运行线程。
+    #     """
+    #     base = BaseThread(start_thread=False)
+    #     assert base.is_alive() is False
 
-        assert 'need event instance.' in str(e.exception)
-
-    def test_init_kw_name(self):
-        """property kwargs : name"""
-        n = BaseThread(**{'name': 'custom_name'})
-        assert n.getName() == 'custom_name'
-
-    @unittest.skip
-    def test_method_run(self):
-        """stop at once. TODO: fixme"""
-
-        class Custom(BaseThread):
-            def run(self):
-                raise Exception()
-
-        custom = Custom()
-
-        assert custom.is_alive() is False
-        custom.start()
-        assert custom.is_alive() is True
-
-        # blink.
-        import time
-        time.sleep(0.1)
-        assert custom.is_alive() is False
-
-    def test_method_stop(self):
-        """block till stopped is True"""
-        base = BaseThread()
-        base.start(True)
-
-        assert base.stopped is False
-        assert base.event.is_set() is True
-
-        base.stop(True)
-        assert base.stopped is True
-        assert base.event.is_set() is False
-
-    def test_method_stop_not_block(self):
-        base = BaseThread()
-        base.start()
-
-        assert base.is_alive() is True
-        assert base.event.is_set() is True
-        assert base.stopped is False
-
-        base.stop(False)
-        assert base.stopped is False
-        assert base.event.is_set() is False
-
-        # not block.
-        time.sleep(1 + 0.01)
-        assert base.stopped is True
+    # def test_parameter_start_thread_true(self):
+    #     base = BaseThread(start_thread=True)
+    #     assert base.is_alive() is True
 
     def test_method_start(self):
-        base = BaseThread()
+        count = Count()
 
-        assert base.stopped is True
-        assert base.event.is_set() is False
+        assert count.event.is_set() == False
 
-        base.start(True)
+        count.start()
+        assert count.is_alive() is True
+        assert count.event.is_set() == True
 
-        assert base.stopped is False
-        assert base.event.is_set() is True
+    def test_method_stop(self):
+        count = Count()
+        count.start()
+        sleep(0.1)
+        count.stop()
+        assert count.mock_count == 1
 
-    def test_method_start_not_block(self):
-        base = BaseThread()
+        sleep(0.4)
 
-        assert base.event.is_set() is False
-        assert base.stopped is True
-
-        base.start()
-        # after event.set() stopped be False immediately
-        # assert base.stopped is True
-        assert base.stopped is False
-        assert base.event.is_set() is True
+        assert count.mock_count == 1
 
 
 if __name__ == '__main__':

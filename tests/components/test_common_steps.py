@@ -74,7 +74,7 @@ class CommonComponentsTestCase(unittest.TestCase):
         mock_run(CountActionStep, {})
         process_model()
 
-        assert get_suits()[0].steps[0].count == 10
+        assert get_suits()[0].steps[0].mock_count == 10
 
     def test_simple_suit(self):
         suit = StepSuit(MyCustomStep)

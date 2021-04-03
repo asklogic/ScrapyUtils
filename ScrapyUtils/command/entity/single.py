@@ -44,7 +44,7 @@ class Single(Command):
             self.log.info('{} - <{}>, res:{}'.format(suit.steps.index(step) + 1, step.name, res), 'Step')
 
             if not step.do(task):
-                self.log.info('failed. count: {0}, url: {1}.'.format(task.count, task.url))
+                self.log.info('failed. count: {0}, url: {1}.'.format(task.mock_count, task.url))
 
             cmd = input('command:')
 

@@ -68,7 +68,7 @@ class TestProcessorSuit(unittest.TestCase):
     def test_function_init(self):
         suit = ProcessorSuit([Blank])
 
-        assert suit.components[0].count == 0
+        assert suit.components[0].mock_count == 0
         assert suit.components[0].data == []
 
     def test_function_init_config(self):

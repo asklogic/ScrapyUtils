@@ -112,7 +112,7 @@ class TestCommand(unittest.TestCase):
         assert pipeline.suit.components[0].name == 'Duplication'
         assert pipeline.suit.components[1].name == 'Count'
 
-        count = pipeline.suit.components[1].count
+        count = pipeline.suit.components[1].mock_count
         failed = len(pipeline.failed)
 
         assert count + failed > 5 * 10
@@ -149,8 +149,8 @@ class TestCommand(unittest.TestCase):
 
         from base.core.collect import models_pipeline
 
-        print(models_pipeline.suit.components[0].count)
-        assert models_pipeline.suit.components[0].count > 0
+        print(models_pipeline.suit.components[0].mock_count)
+        assert models_pipeline.suit.components[0].mock_count > 0
 
     def test_log(self):
         command = Thread()

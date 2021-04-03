@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, get_type_hints
 from abc import abstractmethod
 import time
 
@@ -9,35 +9,58 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 
 class BaseThread(Thread):
-    """
-    BaseThreading
+    """BaseThreading
+
+    基本线程类
+
     提供简单启停的线程类 通过threading.Event来控制启停.
     若不提供默认event 则会使用全局同一的Event对象.
     默认为守护进程 和主线程一同退出 故只有暂停方法.
 
     创建好对象时开始就执行Thread.start.
     event.wait将会阻塞线程 需要调用BaseThreading.start来运行.
+
+    能够简单的启停线程。
+    通过start & stop 来阻塞event对象
+
     """
-    _stopped_event: Event = None
+    _event: Event = None
     _stopped: bool = False
 
-    def __init__(self, event: Event = Event(), **kwargs):
+    def __init__(self, event: Event = Event(), start_thread: bool = True, **kwargs):
+
+        # check arguments
         assert isinstance(event, Event), 'need event instance.'
+
         Thread.__init__(self, name=kwargs.get('name'))
         self.setDaemon(True)
 
-        # set event before start.
-        self._stopped_event = event
+        # arguments event: set event before start.
+        self._event = event
         self.event.clear()
 
-        Thread.start(self)
+        # arguments start_thread: start thread when initial.
+        if start_thread:
+            Thread.start(self)
 
         # block at self.wait() in method run()
-        self.stop(True)
+        # self.stop(True)
 
+    # property:
+    @property
+    def event(self):
+        return self._event
+
+    @property
+    def stopped(self):
+        return self._stopped
+
+    # override function:
     def run(self) -> None:
-        """
-        demo
+        """A sample run function.
+
+        不断执行一个耗时的方法，每次运行时，会对阻塞情况进行判断。
+
         :return:
         """
         while True:
@@ -45,30 +68,23 @@ class BaseThread(Thread):
             time.sleep(1)
             print('run')
 
-    @property
-    def event(self):
-        return self._stopped_event
-
-    @property
-    def stopped(self):
-        return self._stopped
-
     def wait(self) -> bool:
         self._stopped = True
         self.event.wait()
         self._stopped = False
         return True
 
-    def stop(self, block=True):
-        self._stopped_event.clear()
-        if block:
-            while self.stopped is not True:
-                time.sleep(0.1)
+    def stop(self, block_to_wait=True):
+        self._event.clear()
+        if block_to_wait:
+            self.event.wait()
+            # while self.stopped is not True:
+            #     time.sleep(0.1)
 
-    def start(self, block=True):
+    def start(self, block_to_wait=True):
         # TODO: abort block?
         self.event.set()
-        if block:
+        if block_to_wait:
             while self.stopped is True:
                 time.sleep(0.1)
 

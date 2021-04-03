@@ -93,10 +93,10 @@ class ScrapyConsumer(Consumer):
                     self.pipeline.push(data_model)
             else:
                 # res is False, retry.
-                current.count += 1
+                current.mock_count += 1
 
                 # TODO: custom retry count.
-                if current.count <= 3:
+                if current.mock_count <= 3:
                     self.queue.put(current)
 
                 if self.proxy:

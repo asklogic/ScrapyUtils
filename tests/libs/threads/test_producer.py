@@ -6,9 +6,11 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from multiprocessing.dummy import Pool
 from multiprocessing import TimeoutError
-import time
+from time import sleep
 
-from threading import Event
+from threading import Event, Lock
+from typing import Union
+
 from ScrapyUtils.libs.threads import BaseThread
 from ScrapyUtils.libs.threads.producer import Producer
 
@@ -20,7 +22,15 @@ class Custom(Producer):
 
 
 class Count(Producer):
-    pass
+
+    def __init__(self, queue: Queue, overflow: bool = True, delay: Union[int, float] = 0.1, lock: Lock = None,
+                 event: Event = Event(), start_thread: bool = None, **kwargs):
+        self.mock_count = 0
+        super().__init__(queue, overflow, delay, lock, event, start_thread, **kwargs)
+
+    def producing(self):
+        self.mock_count += 1
+        return time.time()
 
 
 class ProducerTestCase(unittest.TestCase):
@@ -32,8 +42,28 @@ class ProducerTestCase(unittest.TestCase):
         self.half = Queue(10)
         [self.half.put(x) for x in range(5)]
 
-        self.queue = Queue(10)
-        self.event = Event()
+    def test_sample_produce(self):
+        """Produce item without delay.
+        """
+        count = Count(Queue(), delay=0)
+        count.resume()
+
+        sleep(0.001)
+
+        print(count.queue.qsize())
+        assert count.queue.qsize() > 100
+
+    def test_sample_produce_delay(self):
+        """Produce item with delay.
+        """
+
+        count = Count(Queue(), delay=0.05)
+        count.resume()
+
+        sleep(0.12)
+        count.pause()
+
+        assert count.queue.qsize() == 2
 
     def test_class_base_thread(self):
         """The subclass of BaseThread

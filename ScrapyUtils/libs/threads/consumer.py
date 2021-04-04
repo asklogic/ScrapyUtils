@@ -12,7 +12,7 @@ Todo:
 
 """
 from abc import abstractmethod
-from threading import Lock
+from threading import Lock, Event
 from typing import List, NoReturn, Any, Union
 
 from queue import Queue, Empty, Full
@@ -30,36 +30,39 @@ class Consumer(BaseThread):
     lock: Lock
     delay: Union[int, float]
 
-    def __init__(self, queue: Queue,
+    def __init__(self,
+                 queue: Queue,
                  delay: Union[int, float] = 0.1,
                  lock: Lock = None,
-                 **kwargs):
+                 event: Event = Event(), start_thread: bool = None, **kwargs):
 
         self.queue = queue
         self.delay = delay
         self.lock = lock if lock else Lock()
 
-        BaseThread.__init__(self, **kwargs)
+        # BaseThread.__init__(self, **kwargs)
+
+        BaseThread.__init__(self, event, start_thread, **kwargs)
 
     def run(self) -> NoReturn:
-        while self.event.wait():
+        while self.thread_wait():
 
             with self.lock:
                 sleep(self.delay)
 
             # step 1: get obj.
             try:
-                obj = self.queue.get(timeout=0.01)
+                obj = self.queue.get(timeout=0.05)
             except Empty as e:
                 continue
+            else:
+                self.queue.task_done()
 
             # step 2: consume obj.
             try:
                 self.consuming(obj)
             except Exception as e:
-                self.stop()
-            else:
-                self.queue.task_done()
+                self.pause(False)
 
     def wait_exit(self) -> NoReturn:
         while self.queue.qsize() != 0:

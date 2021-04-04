@@ -41,22 +41,24 @@ class ComsumerTestCase(unittest.TestCase):
         assert issubclass(Custom, BaseThread)
 
     def test_sample_consume(self):
-        """Consume a queue.
+        """Consume items without delay.
+
+        Consume all item within 0.1 second.
         """
 
         custom = Custom(self.queue, 0)
-        custom.start()
+        custom.resume()
         sleep(0.1)
 
-        assert self.queue.qsize() == 0
+        assert custom.queue.qsize() == 0
 
     def test_sample_delay(self):
-        """Consume with delay.
+        """Consume item with delay.
 
-        delay before consuming!
+        Delay before consuming!
         """
         custom = Custom(self.queue, 0.1)
-        custom.start()
+        custom.resume()
         assert self.queue.qsize() == 5
         sleep(0.15)
         assert self.queue.qsize() == 4
@@ -69,11 +71,11 @@ class ComsumerTestCase(unittest.TestCase):
         count0 = Count(self.queue, 0.1, event=event)
         count1 = Count(self.queue, 0.1, event=event)
 
-        count0.start()
-        count1.start()
+        count0.resume()
+        count1.resume()
         sleep(0.15)
 
-        print(count0.mock_count, count1.mock_count)
+        # print(count0.mock_count, count1.mock_count)
 
         assert count0.mock_count == 1
         assert count1.mock_count == 1
@@ -91,7 +93,7 @@ class ComsumerTestCase(unittest.TestCase):
 
         assert count0.event == count1.event
 
-        count0.start()
+        count0.resume()
         sleep(0.25)
         assert self.queue.qsize() == 3
 

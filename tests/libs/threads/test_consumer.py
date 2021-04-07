@@ -17,10 +17,10 @@ class Custom(Consumer):
 
 class Count(Custom):
 
-    def __init__(self, queue: Queue, delay: Union[int, float] = 0.1, lock: Lock = None, **kwargs):
+    def __init__(self, source: Queue, delay: Union[int, float] = 0.1, lock: Lock = None, **kwargs):
         self.mock_count = 0
 
-        super().__init__(queue, delay, lock, **kwargs)
+        super().__init__(source, delay, lock, **kwargs)
 
     def consuming(self, obj):
         self.mock_count += 1
@@ -50,7 +50,8 @@ class ComsumerTestCase(unittest.TestCase):
         custom.resume()
         sleep(0.1)
 
-        assert custom.queue.qsize() == 0
+        print(custom.source.qsize())
+        assert custom.source.qsize() == 0
 
     def test_sample_delay(self):
         """Consume item with delay.

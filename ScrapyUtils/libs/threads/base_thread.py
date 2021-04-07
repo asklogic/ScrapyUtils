@@ -5,8 +5,6 @@
 
 BaseThread样例：
 
-
-
 Todo:
     * nothing.
 
@@ -31,13 +29,9 @@ initial_start_thread = True
 class BaseThread(Thread):
     """BaseThread for Consumer/Producer base on Threading.Thread.
 
-    通过操作Condition来提供简单的启停操作。
-
-    Args:
-        Thread (threading.Thread): 线程基类
+    通过操作Barrier来提供简单的启停操作。
     """
-
-    paused_flag = True
+    _paused_flag = True
 
     barrier: Barrier
     event: Event
@@ -46,8 +40,6 @@ class BaseThread(Thread):
         """Override the Thread.__init__.
 
         默认设置为守护进程，也可以添加Thread的参数。
-
-        初始化condition操作，默认阻塞。
         """
 
         # Default barrier.
@@ -70,6 +62,40 @@ class BaseThread(Thread):
         if flag:
             Thread.start(self)
 
+    @property
+    def stopped(self) -> bool:
+        """The state of BaseThread.
+        """
+        if self.paused_flag and self.barrier.n_waiting == 1:
+            return True
+        else:
+            return False
+
+    @property
+    def paused_flag(self) -> bool:
+        """The pause state of BaseThread.
+        """
+
+        return self._paused_flag
+
+    @paused_flag.setter
+    def paused_flag(self, value):
+        """
+        Setter of property paused_flag
+
+        If ture mean pause thread, invoke on_pause()
+        If false mean resume thread, invoke on_resume()
+
+        Args:
+            value (bool): The value of paused_flag.
+        """
+        if value:
+            self.on_pause()
+            self._paused_flag = True
+        else:
+            self._paused_flag = False
+            self.on_resume()
+
     @abstractmethod
     def run(self) -> None:
         """A sample run function.
@@ -81,6 +107,12 @@ class BaseThread(Thread):
             print('run', self.name)
 
     def thread_wait(self):
+        """
+        The BaseThread wait in a loop.
+
+        Returns:
+            bool: Always True.
+        """
         if self.paused_flag:
             self.barrier_wait()
         self.event.wait()
@@ -111,17 +143,17 @@ class BaseThread(Thread):
             self.barrier.wait()
         return True
 
-    @property
-    def stopped(self) -> bool:
-        """The state of a BaseThread.
-        """
-        if self.paused_flag and self.barrier.n_waiting == 1:
-            return True
-        else:
-            return False
-
     # common method:
     def pause(self, block: bool = True):
+        """
+        Pause a BaseThread in thread_wait.
+
+        If block, the main thread will block until the sub thread wait.
+        If not block, just set the paused_flag to True.
+
+        Args:
+            block (bool, optional): Block pause or not. Defaults to True.
+        """
         if not self.paused_flag:
             self.paused_flag = True
 
@@ -129,74 +161,27 @@ class BaseThread(Thread):
                 self.barrier.wait()
 
     def resume(self):
-        # if self.is_alive():
+        """
+        Resume a BaseThread from thread_wait.
 
+        Set the paused_flag to fasle and check the n_waiting.
+
+        If the sub thread is waiting, the main thread will wait.
+        """
         if self.paused_flag:
             self.paused_flag = False
             if self.barrier.n_waiting != 0:
                 self.barrier.wait()
 
+    @abstractmethod
+    def on_pause(self):
+        pass
 
-class Mock(BaseThread):
-
-    def __init__(self, event=None, **kwargs):
-        self.count = 0
-        # # self.flag = True
-        # self.event = event if event else Event()
-        # self.event.set()
-        #
-        # # self.event.clear()
-        #
-        # self.condition = Condition()
-        # with self.condition:
-        #     self.paused = True
-
-        self.paused_flag = True
-        super().__init__(**kwargs)
-
-    def run(self) -> None:
-        while True:
-            # with self.condition:
-            # print('inner')
-            # self.condition.acquire()
-
-            if self.paused_flag:
-                print('inner wait before', self.barrier.n_waiting)
-                if self.barrier.n_waiting == self.barrier.parties - 1:
-                    self.barrier.wait()
-                self.barrier.wait()
-                print('inner wait after', self.barrier.n_waiting)
-
-            self.event.wait()
-
-            print('single task start')
-
-            # self.event.wait
-            for i in range(6):
-                print('do task', i + 1, self.name)
-
-                sleep(1)
-                self.count += 1
-
-            # self.condition.release()
-
-            # print('task done.', self.count, self.name)
+    @abstractmethod
+    def on_resume(self):
+        pass
 
 
 if __name__ == '__main__':
-    condition = Condition()
     # barrier = Barrier(3)
-    mock0 = Mock()
-    mock1 = Mock()
-
-    # mock0.resume()
-    # mock1.resume()
-
-    # mock0.barrier = barrier
-    # mock1.barrier = barrier
-
-    # mock0.start()
-    # mock1.start()
     pass
-
-    # mocks = [mock1, mock0]

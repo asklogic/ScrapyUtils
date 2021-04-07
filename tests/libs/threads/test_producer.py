@@ -23,10 +23,10 @@ class Custom(Producer):
 
 class Count(Producer):
 
-    def __init__(self, queue: Queue, overflow: bool = True, delay: Union[int, float] = 0.1, lock: Lock = None,
-                 event: Event = Event(), start_thread: bool = None, **kwargs):
+    def __init__(self, source: Union[Queue, deque], delay: Union[int, float] = 0.1, lock: Lock = None,
+                 expire: bool = True, event: Event = Event(), start_thread: bool = None, **kwargs):
         self.mock_count = 0
-        super().__init__(queue, overflow, delay, lock, event, start_thread, **kwargs)
+        super().__init__(source, delay, lock, expire, event, start_thread, **kwargs)
 
     def producing(self):
         self.mock_count += 1
@@ -50,8 +50,8 @@ class ProducerTestCase(unittest.TestCase):
 
         sleep(0.001)
 
-        print(count.queue.qsize())
-        assert count.queue.qsize() > 100
+        print(count.get_size())
+        assert count.get_size() > 100
 
     def test_sample_produce_delay(self):
         """Produce item with delay.
@@ -63,7 +63,7 @@ class ProducerTestCase(unittest.TestCase):
         sleep(0.12)
         count.pause()
 
-        assert count.queue.qsize() == 2
+        assert count.get_size() == 2
 
     def test_class_base_thread(self):
         """The subclass of BaseThread

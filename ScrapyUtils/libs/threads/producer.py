@@ -20,7 +20,7 @@ from types import MethodType
 from queue import Queue, Full
 from time import sleep
 
-from ScrapyUtils.libs.threads import BaseThread
+from . import BaseThread
 
 
 def _queue_put_item(self, item):
@@ -50,7 +50,7 @@ class Producer(BaseThread):
 
     _get_item_mapper: Dict[type, Tuple[Callable, Callable]] = {
         Queue: (_queue_put_item, _queue_get_size),
-        deque: (_deque_put_item, _queue_get_size),
+        deque: (_deque_put_item, _deque_get_size),
     }
 
     def __init__(self,
@@ -94,10 +94,14 @@ class Producer(BaseThread):
                 self.current = self.current if self.current else self.producing()
             except Exception as e:
                 # TODO: log out
-                print(e)
+                from . import get_producer_looger
+                if get_producer_looger() and get_producer_looger():
+                    get_producer_looger().exception(exc_info=e, msg='consuming error')
+
                 self.pause(False)
             else:
-                self.put_item(self.current)
+                if self.current is not None:
+                    self.put_item(self.current)
 
     def pause(self, block: bool = True):
         """Override pause of BaseThread. Producer cannot blocked pause.

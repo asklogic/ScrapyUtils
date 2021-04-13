@@ -26,7 +26,7 @@ class Count(Custom):
         self.mock_count += 1
 
 
-class ComsumerTestCase(unittest.TestCase):
+class ConsumerTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self.queue = Queue()
@@ -103,8 +103,8 @@ class ComsumerTestCase(unittest.TestCase):
         """
         queue = Queue()
 
-        custom = Custom(queue)
-        assert custom.queue is queue
+        custom = Custom(source=queue)
+        assert custom.source is queue
 
     def test_arguments_lock(self):
         """The argument lock. Shared lock to limit the speed of consuming.

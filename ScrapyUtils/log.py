@@ -89,7 +89,7 @@ class LogWrapper:
 
         current = exception.__traceback__
 
-        # TODO: refact
+        # TODO: refactor
         current_code = current.tb_frame.f_code
 
         while not basename(current_code.co_filename) in ('action.py', 'parse.py') and current.tb_next:

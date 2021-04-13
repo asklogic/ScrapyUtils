@@ -33,3 +33,13 @@ Task = TaskModel
 #         task = ModelManager.model("TaskModel")
 #         task.count = 0
 #         return task
+from collections import deque
+def gen():
+    d = deque()
+    for i in range(1000*1000):
+        task = Task()
+        task.url = 'asdasd'
+        d.append(d)
+
+if __name__ == '__main__':
+    gen()

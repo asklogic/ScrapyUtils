@@ -20,7 +20,7 @@ from queue import Queue, Empty
 from threading import Lock, Event
 from time import sleep
 
-from ScrapyUtils.libs.threads import BaseThread
+from . import BaseThread
 
 
 def _queue_get_item(self):
@@ -95,13 +95,17 @@ class Consumer(BaseThread):
             try:
                 obj = self.get_item()
             except Exception as e:
-                print(e.__class__, e)
+                # print(e.__class__, e)
                 continue
 
             # step 2: consume obj.
             try:
                 self.consuming(obj)
             except Exception as e:
+
+                from . import get_consumer_logger
+                if get_consumer_logger():
+                    get_consumer_logger().exception(exc_info=e, msg='consuming error')
                 self.pause(False)
 
     @abstractmethod

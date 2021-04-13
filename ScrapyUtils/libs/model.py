@@ -73,7 +73,7 @@ class Model(metaclass=ModelMeta):
 
     If the class has public attributes, they may be documented here
     in an ``Attributes`` section and follow the same formatting as a
-    function's ``Args`` section. Alternatively, attributes may be documented
+    function's ``Args`` section. Alternatively, attributes may be d     ocumented
     inline with the attribute's declaration (see __init__ method below).
 
     Properties created with the ``@property`` decorator should be documented
@@ -139,5 +139,22 @@ class Model(metaclass=ModelMeta):
         return self._pure_data
 
 
+class TaskModel(Model):
+    url = Field(convert=str)
+    param = Field()
+    count = Field(default=0, convert=int)
+
+
+Task = TaskModel
+
+from collections import deque
+def gen():
+    d = deque()
+    for i in range(1000*100):
+        task = Task()
+        task.url = 'asdasd'
+        d.append(d)
+
+
 if __name__ == '__main__':
-    Model()
+    gen()

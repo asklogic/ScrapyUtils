@@ -2,13 +2,14 @@ import unittest
 import types
 
 from typing import Any
+from types import MethodType
 
-from base.libs import Model, Field, Task, Proxy
+from ScrapyUtils.libs import Model, field, Task, Proxy
 
 
 class MockModel(Model):
-    age = Field()
-    name = Field()
+    age: int = field()
+    name: str = field()
 
 
 class TestModelTestCase(unittest.TestCase):
@@ -19,63 +20,12 @@ class TestModelTestCase(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
 
-    def test_attribute_pure_data(self):
-        m1 = MockModel()
-        m2 = MockModel()
-
-        # same value
-        assert m1.pure_data == m2.pure_data
-        # different reference
-        assert m1.pure_data is not m2.pure_data
-        assert id(m1.pure_data) != id(m2.pure_data)
-
-    def test_attribute_field(self):
-        m1 = MockModel()
-        m2 = MockModel()
-
-        # same value and same reference.
-        assert m1._fields == m2._fields
-        assert m1._fields is m2._fields
-        assert id(m1._fields) == id(m2._fields)
-
-    def test_attribute_convert(self):
-        m1 = MockModel()
-        m2 = MockModel()
-
-        # same value and same reference.
-        assert m1._converts == m2._converts
-        assert m1._converts is m2._converts
-        assert id(m1._converts) == id(m2._converts)
-
-    def test_method_get_name(self):
-        assert MockModel.get_name() == 'MockModel'
-
-    def test_property_pure_data(self):
-        m = MockModel()
-        m.age = 10
-        m.name = 'test_name'
-        assert m.pure_data == {'age': 10, 'name': 'test_name'}
-
-    def test_function_init(self):
-        m = MockModel(name='this', age=12)
-
-        assert m.pure_data == {'age': 12, 'name': 'this'}
-
-    def test_field_default_value(self):
-        class DefaultTestModel(Model):
-            name = Field('no_name')
-            segment = Field(default='seg')
-
-        m = DefaultTestModel()
-
-        assert m.pure_data == {'name': 'no_name', 'segment': 'seg'}
-
-    def test_set_value(self):
-        """set value like a data model get value from property"""
+    def test_sample_set_value(self):
+        """Set value like a data model get value from property"""
 
         class TestDataModel(Model):
-            age = Field()
-            name = Field()
+            age = field()
+            name = field()
 
         m1 = TestDataModel()
         m2 = TestDataModel()
@@ -86,6 +36,52 @@ class TestModelTestCase(unittest.TestCase):
 
         self.assertEqual(m1.age, 12)
         self.assertEqual(m2.age, 18)
+
+    def test_initial(self):
+        """Add mapper to initial field.
+        """
+        mapper = {
+            'age': 17,
+            'name': 'Ada',
+        }
+
+        m = MockModel(**mapper)
+
+        assert m.age is 17
+
+    def test_property_same_pure_data(self):
+        """The same value have different pure data."""
+        m1 = MockModel()
+        m2 = MockModel()
+
+        # same value
+        assert m1.pure_data == m2.pure_data
+        # different reference
+        assert m1.pure_data is not m2.pure_data
+        assert id(m1.pure_data) != id(m2.pure_data)
+
+    def test_property_pure_data(self):
+        """The common property: pure-data to get data as key-value"""
+        m = MockModel()
+        m.age = 16
+        m.name = 'mm'
+
+        assert m.pure_data == {'age': 16, 'name': 'mm'}
+
+    def test_method_get_name(self):
+        """The method get_name: get the class name"""
+        assert MockModel.get_name() == 'MockModel'
+
+    def test_field_default_value(self):
+        """The default field value could be set in field of dataclass"""
+
+        class DefaultTestModel(Model):
+            name: str = field(default='no_name')
+            segment: Any = field(default='seg')
+
+        m = DefaultTestModel()
+
+        assert m.pure_data == {'name': 'no_name', 'segment': 'seg'}
 
     def test_field(self):
         """Default field without default and convert argument."""
@@ -99,30 +95,20 @@ class TestModelTestCase(unittest.TestCase):
         m.name = 'Test_Name'
         assert m.pure_data == {'name': 'Test_Name', 'age': 18}
 
-    def test_field_convert_default(self):
-        """Default convert. Do not convert any object."""
+    def test_sample(self):
+        """Sample to set different type of data"""
         m = MockModel()
         m.age = 20
+        print(m.pure_data)
         assert m.pure_data == {'name': '', 'age': 20}
         m.age = '20'
         assert m.pure_data == {'name': '', 'age': '20'}
-
-    def test_field_convert(self):
-        """Convert function in Field"""
-
-        class ConvertModel(Model):
-            count = Field(convert=int)
-
-        m = ConvertModel()
-        m.count = '12'
-
-        assert m.pure_data == {'count': 12}
 
     def test_field_default(self):
         """Default value in field."""
 
         class DefaultModel(Model):
-            name = Field('John')
+            name = field(default='John')
 
         assert DefaultModel().pure_data == {'name': 'John'}
 

@@ -1,160 +1,87 @@
-from typing import *
-from abc import ABC, ABCMeta
-import copy
+from dataclasses import dataclass, field, _process_class, asdict, astuple, Field, fields, _MISSING_TYPE
+from typing import Any, Dict, Union, List
 
-
-class Field(object):
-    """The attribute of Model class.
-
-    add different Fields into Model to get custom Model.
-
-    Attributes:
-        attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
-
-    """
-
-    def __init__(self, default=None, convert=None) -> None:
-        self._default = default
-        self._convert = convert
-
-    @property
-    def default(self):
-        """The default value of Field."""
-        return self._default
-
-    @property
-    def convert(self):
-        """The convert callable of Field."""
-        return self._convert
+DEFAULT_VALUE = ''
 
 
 class ModelMeta(type):
+    def __new__(mcs, name, bases, attrs):
+        origin_type = super().__new__(mcs, name, bases, attrs)
 
-    def __new__(mcs, name, bases, attrs) -> Any:
-        # attrs["_name"] = name
-        _pure_data = {}
-        _converts = {}
-        _fields = []
+        default_mapper = {}
+        if object not in bases:
+            # Add __annotations__ dict in no-annotations class.
+            if not hasattr(origin_type, '__annotations__'):
+                setattr(origin_type, '__annotations__', {})
 
-        # remove all Field attribute
-        # now model get attribute by __getattr__ that get from pure_data dict
-        for key, value in tuple(attrs.items()):
-            # if is Field instance.
-            if isinstance(value, Field):
-                # remove attribute
-                attrs.pop(key)
+            # Auto type hinting
+            for attr, value in attrs.items():
+                if isinstance(value, Field):
+                    if isinstance(value.default, _MISSING_TYPE) and isinstance(value.default_factory, _MISSING_TYPE):
+                        default_mapper[attr] = DEFAULT_VALUE
+                    # elif isinstance(value.default, _MISSING_TYPE):
+                    #     default_mapper[attr] = value.default_factory()
+                    # # elif isinstance(value.default_factory, _MISSING_TYPE):
+                    # else:
+                    #     default_mapper[attr] = value.default
 
-                # append data field into _fileds
-                _fields.append(key)
+                    if not origin_type.__annotations__.get(attr):
+                        origin_type.__annotations__[attr] = Any
 
-                if value.default and not value.convert:
-                    _converts[key] = tuple(value.default)
-                _converts[key] = value.convert
+        # Hook here.
+        dataclass_type = _process_class(origin_type, True, True, True, False, False, False)
 
-                if not value.default and value.convert:
-                    _pure_data[key] = value._convert()
-                _pure_data[key] = value.default
+        # Add default_mapper in class property.
+        # dataclass_type.default_mapper = default_mapper
 
-                if not value.default and not value.convert:
-                    _pure_data[key] = ''
-                    _converts[key] = None
+        # Extend will destory default __init__ with default
+        # Add initial wrapper.
+        current_init = dataclass_type.__init__
 
-        # add field info into model cls
-        attrs['_fields'] = _fields
-        attrs['_pure_data'] = _pure_data
-        attrs['_converts'] = _converts
+        def init_mapper(self, **kwargs):
+            for k, v in default_mapper.items():
+                kwargs.setdefault(k, v)
+            # kwargs.update(default_mapper)
+            # default_mapper.update(kwargs)
+            current_init(self, **kwargs)
 
-        return super().__new__(mcs, name, bases, attrs)
+        dataclass_type.__init__ = init_mapper
+
+        return dataclass_type
 
 
-class Model(metaclass=ModelMeta):
-    """The data model that to save data.
+class Model(object, metaclass=ModelMeta):
 
-    If the class has public attributes, they may be documented here
-    in an ``Attributes`` section and follow the same formatting as a
-    function's ``Args`` section. Alternatively, attributes may be d     ocumented
-    inline with the attribute's declaration (see __init__ method below).
-
-    Properties created with the ``@property`` decorator should be documented
-    in the property's getter method.
-
-    Attributes:
-        attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
-
-    """
-
-    def __new__(cls, **kwargs) -> Any:
-        # Model must be extended
-        if cls.__name__ == 'Model':
-            raise Exception('Model must be extended')
-        return super().__new__(cls)
-
-    def __init__(self, **kwargs) -> None:
-        # copy default value dict from Filed instance.
-        self._pure_data = copy.deepcopy(self.__class__._pure_data)
-
-        # set value by kwargs.
-        for key in kwargs.keys():
-            setattr(self, key, kwargs[key])
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """
-        in fields: save in pure_data
-        not in field: save as attr
-        """
-
-        # TODO
-        if name in self._fields:
-            if self._converts[name]:
-                self._pure_data[name] = self._converts[name](value)
-            else:
-                self._pure_data[name] = value
+    @property
+    def pure_data(self, to_tuple=False) -> Dict[str, Any]:
+        if to_tuple:
+            return astuple(self)
         else:
-            super().__setattr__(name, value)
-
-    def __getattr__(self, item):
-        if item in self._fields:
-            return self._pure_data[item]
-        return super().__getattr__(item)
+            return asdict(self)
 
     @classmethod
     def get_name(cls):
-        """
-
-        Returns:
-
-        """
         return cls.__name__
 
-    @property
-    def pure_data(self) -> Dict:
-        """
 
-        Returns: The key-value data as python dict.
-
-        """
-
-        return self._pure_data
+class Proxy(Model):
+    """
+    The common Model.
+    """
+    ip: str = field()
+    port: Union[int, str] = field()
 
 
-class TaskModel(Model):
-    url = Field(convert=str)
-    param = Field()
-    count = Field(default=0, convert=int)
-
-
-Task = TaskModel
-
-from collections import deque
-def gen():
-    d = deque()
-    for i in range(1000*100):
-        task = Task()
-        task.url = 'asdasd'
-        d.append(d)
+class Task(Model):
+    """
+    The common Model.
+    """
+    url: str = field()
+    count: int = field(default=0)
+    param: Dict = field(default_factory=dict)
 
 
 if __name__ == '__main__':
-    gen()
+    p = Proxy(ip='1')
+    print(p.pure_data)
+    print(Task().pure_data)

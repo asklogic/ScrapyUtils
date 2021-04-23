@@ -1,11 +1,13 @@
-from typing import Callable, Dict, List, Type
+from typing import Callable, Dict, List, Type, Union
 from types import ModuleType
 
 from os import path
 from queue import Queue
 
 from ScrapyUtils.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline, ProcessorSuit
-from ScrapyUtils.libs import Scraper, RequestScraper, Proxy, MultiProducer, Producer
+from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper
+
+from ScrapyUtils.libs import Producer, Consumer
 
 # preload
 # ----------------------------------------------------------------------
@@ -38,8 +40,14 @@ proxy: Producer = None
 SCHEME_PATH = path.sep
 
 registered_keys = [
+    # 日志
     'KEEP_LOG',
-    'THREAD', 'TIMEOUT',
+
+    # 线程数
+    'THREAD',
+
+    # 超时时间
+    'TIMEOUT',
 
     # global
     'GLOBAL_KEY',
@@ -55,27 +63,20 @@ registered_keys = [
     'DOWNLOAD_PATH',
 ]
 
-KEEP_LOG = True
+KEEP_LOG: bool = True
 
-THREAD = 5
-TIMEOUT = 1.5
+THREAD: int = 5
+TIMEOUT: Union[int, float] = 1.5
 
 # global
-GLOBAL_KEY = False
-GLOBAL_TASK = False
-GLOBAL_SCRAPER = False
+GLOBAL_KEY: bool = False
+GLOBAL_TASK: bool = False
+GLOBAL_SCRAPER: bool = False
 
 # data & file
-DATA_FOLDER_PATH = path.join('data')
+DATA_FOLDER_PATH: str = path.join('data')
 
 # download
-DOWNLOAD_FOLDER_PATH = 'download'
-DOWNLOAD_SUFFIX = '.html'
-DOWNLOAD_PATH = None
-
-if __name__ == '__main__':
-    globals()['test'] = 'test'
-    print(locals())
-    print(globals())
-
-    pass
+DOWNLOAD_FOLDER_PATH: str = 'download'
+DOWNLOAD_SUFFIX: str = '.html'
+DOWNLOAD_PATH: str = None

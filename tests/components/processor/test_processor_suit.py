@@ -68,25 +68,25 @@ class TestProcessorSuit(unittest.TestCase):
     def test_function_init(self):
         suit = ProcessorSuit([Blank])
 
-        assert suit.components[0].mock_count == 0
-        assert suit.components[0].data == []
+        assert suit.schemes[0].mock_count == 0
+        assert suit.schemes[0].data == []
 
     def test_function_init_config(self):
         suit = ProcessorSuit([Blank], config)
 
-        assert suit.components[0].config == config
-        assert suit.components[0].config is config
+        assert suit.schemes[0].config == config
+        assert suit.schemes[0].config is config
 
     def test_function_init_failed(self):
         suit = ProcessorSuit([Blank, MockInitFailed])
 
-        assert len(suit.components) == 1
+        assert len(suit.schemes) == 1
 
     def test_function_suit_start(self):
         suit = ProcessorSuit([Blank, MockOnStart])
         suit.suit_start()
 
-        assert suit.components[1].start_sign == []
+        assert suit.schemes[1].start_sign == []
 
     def test_function_suit_start_failed(self):
         suit = ProcessorSuit([Blank, MockOnStartFailed, MockOnStart])
@@ -103,14 +103,14 @@ class TestProcessorSuit(unittest.TestCase):
         suit.suit_exit()
 
 
-        assert suit.components[1].exit_sign == []
+        assert suit.schemes[1].exit_sign == []
 
     def test_function_suit_exit_failed(self):
         suit = ProcessorSuit([Blank, MockOnExitFailed ,MockOnExit])
         suit.suit_start()
         suit.suit_exit()
 
-        assert suit.components[2].exit_sign == []
+        assert suit.schemes[2].exit_sign == []
 
 
 if __name__ == '__main__':

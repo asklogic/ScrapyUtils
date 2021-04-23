@@ -12,7 +12,7 @@ from ScrapyUtils import common
 from ScrapyUtils.log import common as log
 from ScrapyUtils.log import basic
 from ScrapyUtils.listen import Listener
-from ScrapyUtils.core import scheme_preload, scheme_initial, scheme_start, scheme_exit
+# from ScrapyUtils.core import scheme_preload, scheme_initial, scheme_start, scheme_exit
 
 listener = Listener()
 

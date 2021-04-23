@@ -53,7 +53,7 @@ def _default_scraper(scraper_callable) -> Callable:
             if default_flag:
                 # TODO: wtf is that?
                 # log.exception('Scraper', e)
-                # log.warning('able default RequestScraper.', 'system')
+                # log.warning('able default RequestScraper.', 'components')
                 log.warning('able default RequestScraper.')
                 default_flag = False
         finally:

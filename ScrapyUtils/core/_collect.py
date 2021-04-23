@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 
 from ScrapyUtils.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, Pipeline, ProcessorSuit
-from ScrapyUtils.libs import Scraper, RequestScraper, Proxy, MultiProducer, Producer
+from ScrapyUtils.libs import Scraper, RequestScraper, Proxy, Producer
 from ScrapyUtils.log import basic
 
 from .. import configure
@@ -48,7 +48,6 @@ log = basic
 
 
 def initial_configure(settings_module: ModuleType):
-    global tasks_callable, scraper_callable
 
     # globals()['SCHEME_PATH'] = path.dirname(settings_module.__file__)
     configure.DATA_FOLDER_PATH = path.join(path.dirname(settings_module.__file__), 'data')
@@ -64,11 +63,11 @@ def initial_configure(settings_module: ModuleType):
             setattr(configure, key, getattr(settings_module, key))
 
     # tasks
-    tasks_callable = getattr(settings_module, 'generate_tasks')
+    configure.tasks_callable = getattr(settings_module, 'generate_tasks')
     assert callable(tasks_callable), "profile's generate_tasks must be callable."
 
     # scraper
-    scraper_callable = getattr(settings_module, 'generate_scraper')
+    configure.scraper_callable = getattr(settings_module, 'generate_scraper')
     assert callable(scraper_callable), "profile's generate_scraper must be callable."
 
 
@@ -364,7 +363,7 @@ def _default_scraper(scraper_callable) -> Callable:
             if default_flag:
                 # TODO: wtf is that?
                 # log.exception('Scraper', e)
-                # log.warning('able default RequestScraper.', 'system')
+                # log.warning('able default RequestScraper.', 'components')
                 log.warning('able default RequestScraper.')
                 default_flag = False
         finally:

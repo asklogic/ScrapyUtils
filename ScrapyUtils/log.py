@@ -4,6 +4,12 @@ import linecache
 from os.path import basename
 from logging import DEBUG, INFO, WARNING, ERROR
 
+from logging import Logger, getLogger, StreamHandler, Formatter
+
+common_time_format = '%m.%d %H:%M:%S'
+
+common_format_str = r'%(asctime)s [%(levelname)s] %(message)s'
+
 common_format = logging.Formatter(r'%(asctime)s [%(levelname)s] %(message)s', r'%H:%M:%S')
 basic_format = logging.Formatter(r" * %(message)s", r'%H:%M:%S')
 
@@ -161,6 +167,32 @@ logger.addHandler(sh)
 
 basic = LogWrapper(logger)
 basic.syntax = ''
+
+
+# new logger
+
+def build_defalut_logger(logger_name: str,
+                         format_str: str = common_format_str,
+                         time_format: str = common_time_format,
+                         level=DEBUG) -> Logger:
+    logger = getLogger(logger_name)
+    logger.setLevel(DEBUG)
+
+    stream = StreamHandler()
+    stream.setFormatter(Formatter(format_str, time_format))
+    stream.setLevel(DEBUG)
+
+    # fs = FileHandler()
+
+    logger.addHandler(stream)
+
+    return logger
+
+
+build_defalut_logger('scheme_state', format_str='[%(state)s] - %(message)s', time_format='%H:%M:%S')
+build_defalut_logger('scheme_load', format_str='(%(levelname)s) %(message)s', time_format='%H:%M:%S')
+build_defalut_logger('core', format_str='(%(levelname)s) %(message)s', time_format='%H:%M:%S')
+# build_defalut_logger('Common')
 
 if __name__ == '__main__':
     print('logger test!')

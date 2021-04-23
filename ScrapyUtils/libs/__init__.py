@@ -5,9 +5,8 @@ from .scraper.firefox_scraper import FireFoxScraper
 
 from .scraper.firefox_scraper import set_firefox_path, set_driver_path
 
-from .model import Model, field
+from .model import Model, field, Task, Proxy
 
-from .model import Task, Proxy
+from .threads import BaseThread, Consumer, Producer
 
-
-from .threads import BaseThread
+Field = field

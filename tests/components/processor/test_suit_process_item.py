@@ -52,39 +52,39 @@ class TestProcessItemTestCase(unittest.TestCase):
     def test_normal(self):
         suit = ProcessorSuit([Count, Count])
 
-        assert suit.components[0].mock_count == 0
-        assert suit.components[1].mock_count == 0
+        assert suit.schemes[0].mock_count == 0
+        assert suit.schemes[1].mock_count == 0
 
         suit.process(self.model)
 
-        assert suit.components[0].mock_count == 1
-        assert suit.components[1].mock_count == 1
+        assert suit.schemes[0].mock_count == 1
+        assert suit.schemes[1].mock_count == 1
 
         suit.process(self.model)
 
-        assert suit.components[0].mock_count == 2
-        assert suit.components[1].mock_count == 2
+        assert suit.schemes[0].mock_count == 2
+        assert suit.schemes[1].mock_count == 2
 
     def test_continue(self):
         suit = ProcessorSuit([Count, ContinueProcessor, Count])
 
-        assert suit.components[0].mock_count == 0
-        assert suit.components[2].mock_count == 0
+        assert suit.schemes[0].mock_count == 0
+        assert suit.schemes[2].mock_count == 0
 
         suit.process(self.model)
 
-        assert suit.components[0].mock_count == 1
-        assert suit.components[2].mock_count == 1
+        assert suit.schemes[0].mock_count == 1
+        assert suit.schemes[2].mock_count == 1
 
     def test_abort(self):
         suit = ProcessorSuit([Count, Abort, Count])
-        assert suit.components[0].mock_count == 0
-        assert suit.components[2].mock_count == 0
+        assert suit.schemes[0].mock_count == 0
+        assert suit.schemes[2].mock_count == 0
 
         suit.process(self.model)
 
-        assert suit.components[0].mock_count == 1
-        assert suit.components[2].mock_count == 0
+        assert suit.schemes[0].mock_count == 1
+        assert suit.schemes[2].mock_count == 0
 
 
 if __name__ == '__main__':

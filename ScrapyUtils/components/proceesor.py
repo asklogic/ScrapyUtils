@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any
 
-from ScrapyUtils.components.base import ComponentMeta, Component
+from ScrapyUtils.components.component import ComponentMeta, Component
 from ScrapyUtils.libs import Model
 
 

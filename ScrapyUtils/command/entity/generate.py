@@ -1,5 +1,3 @@
-from ScrapyUtils.core import core
-
 from ScrapyUtils.generate.generator import create_folder, create_components
 from ScrapyUtils.exception import CmdRunException
 import time

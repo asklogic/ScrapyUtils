@@ -74,7 +74,7 @@ class TestPipeline(unittest.TestCase):
         pipeline = Pipeline(ProcessorSuit([Block]))
         [pipeline.push(x) for x in self.models[:2000]]
 
-        pipeline.exit(1)
+        pipeline.stop(1)
 
         # print(len(pipeline.failed))
         # print(pipeline.suit.components[0].count)

@@ -8,7 +8,6 @@ from . import Command, ComponentMixin
 
 from ScrapyUtils.components import *
 from ScrapyUtils.libs import Task, Consumer, Producer
-from ScrapyUtils.core import *
 
 from ... import configure
 

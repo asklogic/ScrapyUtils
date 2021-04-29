@@ -1,8 +1,42 @@
+# -*- coding: utf-8 -*-
+"""The scraper module for scrapy data.
+
+爬取核心类，负责与网页或者其他数据来源交互，获得数据。
+
+其中设定了爬取基本类Scraper，规定了所有爬取类的通用方法，具体的其他方法需要通过子类的Mixin导入。
+
+
+
+样例:
+    启动自带的Scraper或者自定义Scraper::
+
+        scraper = RequestScraper()
+
+    必须先attach之后再进行使用::
+
+        scraper.scraper_attach()
+
+    通用方法包括'重启'、'清理'和'返回爬取实例'，都需要子类自定义::
+
+        scraper.scraper_clear()
+        scraper.scraper_restart()
+        scraper.get_driver()
+
+    对于基于Selenium之类的Scraper，最好执行退出::
+
+        scraper.scraper_detach()
+
+
+
+Todo:
+    * Appium Scraper
+    * Chrome Scraper
+"""
+
 from abc import abstractmethod
 from typing import *
 
 
-# FirefoxScraper, AppiumScraper, wait_block = None, None, None
 
 
 def check_property(property_name: str, value: Any):
@@ -62,8 +96,10 @@ class Scraper(
 
     Define the common methods and the abstract methods of a scraper.
 
+    只定义了爬取类通用方法的Scraper基类，子类必须实现全部的抽象方法。
+
     Args:
-        _attached (bool): Common parameter. Scraper will attach when initial.
+        attach (bool): Common parameter. Scraper will attach when initial.
 
     """
     _attached: bool = False

@@ -31,7 +31,8 @@ def default_scraper():
 
 
 class ScraperScheme(Scheme):
-    def deploy(self):
+    @classmethod
+    def start(cls):
         scraper_callable = configure.scraper_callable
 
         logger.info(f'Start build {configure.THREAD} scrapers... ')
@@ -45,11 +46,13 @@ class ScraperScheme(Scheme):
                 break
         configure.scrapers = scrapers
 
-    def verify(self) -> bool:
+    @classmethod
+    def verify(cls) -> bool:
         assert configure.scrapers
         return True
 
-    def exit(self):
+    @classmethod
+    def stop(cls):
         scrapers = configure.scrapers
 
         for scraper in scrapers:

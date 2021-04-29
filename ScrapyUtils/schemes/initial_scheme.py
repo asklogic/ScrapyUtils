@@ -6,7 +6,8 @@ from ScrapyUtils.components import StepSuit, ProcessorSuit, Pipeline
 
 class InitialScheme(Scheme):
 
-    def deploy(self):
+    @classmethod
+    def start(cls):
         steps_class = configure.steps_class
         processors_class = configure.processors_class
 
@@ -18,12 +19,14 @@ class InitialScheme(Scheme):
         configure.step_suits = step_suits
         configure.processor_suit = processor_suit
 
+    @classmethod
     def verify(self) -> bool:
         assert configure.step_suits
         assert configure.processor_suit
         return True
 
-    def exit(self):
+    @classmethod
+    def stop(self):
         for suit in configure.step_suits:
             suit.suit_exit()
 

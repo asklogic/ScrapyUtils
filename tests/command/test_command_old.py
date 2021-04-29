@@ -46,7 +46,7 @@ def mock_trigger(command, **kwargs):
         log.exception('Command', e)
 
     finally:
-        command.exit()
+        command.stop()
 
     sys_exit(command.exitcode)
 

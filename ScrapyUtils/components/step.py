@@ -2,7 +2,7 @@ from abc import abstractmethod, ABC
 from typing import *
 
 from collections import deque
-from ScrapyUtils.components.base import Component, ComponentSuit
+from ScrapyUtils.components.component import Component, ComponentSuit
 from ScrapyUtils.libs import Scraper, Task
 
 

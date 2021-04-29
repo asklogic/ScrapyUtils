@@ -120,7 +120,7 @@ class BaseThread(Thread):
         return True
 
     def barrier_wait(self):
-        """The BaseThread wait.
+        """The BaseThread sync-wait in thread_wait().
 
         通过控制两个长度的barrier来控制子线程的启停。
 

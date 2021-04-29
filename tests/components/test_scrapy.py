@@ -101,7 +101,7 @@ class TestScrapy(TestCase):
         for task in tasks:
             scrapy(suit, task, pipeline)
 
-        pipeline.exit()
+        pipeline.stop()
 
         failed = len(pipeline.failed)
         processed = pipeline.suit.schemes[0].mock_count

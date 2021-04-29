@@ -189,9 +189,8 @@ def build_defalut_logger(logger_name: str,
     return logger
 
 
-build_defalut_logger('scheme_state', format_str='[%(state)s] - %(message)s', time_format='%H:%M:%S')
-build_defalut_logger('scheme_load', format_str='(%(levelname)s) %(message)s', time_format='%H:%M:%S')
 build_defalut_logger('core', format_str='(%(levelname)s) %(message)s', time_format='%H:%M:%S')
+build_defalut_logger('base', format_str=' * %(message)s', time_format='%H:%M:%S')
 # build_defalut_logger('Common')
 
 if __name__ == '__main__':

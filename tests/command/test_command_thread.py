@@ -25,7 +25,7 @@ class TestCommandThreadTestCase(unittest.TestCase):
         while not command.finished() and True:
             time.sleep(0.2)
 
-        command.exit()
+        command.stop()
 
         pass
 

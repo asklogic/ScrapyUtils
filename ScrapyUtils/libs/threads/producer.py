@@ -22,6 +22,11 @@ from time import sleep
 
 from . import BaseThread
 
+support_source = [
+    Queue,
+    deque,
+]
+
 
 def _queue_put_item(self, item):
     source: Queue = self.source
@@ -59,6 +64,7 @@ class Producer(BaseThread):
                  lock: Lock = None,
                  expire: bool = True,
                  event: Event = Event(), start_thread: bool = None, **kwargs):
+        assert type(source) in support_source, 'Source not support'
 
         for cls, methods in self._get_item_mapper.items():
             if isinstance(source, cls):
@@ -94,9 +100,9 @@ class Producer(BaseThread):
                 self.current = self.current if self.current else self.producing()
             except Exception as e:
                 # TODO: log out
-                from . import get_producer_looger
-                if get_producer_looger() and get_producer_looger():
-                    get_producer_looger().exception(exc_info=e, msg='consuming error')
+                from . import consumer_logger
+                if consumer_logger:
+                    consumer_logger.exception(exc_info=e, msg='consuming error')
 
                 self.pause(False)
             else:

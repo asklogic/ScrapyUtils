@@ -8,11 +8,13 @@ from importlib import import_module
 class PreloadScheme(Scheme):
     target: str = None
 
-    def deploy(self):
-        assert self.target, 'Need target module.'
-        import_module(self.target)
+    @classmethod
+    def start(cls):
+        assert cls.target, 'Need target module.'
+        import_module(cls.target)
 
-    def verify(self) -> bool:
+    @classmethod
+    def verify(cls) -> bool:
         assert configure.steps_class
         assert configure.processors_class
 
@@ -20,7 +22,8 @@ class PreloadScheme(Scheme):
         assert configure.scraper_callable
         return True
 
-    def exit(self):
+    @classmethod
+    def stop(cls):
         pass
 
     def load_context(self):

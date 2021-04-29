@@ -6,7 +6,7 @@ from threading import Lock
 
 from ScrapyUtils.libs.threads import Consumer
 from .proceesor import Processor
-from .base import ComponentSuit
+from .component import ComponentSuit
 from ScrapyUtils.libs.model import Model
 
 from . import component_log

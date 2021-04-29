@@ -3,7 +3,7 @@ from typing import Dict, Generator
 
 from ScrapyUtils.libs import Scraper, Task, Model, Field
 
-from ScrapyUtils.components.base import Component, ComponentMeta
+from ScrapyUtils.components.component import Component, ComponentMeta
 
 from ScrapyUtils.exception import HTTPStatusException
 

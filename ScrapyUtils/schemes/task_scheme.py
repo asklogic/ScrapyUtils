@@ -6,17 +6,20 @@ from ScrapyUtils import configure
 
 
 class TaskScheme(Scheme):
-    def deploy(self):
+    @classmethod
+    def start(cls):
         tasks = Queue()
         for task in configure.tasks_callable():
             tasks.put(task)
 
         configure.tasks = tasks
 
-    def verify(self) -> bool:
+    @classmethod
+    def verify(cls) -> bool:
         assert configure.tasks and isinstance(configure.tasks, Queue)
         return True
 
-    def exit(self):
+    @classmethod
+    def stop(cls):
         # TODO: dump to save
         pass

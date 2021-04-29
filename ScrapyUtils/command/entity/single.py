@@ -9,7 +9,6 @@ from ScrapyUtils.components import *
 from ScrapyUtils.libs import *
 
 import click
-from ScrapyUtils.core import collect
 
 
 class Single(Command):

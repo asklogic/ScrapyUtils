@@ -22,6 +22,11 @@ from time import sleep
 
 from . import BaseThread
 
+support_source = [
+    Queue,
+    deque,
+]
+
 
 def _queue_get_item(self):
     source: Queue = self.source
@@ -66,6 +71,7 @@ class Consumer(BaseThread):
                  delay: Union[int, float] = 0.1,
                  lock: Lock = None,
                  event: Event = Event(), start_thread: bool = None, **kwargs):
+        assert type(source) in support_source, 'Source not support'
 
         for cls, methods in self._get_item_mapper.items():
             if isinstance(source, cls):
@@ -80,10 +86,10 @@ class Consumer(BaseThread):
         BaseThread.__init__(self, event, start_thread, **kwargs)
 
     def get_item(self) -> Any:
-        pass
+        assert False
 
     def get_size(self) -> int:
-        pass
+        return 0
 
     def run(self) -> NoReturn:
         while self.thread_wait():

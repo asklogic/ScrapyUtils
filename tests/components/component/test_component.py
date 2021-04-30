@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Testcase for Component class.
+"""
 import unittest
 
 from ScrapyUtils.components import Component

@@ -241,26 +241,20 @@ class ComponentSuit(object):
                 self._components.append(current)
 
     def suit_start(self):
-        for component in self.components:
+        for index, component in enumerate(self.components):
             try:
                 component.on_start()
             except Exception as e:
-                component_log.exception(e)
-                component_log.error('component {} start failed.'.format(component.name), self.__class__.__name__)
-
+                component_log.error('Suit start component: {} failed.'.format(component.name), self.__class__.__name__)
                 self.components.remove(component)
-                # TODO: interrupt exception.
-                raise Exception('interrupt.')
 
     def suit_exit(self):
-        for component in self.components:
+        for index, component in enumerate(self.components):
             try:
                 component.on_exit()
             except Exception as e:
-                component_log.exception(e)
-                component_log.error('component {} exit failed.'.format(component.name), self.__class__.__name__)
-                # TODO: interrupt exception.
-                # raise Exception('interrupt.')
+                component_log.error('Suit exit component: {} failed.'.format(component.name), self.__class__.__name__)
+                self.components.remove(component)
 
 
 def active(component_class: type(Component)):

@@ -27,7 +27,7 @@ Todo:
 """
 
 from abc import abstractmethod
-from typing import List, Iterable, Type, Union, get_type_hints, get_args, get_origin
+from typing import List, Iterable, Type, Union, Optional, get_type_hints, get_args, get_origin
 
 from . import component_log
 
@@ -159,35 +159,14 @@ class Component(object, metaclass=ComponentMeta):
         不要动态修改Component已有的属性，此为组件类通用属性，需要通过工具函数来进行工作。
 
     Attributes:
+        active (bool): Active state of a component. Default: False
         priority (int): Priority of a component. 
         name (str): Name of a component. Default: __class__.__name__
-        active (bool): Active state of a component. Default: False
 
     """
-    name: str
     active: bool
-
+    name: str
     priority: int = 500
-
-    # @property
-    # def name(self) -> str:
-    #     """The name of a component(class name).
-    #
-    #     Returns:
-    #         str: A str content.
-    #     """
-    #     return self.__class__.name
-
-    # @property
-    # def active(self) -> bool:
-    #     """The state of a component.
-    #
-    #     The active attributes in base on class.
-    #
-    #     Returns:
-    #         bool: True is active, Flase is deactive.
-    #     """
-    #     return self._active
 
     @abstractmethod
     def on_start(self):
@@ -203,42 +182,52 @@ class Component(object, metaclass=ComponentMeta):
 
 
 class ComponentSuit(object):
-    """[summary]
+    """The collection for series components.
+
+    统一控制并且管理Component组件类的Suit类，可以统一对组件进行启停操作。
 
     Attributes:
-        attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
+        components (List[Component]): The list of components.
+
+        Args:
+            components (List[Union[Type[Component], Component]]): The components that will be added into suit.
 
     """
-    _components: List[Component] = None
+    components: List[Component] = None
     target_components: Type[Component] = Component
 
-    def __init__(self, components: List[Union[Type[Component], Component]]):
-
-        self._components = []
+    def __init__(self, components: List[Union[Type[Component], Component]] = []):
         # initial components
-        self.components = components
+        self.components = []
 
-        # for component in components:
-        #     current = component()
-        #     self.components.append(current)
-
-    @property
-    def components(self):
-        return self._components
-
-    @components.setter
-    def components(self, components: List[Union[Type[Component], Component]]):
         for component in components:
-            # case 1: A component instance.
-            if isinstance(component, Component):
-                self._components.append(component)
+            self.add_component(component)
 
-            # case 2: A component class(type).
+    def add_component(self, component: Union[Type[Component], Component]) -> Optional[Component]:
+        """Add a component instance or class into suit.
 
-            elif isinstance(component, type) and issubclass(component, Component):
-                current = component()
-                self._components.append(current)
+        向suit中添加一个组件实例或者组件类，如果是组件类将会无参数自动创建一个实例。
+
+        返回True代表成功添加，返回False代表传入了错误的类型导致没有成功添加。
+
+        Args:
+            component (Union[Type[Component], Component]): The component instance/class.
+
+        Returns:
+            Optional[Component]: If success, return the component instance.
+        """
+        # case 1: A component instance.
+        if isinstance(component, self.target_components):
+            self.components.append(component)
+            return component
+
+        # case 2: A component class(type).
+        elif isinstance(component, type) and issubclass(component, self.target_components):
+            current = component()
+            self.components.append(current)
+            return current
+
+        return None
 
     def suit_start(self):
         for index, component in enumerate(self.components):

@@ -2,3 +2,9 @@
 """Example Google style docstrings.
 
 """
+
+from . import Step
+
+
+class Parse(Step):
+    pass

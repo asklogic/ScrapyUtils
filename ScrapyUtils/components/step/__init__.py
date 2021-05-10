@@ -6,10 +6,7 @@ Todo:
     
 """
 
-from abc import abstractmethod
 from ScrapyUtils.components import Component
-
-from .suit import StepSuit
 
 
 class Step(Component):
@@ -21,7 +18,7 @@ class Step(Component):
     所有的Step类在同一个线程中，都拥有同一个Suit实例来管理。这一系列Step实例的context属性也指向其Suit实例的context属性，用于同一线程下的上下文管理。
     """
 
-    suit: StepSuit = None
+    suit = None
 
     @property
     def context(self) -> dict:
@@ -34,3 +31,8 @@ class Step(Component):
             dict: The suit's context property.
         """
         return self.suit.context
+
+
+from .action import Action
+from .parse import Parse
+from .suit import StepSuit

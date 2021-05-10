@@ -13,7 +13,7 @@ from . import component_log
 
 
 class ProcessorSuit(ComponentSuit):
-    _components: List[Processor] = None
+    components: List[Processor] = None
     target_components: type(Processor) = Processor
 
     config: dict = None

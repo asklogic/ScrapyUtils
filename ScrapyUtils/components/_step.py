@@ -174,7 +174,7 @@ class StepSuit(ComponentSuit, BaseStepSuit):
 
     @property
     def steps(self):
-        return self._components
+        return self.components
 
 
 class BaseActionStep(BaseStep):

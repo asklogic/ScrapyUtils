@@ -7,9 +7,11 @@ Todo:
 """
 import random
 from typing import Union, Type, Optional, List, Callable
+from collections import deque
 
-from ScrapyUtils.components import ComponentSuit, Component
 from ScrapyUtils.libs import Task, Scraper
+
+from ..component import ComponentSuit, Component
 from . import Step, Action, Parse
 
 
@@ -19,10 +21,12 @@ class StepSuit(ComponentSuit):
     target_components = Step
 
     context: dict = None
+    models: deque = None
     scraper: Scraper = None
 
     def __init__(self, components: List[Union[Type[Component], Component]] = []):
         self.context = dict()
+        self.models = deque()
         super().__init__(components)
 
     def add_component(self, component: Union[Type[Step], Step]) -> Optional[Step]:
@@ -65,27 +69,26 @@ def do_scrapy(suit: StepSuit, task: Task) -> bool:
 
     return True
 
-
-from typing import Dict, Tuple
-import random
-
-names: List[str] = ['Ana', 'John', 'Lil']
-
-line_count: Dict[str, int] = {
-    'logger.py': 80,
-    'engine.py': 200,
-    'listener.py': 251,
-}
-
-
-def inner(contents: List[str]) -> bool:
-    return True
-
-
-inner: Callable[[List[str]], bool]
-
-point: List[int, int] = [314, 156]
-
-
-def ran() -> Union[int, str]:
-    return random.choice([134, 'message'])
+# from typing import Dict, Tuple, Literal
+# import random
+#
+# names: List[str] = ['Ana', 'John', 'Lil']
+#
+# line_count: Dict[str, int] = {
+#     'logger.py': 80,
+#     'engine.py': 200,
+#     'listener.py': 251,
+# }
+#
+#
+# def inner(contents: List[str]) -> bool:
+#     return True
+#
+#
+# inner: Callable[[List[str]], bool]
+#
+# point: Literal[int, int] = [314, 156]
+#
+#
+# def ran() -> Union[int, str]:
+#     return random.choice([134, 'message'])

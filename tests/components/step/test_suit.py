@@ -1,10 +1,30 @@
 import unittest
+from typing import List
+from collections import deque
 
-from ScrapyUtils.components import StepSuit, Action, Step, ComponentSuit
+from ScrapyUtils.components import StepSuit, Action, Step, ComponentSuit, Parse
+from ScrapyUtils.libs import RequestScraper, Task, Scraper, Model
 
 
 class ActionTest(Action):
     pass
+
+
+class CountAction(Action):
+    count = 0
+
+    def scraping(self, task: Task, scraper: Scraper) -> str:
+        self.count += 1
+
+
+class CountParse(Parse):
+    count = 0
+
+    def parsing(self, content: str) -> List[Model]:
+        self.count += 1
+
+
+task = Task(url='1', param=5)
 
 
 class StepSuitTestCase(unittest.TestCase):
@@ -30,6 +50,11 @@ class StepSuitTestCase(unittest.TestCase):
         """Default attribute target_components: {}"""
 
         assert self.suit.context == {}
+
+    def test_attribute_models_default(self):
+        """Default attribute models: deque"""
+
+        assert self.suit.models == deque()
 
     def test_attribute_scraper_default(self):
         """Default attribute scraper: {}"""
@@ -79,17 +104,28 @@ class StepSuitTestCase(unittest.TestCase):
         assert res == None
 
     def test_method_generate(self):
-        """TODO:"""
-        assert False
+        """Method generate will return a function to process task."""
+        self.suit.add_component(CountAction)
+        self.suit.add_component(CountParse)
+        func = self.suit.generate_scrapy_callable()
 
+        func(task)
+
+        assert self.suit.components[0].count == 1
+        assert self.suit.components[1].count == 1
+
+    @unittest.skip
     def test_method_generate_error(self):
         """TODO:"""
+
         assert False
 
+    @unittest.skip
     def test_function_do_scraper(self):
         """TODO:"""
         assert False
 
+    @unittest.skip
     def test_function_do_scraper_error(self):
         """TODO:"""
         assert False
@@ -97,4 +133,3 @@ class StepSuitTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

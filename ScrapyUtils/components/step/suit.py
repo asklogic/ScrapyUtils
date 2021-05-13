@@ -92,3 +92,4 @@ def do_scrapy(suit: StepSuit, task: Task) -> bool:
 #
 # def ran() -> Union[int, str]:
 #     return random.choice([134, 'message'])
+StepSuit.__annotations__

@@ -8,8 +8,6 @@ from ScrapyUtils.components import Component, ComponentSuit
 
 import unittest
 
-from ScrapyUtils.components.component import Component, method_checker
-
 
 class Mock(Component):
     pass
@@ -26,8 +24,8 @@ class NotSub(Component):
 class Error(Component):
 
     def __init__(self) -> None:
-        raise Exception('failed __init__ case')
         super().__init__()
+        raise Exception('failed __init__ case')
 
 
 class ComponentSuitTestCase(unittest.TestCase):
@@ -73,24 +71,17 @@ class ComponentSuitTestCase(unittest.TestCase):
         with self.assertRaises(TypeError) as te:
             ComponentSuit(True)
 
-    @unittest.skip
-    def test_checker(self):
-        from typing import List, Dict
-        number = 10
+    def test_method_append_component(self):
+        """TODO"""
+        self.assertEqual(True, False)
 
-        components = [Component(), Mock()]
+    def test_method_suit_start(self):
+        """TODO"""
+        self.assertEqual(True, False)
 
-        mapper = {
-            'com': Component(),
-            'mock': Mock(),
-        }
-
-        @method_checker
-        def mock_function(number: int, components: List[Component], mapper: Dict[str, Component],
-                          nested: List[Dict[str, Component]]):
-            pass
-
-        mock_function(number, components, mapper, nested=[mapper, mapper])
+    def test_method_suit_exit(self):
+        """TODO"""
+        self.assertEqual(True, False)
 
 
 if __name__ == '__main__':

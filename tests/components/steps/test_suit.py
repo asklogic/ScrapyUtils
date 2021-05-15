@@ -114,21 +114,17 @@ class StepSuitTestCase(unittest.TestCase):
         assert self.suit.components[0].count == 1
         assert self.suit.components[1].count == 1
 
-    @unittest.skip
-    def test_method_generate_error(self):
-        """TODO:"""
+    def test_method_generate_empty_component(self):
+        """Generate from a empty component"""
+        assert self.suit.components == []
 
-        assert False
+        func = self.suit.generate_scrapy_callable()
 
-    @unittest.skip
-    def test_function_do_scraper(self):
-        """TODO:"""
-        assert False
+        func(task)
 
-    @unittest.skip
-    def test_function_do_scraper_error(self):
-        """TODO:"""
-        assert False
+    def test_function_do_scrapy(self):
+        """To tests.step.test_do_scrapy module."""
+        assert True
 
 
 if __name__ == '__main__':

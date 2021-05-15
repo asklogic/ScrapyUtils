@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Example Google style docstrings.
+"""ProcessorSuit module.
 
 """
 from typing import List
@@ -16,6 +16,7 @@ class ProcessorSuit(ComponentSuit):
     components: List[Processor] = []
 
     def process(self, model: Model):
+
         current = model
 
         for processor in self.components:
@@ -25,7 +26,7 @@ class ProcessorSuit(ComponentSuit):
                 next_model = processor.process_item(current)
 
                 # case 1: Return a modified model.
-                if isinstance(current, processor.target):
+                if isinstance(next_model, processor.target):
                     current = next_model
 
                 # case 2: Return false will interrupt loop.
@@ -33,3 +34,6 @@ class ProcessorSuit(ComponentSuit):
                     break
 
                 # case 3: Return None will continue.
+                pass
+
+        return True

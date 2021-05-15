@@ -3,6 +3,7 @@
 
 """
 from abc import abstractmethod
+from typing import Optional
 
 from ScrapyUtils.libs import Task, Scraper
 from . import Step
@@ -12,7 +13,7 @@ class Action(Step):
     priority: int = 600
 
     @abstractmethod
-    def scraping(self, task: Task, scraper: Scraper) -> str:
+    def scraping(self, task: Task, scraper: Scraper) -> Optional[str]:
         """The overriding method should return the result of a web page.
 
         Args:

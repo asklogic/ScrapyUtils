@@ -52,6 +52,9 @@ class ModelMeta(type):
 
 class Model(object, metaclass=ModelMeta):
 
+    def __init__(self, **kwargs):
+        super(Model, self).__init__(**kwargs)
+
     @property
     def pure_data(self, to_tuple=False) -> Dict[str, Any]:
         if to_tuple:

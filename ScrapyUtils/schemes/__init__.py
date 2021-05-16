@@ -21,13 +21,12 @@ Todo:
     * ROOT装饰器化。
 
 """
+from .scheme import Root, Scheme
 
 from .preload_scheme import PreloadScheme
 from .initial_scheme import InitialScheme
 from .scraper_scheme import ScraperScheme
 from .task_scheme import TaskScheme
-
-from .scheme import Root, Scheme
 
 # logger
 

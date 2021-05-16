@@ -21,13 +21,14 @@ class TestCollectPreloadTestCase(unittest.TestCase):
     def test_sample(self):
         import lianjia
 
-        lianjia.preload()
+        pass
 
-        assert configure.steps_class
-        assert configure.processors_class
+    def test_method(self):
+        """TODO"""
+        self.assertEqual(True, False)
 
-        assert configure.scraper_callable
-        assert configure.tasks_callable
+        # assert configure.scraper_callable
+        # assert configure.tasks_callable
 
     # def test_variable(self):
     #     """import before preload."""

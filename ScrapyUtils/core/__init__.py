@@ -1,3 +1,9 @@
+from logging import getLogger
+
+logger = getLogger('core')
+
+from .preload import collect_steps, collect_processors, initial_configure
+
 # from .collect import scheme_preload, scheme_initial, scheme_start, scheme_exit, initial_configure
 # from . import collect
 #

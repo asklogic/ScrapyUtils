@@ -21,7 +21,7 @@ case 1 该步骤正常启动，logger返回状态 [SUCCESS].
 
 case 2 该步骤错误，logger返回状态 [FAILED].
 
-case 3 该步骤错误，logger返回状态 [ERROR].
+case 3 该步骤出现异常，logger返回状态 [ERROR].
 
 
 

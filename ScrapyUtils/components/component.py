@@ -23,7 +23,7 @@ Note:
 
 
 Todo:
-    * 
+    * todo
 """
 
 from abc import abstractmethod
@@ -142,10 +142,10 @@ class ComponentSuit(object):
                 self.components.remove(component)
 
 
-def active(component_class: type(Component)):
-    component_class._active = True
+def active(component_class: Type[Component]):
+    component_class.active = True
     return component_class
 
 
-def set_active(component_class: type(Component)):
-    component_class._active = True
+def set_active(component_class: Type[Component]):
+    component_class.active = True

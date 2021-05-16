@@ -1,10 +1,28 @@
 # -*- coding: utf-8 -*-
-"""Preload module to load python module in __init__ and preload function.
+"""Preload module to load components and other configuration from a python module.
 
-包含了Scheme包的各式加载函数，其主要存在于__init__.py中。
-只需要import指定的包就可以自动加载各项设置、组件component和其他设置。
+包含了加载一个Scheme包的各式加载函数，其主要存在于一个项目的__init__.py文件中。
 
-另外提供scheme_preload。
+只需要import指定的包就可以自动加载各项设置、组件components和其他函数到全局变量中，以用于各类初始化函数中。
+
+
+函数:
+
+    1. _load_components::
+
+        从一个Python module中加载指定类型的Components，返回指定类型的类对象列表。
+
+    2. collect_steps::
+
+        基于_load_components函数，从多个module中加载Step组件类。
+
+    3. collect_processors::
+
+        基于_load_components函数，从多个module中加载Processor组件
+
+    4. initial_configure::
+
+        加载一个项目中setting.py的各项属性。
 
 Todo:
     * 异常处理: Python加载异常（包含代码格式、缺少包）
@@ -21,19 +39,6 @@ from ScrapyUtils import configure
 from logging import getLogger
 
 logger = getLogger(__name__)
-
-
-# def scheme_preload(scheme: str):
-#     try:
-#         module = import_module(scheme)
-#
-#         global steps_class, processors_class
-#
-#         steps_class = module.steps_class
-#         processors_class = module.processors_class
-#     except Exception as e:
-#         logger.exception(e)
-#         raise Exception('Failed in scheme preload.')
 
 
 def _load_components(module: ModuleType, component_type: Type[Component] = Component) -> List[Type[Component]]:

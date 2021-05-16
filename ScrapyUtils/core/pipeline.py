@@ -9,13 +9,12 @@ from collections import deque
 from queue import Queue
 from threading import Lock, Event
 from typing import Any, NoReturn, Union
-from logging import getLogger
 
 from ScrapyUtils.components import ProcessorSuit
 
 from ScrapyUtils.libs import Consumer, Model
 
-logger = getLogger('core')
+from . import logger
 
 
 class Pipeline(Consumer):

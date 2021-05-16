@@ -1,7 +1,7 @@
 from .scheme import Scheme
 
 from ScrapyUtils import configure
-from ScrapyUtils.components import StepSuit, ProcessorSuit, Pipeline
+from ScrapyUtils.components import StepSuit, ProcessorSuit
 
 
 class InitialScheme(Scheme):
@@ -13,7 +13,7 @@ class InitialScheme(Scheme):
 
         thread = configure.THREAD
 
-        step_suits = [StepSuit(steps=steps_class) for i in range(thread)]
+        step_suits = [StepSuit(components=steps_class) for i in range(thread)]
         processor_suit = ProcessorSuit(processors_class)
 
         configure.step_suits = step_suits

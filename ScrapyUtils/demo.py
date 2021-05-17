@@ -5,7 +5,7 @@ if __name__ == '__main__':
     PreloadScheme.target = 'lianjia'
     root.load(PreloadScheme)
 
-    root.load(InitialScheme)
+    root.load(ComponentsScheme)
     root.load(ScraperScheme)
     root.load(TaskScheme)
 

@@ -100,15 +100,15 @@ class Scheme(SchemeDecoratorMixin):
     def stop(cls):
         pass
 
-    @classmethod
-    @abstractmethod
-    def load_context(cls):
-        pass
-
-    @classmethod
-    @abstractmethod
-    def check_context(cls):
-        pass
+    # @classmethod
+    # @abstractmethod
+    # def load_context(cls):
+    #     pass
+    #
+    # @classmethod
+    # @abstractmethod
+    # def check_context(cls):
+    #     pass
 
 
 def execute_function(executor: ThreadPoolExecutor, func: Callable, target_method='scheme') -> Optional[bool]:

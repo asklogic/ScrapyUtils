@@ -1,18 +1,18 @@
-from typing import Callable, Dict, List, Type, Union
+from typing import Callable, Dict, List, Type, Union, Iterator
 from types import ModuleType
 
 from os import path
 from queue import Queue
 
 from ScrapyUtils.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, ProcessorSuit
-from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper
+from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper, Task
 
 from ScrapyUtils.libs import Producer, Consumer
 
 # preload
 # ----------------------------------------------------------------------
 # callable
-tasks_callable: Callable = None
+tasks_callable: Iterator[Task] = None
 scraper_callable: Callable = None
 
 # components

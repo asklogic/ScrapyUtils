@@ -1,10 +1,20 @@
+# -*- coding: utf-8 -*-
+"""Components scheme.
+
+构建StepSuit列表和ProcessorSuit，实例化各项组件类。
+
+Todo:
+    * Refactor components on_start/on_exit.
+
+"""
+
 from .scheme import Scheme
 
 from ScrapyUtils import configure
 from ScrapyUtils.components import StepSuit, ProcessorSuit
 
 
-class InitialScheme(Scheme):
+class ComponentsScheme(Scheme):
 
     @classmethod
     def start(cls):

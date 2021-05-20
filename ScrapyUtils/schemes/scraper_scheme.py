@@ -1,6 +1,17 @@
+# -*- coding: utf-8 -*-
+"""Scraper scheme.
+
+构建Scraper对象，并且根据生成情况构建默认Scraper对象。
+
+Todo:
+    * Default scrapers list
+    * Scrapers watch thread
+
+"""
 from concurrent.futures import ThreadPoolExecutor
 from logging import getLogger
 from typing import Callable
+from types import FunctionType
 
 from .scheme import Scheme
 

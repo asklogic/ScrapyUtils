@@ -24,9 +24,8 @@ Todo:
 from .scheme import Root, Scheme
 
 from .preload_scheme import PreloadScheme
-from .initial_scheme import InitialScheme
+from .components_scheme import ComponentsScheme
 from .scraper_scheme import ScraperScheme
-from .task_scheme import TaskScheme
 
 # logger
 

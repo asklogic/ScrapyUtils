@@ -71,6 +71,10 @@ redis/
 # virtual environment
 venv/
 
+doc/
+
+firefox/
+
 #_*
 #_*.*
 #_*/

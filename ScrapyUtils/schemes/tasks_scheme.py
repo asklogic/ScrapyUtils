@@ -27,6 +27,10 @@ def load_remains():
 
 
 def load_iterator():
+
+    assert tasks_callable
+    assert tasks
+
     for task in tasks_callable:
         tasks.put(task)
 

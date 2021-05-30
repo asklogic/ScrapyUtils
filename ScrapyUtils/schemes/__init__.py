@@ -23,18 +23,10 @@ Todo:
 """
 from .scheme import Root, Scheme
 
+# logger
+
+
 from .preload_scheme import PreloadScheme
 from .components_scheme import ComponentsScheme
 from .scraper_scheme import ScraperScheme
-
-# logger
-
-from ScrapyUtils.log import build_defalut_logger
-
-state_logger = build_defalut_logger('scheme_state',
-                                    format_str="[%(state)s in '%(method)s'] - %(message)s",
-                                    time_format='%H:%M:%S')
-
-load_logger = build_defalut_logger('scheme_load',
-                                   format_str='(%(levelname)s) %(message)s',
-                                   time_format='%H:%M:%S')
+from .tasks_scheme import TasksScheme

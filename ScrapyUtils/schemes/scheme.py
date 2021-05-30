@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Scheme module.
+"""Schemes module.
 
-在Python项目中的模拟一个service的Scheme类，负责一个服务的管理。
+使用Scheme类在Python项目中的模拟一个service，负责管理同属一类对象或者变量的启动和退出。Scheme应该是全局唯一的。
+
+其中，Scheme应该是可以做到异步启动的，基于concurrent.future来实现。
+每一个Scheme可以通过调用函数其他Scheme提供的一些对象或者变量，Scheme不存在强制的依赖关系。
+
+每一个Scheme能够提供的变量通过其start方法返回，也就是说start方法返回的变量即为其他Scheme能够调用获取的变量。
+
 
 提供了如下几个方法:
     1. start - 开启
@@ -30,19 +36,22 @@ Todo:
 
 """
 from abc import abstractmethod
+from functools import wraps
 from typing import List, Callable, Any, Type, Union, Optional
 from types import FunctionType, MethodType
 from time import sleep
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
 
-from ScrapyUtils.log import getLogger
+from ScrapyUtils.log import getLogger, error_lines
 
 import ScrapyUtils.schemes
 
 base_logger = getLogger('base')
 scheme_state_logger = getLogger('scheme_state')
 scheme_load_logger = getLogger('scheme_load')
+
+from linecache import getlines
 
 
 class SchemeDecoratorMixin(object):
@@ -52,7 +61,7 @@ class SchemeDecoratorMixin(object):
 
         assert isinstance(func, FunctionType)
         if func.__code__.co_argcount == 0:
-
+            @wraps(func)
             def register_wrapper(cls):
                 func()
 
@@ -64,6 +73,7 @@ class SchemeDecoratorMixin(object):
     def register_verify(cls, func: FunctionType):
         assert isinstance(func, FunctionType)
         if func.__code__.co_argcount == 0:
+            @wraps(func)
             def register_wrapper(cls):
                 func()
 
@@ -75,6 +85,7 @@ class SchemeDecoratorMixin(object):
     def register_stop(cls, func: FunctionType):
         assert isinstance(func, FunctionType)
         if func.__code__.co_argcount == 0:
+            @wraps(func)
             def register_wrapper(cls):
                 return func()
 
@@ -84,6 +95,10 @@ class SchemeDecoratorMixin(object):
 
 
 class Scheme(SchemeDecoratorMixin):
+    _start_future: Future = None
+
+    def get_result(self):
+        return self._start_future.result()
 
     @classmethod
     @abstractmethod
@@ -100,16 +115,6 @@ class Scheme(SchemeDecoratorMixin):
     def stop(cls):
         pass
 
-    # @classmethod
-    # @abstractmethod
-    # def load_context(cls):
-    #     pass
-    #
-    # @classmethod
-    # @abstractmethod
-    # def check_context(cls):
-    #     pass
-
 
 def execute_function(executor: ThreadPoolExecutor, func: Callable, target_method='scheme') -> Optional[bool]:
     function_name = func.__name__
@@ -125,7 +130,9 @@ def execute_function(executor: ThreadPoolExecutor, func: Callable, target_method
             '{0} error.'.format(function_name.capitalize()),
             extra={'state': 'ERROR', 'method': target_method}
         )
-        base_logger.exception('Error message ', exc_info=e, extra={'state': 'FAILED'})
+
+        error_lines(scheme_load_logger, f'Failed in scheme', e)
+
         return False
 
     else:

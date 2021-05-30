@@ -6,7 +6,7 @@ import time
 
 from ScrapyUtils.command import get_command_type
 
-from ScrapyUtils.log import set_log_file_name, set_syntax
+from ScrapyUtils.log import set_log_file_name
 
 from ScrapyUtils import common
 from ScrapyUtils.log import common as log

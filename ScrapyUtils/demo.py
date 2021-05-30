@@ -7,6 +7,6 @@ if __name__ == '__main__':
 
     root.load(ComponentsScheme)
     root.load(ScraperScheme)
-    root.load(TaskScheme)
+    root.load(TasksScheme)
 
     root.exit()

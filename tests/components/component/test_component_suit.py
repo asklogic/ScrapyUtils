@@ -30,6 +30,9 @@ class Error(Component):
 
 class ComponentSuitTestCase(unittest.TestCase):
 
+    def setUp(self) -> None:
+        self.suit = ComponentSuit([])
+
     def test_sample(self):
         pass
 

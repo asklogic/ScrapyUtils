@@ -17,6 +17,10 @@ from typing import *
 
 from ScrapyUtils.libs.scraper import Scraper, TimeoutMixin
 
+from logging import getLogger
+
+logger = getLogger('firefox')
+
 try:
     from selenium.webdriver import Firefox, FirefoxOptions
     from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
@@ -83,7 +87,7 @@ class FireFoxSettingMixin(object):
         options (FirefoxOptions): Current options.
 
     """
-    
+
     # firefox property
     _image: bool = False
     _headless: bool = True

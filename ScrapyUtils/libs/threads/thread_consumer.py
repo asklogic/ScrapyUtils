@@ -14,6 +14,7 @@ Todo:
 from abc import abstractmethod
 from typing import List, NoReturn, Any, Union, Dict, ClassVar, Tuple, Callable
 from types import MethodType
+from logging import getLogger
 
 from collections import deque
 from queue import Queue, Empty
@@ -21,6 +22,8 @@ from threading import Lock, Event
 from time import sleep
 
 from . import BaseThread
+
+logger = getLogger('consumer')
 
 support_source = [
     Queue,
@@ -70,7 +73,9 @@ class Consumer(BaseThread):
                  source: Union[Queue, deque],
                  delay: Union[int, float] = 0.1,
                  lock: Lock = None,
-                 event: Event = Event(), start_thread: bool = None, **kwargs):
+                 event: Event = Event(),
+                 start_thread: bool = None,
+                 **kwargs):
         assert type(source) in support_source, 'Source not support'
 
         for cls, methods in self._get_item_mapper.items():
@@ -108,10 +113,7 @@ class Consumer(BaseThread):
             try:
                 self.consuming(obj)
             except Exception as e:
-
-                from . import get_consumer_logger
-                if get_consumer_logger():
-                    get_consumer_logger().exception(exc_info=e, msg='consuming error')
+                logger.exception(exc_info=e, msg='consuming error')
                 self.pause(False)
 
     @abstractmethod

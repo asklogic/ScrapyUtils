@@ -6,7 +6,7 @@ from threading import Event, Lock
 from time import sleep
 from typing import Union
 
-from ScrapyUtils.libs.threads.consumer import Consumer
+from ScrapyUtils.libs.threads.thread_consumer import Consumer
 from ScrapyUtils.libs import BaseThread
 
 

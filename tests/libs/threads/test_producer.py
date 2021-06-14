@@ -12,7 +12,7 @@ from threading import Event, Lock
 from typing import Union
 
 from ScrapyUtils.libs.threads import BaseThread
-from ScrapyUtils.libs.threads.producer import Producer
+from ScrapyUtils.libs.threads.thread_producer import Producer
 
 
 class Custom(Producer):

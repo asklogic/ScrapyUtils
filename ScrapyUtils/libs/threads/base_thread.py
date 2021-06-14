@@ -23,7 +23,7 @@ from threading import Event, Thread, Condition, Barrier
 
 # global setting:
 
-initial_start_thread = True
+initial_start_thread = False
 
 
 class BaseThread(Thread):

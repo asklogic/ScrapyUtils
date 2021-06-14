@@ -18,6 +18,7 @@ from typing import *
 
 from ScrapyUtils.libs.scraper import Scraper
 
+
 try:
     from requests import Session, Response
 

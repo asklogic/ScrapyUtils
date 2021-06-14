@@ -13,6 +13,7 @@ Todo:
 """
 from abc import abstractmethod
 from collections import deque
+from logging import getLogger
 from threading import Lock, Event
 from typing import Any, Dict, List, Tuple, Union, Callable
 from types import MethodType
@@ -20,7 +21,9 @@ from types import MethodType
 from queue import Queue, Full
 from time import sleep
 
-from . import BaseThread
+from ScrapyUtils.libs.threads import BaseThread
+
+logger = getLogger('producing')
 
 support_source = [
     Queue,
@@ -63,7 +66,9 @@ class Producer(BaseThread):
                  delay: Union[int, float] = 0.1,
                  lock: Lock = None,
                  expire: bool = True,
-                 event: Event = Event(), start_thread: bool = None, **kwargs):
+                 event: Event = Event(),
+                 start_thread: bool = None,
+                 **kwargs):
         assert type(source) in support_source, 'Source not support'
 
         for cls, methods in self._get_item_mapper.items():
@@ -99,11 +104,7 @@ class Producer(BaseThread):
             try:
                 self.current = self.current if self.current else self.producing()
             except Exception as e:
-                # TODO: log out
-                from . import consumer_logger
-                if consumer_logger:
-                    consumer_logger.exception(exc_info=e, msg='consuming error')
-
+                logger.exception(exc_info=e, msg='consuming error')
                 self.pause(False)
             else:
                 if self.current is not None:

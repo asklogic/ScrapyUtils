@@ -9,19 +9,19 @@ Todo:
     * nothing.
 
 .. python threading library:
+    en: https://docs.python.org/3/library/threading.html
     cn: https://docs.python.org/zh-cn/3/library/threading.html
 
 """
+import threading
+import time
 from abc import abstractmethod
-from typing import List, NoReturn
 
-from collections import deque
-from multiprocessing.dummy import Pool as ThreadPool
-from queue import Queue, Empty, Full
 from time import sleep
 from threading import Event, Thread, Condition, Barrier
 
 # global setting:
+from typing import Optional, Callable, Any, Iterable, Mapping
 
 initial_start_thread = False
 
@@ -182,6 +182,43 @@ class BaseThread(Thread):
         pass
 
 
-if __name__ == '__main__':
-    # barrier = Barrier(3)
-    pass
+class BasicThread(threading.Thread):
+    """基础线程类"""
+
+    def __init__(self, source, delay: int = 1, daemon: Optional[bool] = ...) -> None:
+        """屏蔽一些Thread类的initial参数."""
+
+        self._source = source
+        self.delay = delay
+        super().__init__(daemon=daemon)
+
+    @abstractmethod
+    def on_start(self):
+        pass
+
+    def start(self) -> None:
+        self.on_start()
+        super().start()
+
+    @abstractmethod
+    def do_loop(self):
+        pass
+
+    @abstractmethod
+    def continue_loop(self) -> bool:
+        pass
+
+    @abstractmethod
+    def exception_loop(self, exception: Exception):
+        pass
+
+    def run(self) -> None:
+        while True:
+            if self.continue_loop():
+                break
+            try:
+                self.do_loop()
+            except Exception as e:
+                self.exception_loop(e)
+            finally:
+                time.sleep(max(0, self.delay))

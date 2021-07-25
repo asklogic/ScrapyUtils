@@ -37,26 +37,24 @@ from abc import abstractmethod
 from typing import *
 
 
-
-
-def check_property(property_name: str, value: Any):
+def check_property(property_name: str, value: Any, assert_content='Scraper must be activated.'):
     """Check the property when the method be invoked.
 
-    属性检查装饰器，调用时检查属性,不正确将会抛出异常。
+    类属性检查装饰器，调用时通过属性名字检查属性, 属性的值不等于理想值将会抛出异常。
 
     If the property's value isn't equal to value raise Exception.
     """
 
     def need_activated(func) -> Callable:
-        def wrapper(obj, *args, **kwargs):
+        def check_property_inner(obj, *args, **kwargs):
+            """check_property inner."""
             property_vale = getattr(obj, property_name)
 
-            if property_vale != value:
-                raise Exception('Scraper must be activated.')
+            assert property_vale == value, assert_content
 
             return func(obj, *args, **kwargs)
 
-        return wrapper
+        return check_property_inner
 
     return need_activated
 
@@ -88,9 +86,7 @@ class TimeoutMixin(object):
         self._timeout = value
 
 
-class Scraper(
-    TimeoutMixin,
-    object):
+class Scraper(object):
     """
     The base class of Scraper.
 
@@ -99,7 +95,7 @@ class Scraper(
     只定义了爬取类通用方法的Scraper基类，子类必须实现全部的抽象方法。
 
     Args:
-        attach (bool): Common parameter. Scraper will attach when initial.
+        attach (bool): Common parameter. Scraper will attach when it initial.
 
     """
     _attached: bool = False

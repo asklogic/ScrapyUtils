@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Firefox scraper module.
+"""firefox_scraper module.
 
 FirefoxScraper bases on Selenium.webdriver.Firefox.
 
@@ -41,11 +41,11 @@ driver_path = ''.join(['firefox', os.sep, 'geckodriver', platform_suffix])
 # setter function
 
 def set_firefox_path(path: str):
-    """Set the global varibale firefox_path.
+    """Set the global variable firefox_path.
 
-    The firefox will attach the browser by this path.
+    The firefox will attach the browser with this path.
 
-    Default value is "project/firefox/firefox"
+    Default value is "{project}/firefox/firefox"
 
     Args:
         path (str): The path of browser.
@@ -55,7 +55,7 @@ def set_firefox_path(path: str):
 
 
 def set_driver_path(path: str):
-    """Set the gloabl variable driver_path.
+    """Set the global variable driver_path.
 
     The dirver_path is the path of webdriver.
 
@@ -77,9 +77,9 @@ class FireFoxSettingMixin(object):
     attach之后不能修改浏览器属性，因为设置属性只修改了option的值，需要重启才能应用修改。
 
     Attributes:
-        image (bool): Image state, Flase means no image.
-        headless (bool): Headless state, Flase means headless.
-        js (bool): Javascripts state, Flase means no js.
+        image (bool): Image state, False means no image.
+        headless (bool): Headless state, False means headless.
+        js (bool): Javascript state, False means no js.
 
         driver_path (str): Current driver_path.
         binary (FirefoxBinary): Current bianry(browser).
@@ -113,7 +113,7 @@ class FireFoxSettingMixin(object):
         self.options.set_preference("network.http.use-cache", False)
         self.options.set_preference("browser.cache.memory.enable", False)
         self.options.set_preference("browser.cache.disk.enable", False)
-        self.options.set_preference("network.dns.disableIPv6", True)
+        # self.options.set_preference("network.dns.disableIPv6", True)
         self.options.set_preference("Content.notify.interval", 750000)
         self.options.set_preference("content.notify.backoffcount", 3)
 
@@ -206,7 +206,7 @@ class FireFoxScraper(
         try:
             self.firefox.service.assert_process_still_running()
         except Exception as e:
-            print(e)
+            logger.error(e)
         self.firefox.quit()
 
     def _clear(self) -> NoReturn:

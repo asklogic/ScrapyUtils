@@ -10,8 +10,6 @@ from fastapi import FastAPI, Request
 
 sys.path.insert(0, os.path.abspath(f'..{os.sep}..{os.sep}..'))
 
-
-
 api = FastAPI()
 
 
@@ -23,3 +21,7 @@ def test_get(request: Request):
 t = threading.Thread(target=lambda: uvicorn.run(api, port=9009, debug=True))
 t.setDaemon(True)
 t.start()
+
+# test url
+
+cookie_test_url = 'https://ip.cn/'

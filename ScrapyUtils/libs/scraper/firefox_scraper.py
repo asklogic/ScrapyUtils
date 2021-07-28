@@ -10,34 +10,33 @@ Todo:
 
 import os
 import platform
-from typing import *
-
-from ScrapyUtils.libs.scraper import Scraper, TimeoutMixin
-
 from logging import getLogger
+from typing import Set, Union, NoReturn
 
+from selenium.webdriver import Firefox, FirefoxOptions
+from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+
+from ScrapyUtils.libs.scraper import Scraper
+
+# default logger
 logger = getLogger('firefox')
 
-try:
-    from selenium.webdriver import Firefox, FirefoxOptions
-    from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
-
-except ImportError as e:
-    # TODO: libs log
-    pass
-
+# system switch
 if 'Win' in platform.system():
     platform_suffix = '.exe'
 else:
     platform_suffix = ''
 
 firefox_path = ''.join(['firefox', os.sep, 'firefox', platform_suffix])
+"""str: The firefox path"""
 driver_path = ''.join(['firefox', os.sep, 'geckodriver', platform_suffix])
+"""str: The geckodriver path"""
+
+global_webdriver_set: Set[Firefox] = set()
 
 
 # setter function
-
-def set_firefox_path(path: str):
+def set_firefox_path(path: str) -> NoReturn:
     """Set the global variable firefox_path.
 
     The firefox will attach the browser with this path.
@@ -51,10 +50,10 @@ def set_firefox_path(path: str):
     firefox_path = path
 
 
-def set_driver_path(path: str):
+def set_driver_path(path: str) -> NoReturn:
     """Set the global variable driver_path.
 
-    The dirver_path is the path of webdriver.
+    The driver_path is the path of webdriver.
 
     Default value is "{project}/firefox/geckodriver"
 
@@ -63,6 +62,13 @@ def set_driver_path(path: str):
     """
     global driver_path
     driver_path = path
+
+
+def exit_all_firefox_webdriver() -> NoReturn:
+    """Exit all firefox webdriver without scraper_detach.
+    """
+    for webdriver in global_webdriver_set:
+        webdriver.quit()
 
 
 class FireFoxBase(object):
@@ -103,7 +109,7 @@ class FirefoxImageMixin(FireFoxOptionsBase):
 class FirefoxTimeoutMixin(FireFoxBase):
     timeout = 10
 
-    def set_timeout(self, timeout: Union[int, float] = 5):
+    def set_timeout(self, timeout: Union[int, float] = 10):
         self.timeout = timeout
         if self.firefox:
             self.firefox.set_script_timeout(timeout)
@@ -157,6 +163,11 @@ class FireFoxScraper(
         Scraper.__init__(self, attach)
 
     def _attach(self) -> NoReturn:
+        """Attach the Firefox instance.
+
+        Create a firefox instance by options and binary.
+
+        """
         self.firefox = Firefox(options=self.options,
                                firefox_binary=self.binary,
                                executable_path=self.driver_path)
@@ -168,14 +179,27 @@ class FireFoxScraper(
 
         self.set_timeout(10)
 
+        global_webdriver_set.add(self.firefox)
+
     def _detach(self) -> NoReturn:
+        """Detach the firefox instacne.
+
+        Quit the firefox and remove the instance from global set.
+
+        """
         try:
             self.firefox.service.assert_process_still_running()
+            self.firefox.quit()
+            if self.firefox in global_webdriver_set:
+                global_webdriver_set.remove(self.firefox)
         except Exception as e:
             logger.error(e)
-        self.firefox.quit()
 
     def _clear(self) -> NoReturn:
+        """Clear the cookie and cache.
+
+        Restart it becasue no api.
+        """
         self.firefox.delete_all_cookies()
         self.firefox.get("about:blank")
         self.firefox.delete_all_cookies()

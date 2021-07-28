@@ -19,7 +19,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # Firefox common setting
 
 geckodriver_path = ''
-firefox_path = ''
+FIREFOX_PATH = ''
 
 
 # TODO: fix it.

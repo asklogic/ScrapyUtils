@@ -6,85 +6,119 @@ import unittest
 
 from ScrapyUtils.components import Component, ComponentSuit
 
-import unittest
-
-
-class Mock(Component):
-    pass
-
-
-class SubMock(Mock):
-    pass
-
-
-class NotSub(Component):
-    pass
-
-
-class Error(Component):
-
-    def __init__(self) -> None:
-        super().__init__()
-        raise Exception('failed __init__ case')
-
 
 class ComponentSuitTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self.suit = ComponentSuit([])
 
-    def test_sample(self):
-        pass
+        class Alpha(Component):
+            priority = 800
+            pass
 
-    def test_init_component_single(self):
-        """__init__ with single component."""
-        suit = ComponentSuit([Mock, ])
+        class Beta(Component):
+            priority = 600
 
-        assert len(suit.components) == 1
+        class Gamma(Component):
+            priority = 400
 
-    def test_init_component_multi(self):
-        """__init__ with multi components."""
-        suit = ComponentSuit([Mock, SubMock])
+        class ErrorStart(Component):
+            def on_start(self):
+                assert False
 
-        assert len(suit.components) == 2
+        class ErrorExit(Component):
+            def on_exit(self):
+                assert False
 
-    def test_init_component_incorrect_component_type(self):
-        """ComponentSuit will skip incorrect component type."""
-        assert len(ComponentSuit([1]).components) == 0
+        self.mock_components = [Alpha(), Beta(), Gamma()]
+        self.alpha = Alpha()
+        self.beta = Beta()
+        self.gamma = Gamma()
+        self.error_start = ErrorStart()
+        self.error_exit = ErrorExit()
 
-        assert len(ComponentSuit([Mock(), list, lambda: 0]).components) == 1
+    def test_arguments_components(self):
+        """Arguments components: several components"""
+        suit = ComponentSuit(components=self.mock_components)
 
-    def test_init_component_error(self):
-        """__init__ failed in component's init method."""
-        with self.assertRaises(Exception) as e:
-            suit = ComponentSuit([Error])
-        assert 'failed __init__ case' in str(e.exception)
+        self.assertEqual(len(suit.components), 3)
 
-    def test_init_component_incorrect_type(self):
-        """ComponentSuit need a component list."""
+    def test_arguments_components_positional(self):
+        """Arguments components: several components in positional arguments"""
+        suit = ComponentSuit(self.mock_components)
 
-        ComponentSuit([])
+        self.assertEqual(len(suit.components), 3)
 
-        with self.assertRaises(TypeError) as te:
-            ComponentSuit(None)
+    def test_arguments_components_none(self):
+        """Arguments components: None"""
+        suit = ComponentSuit()
 
-        with self.assertRaises(TypeError) as te:
-            ComponentSuit(0)
-
-        with self.assertRaises(TypeError) as te:
-            ComponentSuit(True)
+        self.assertEqual(len(suit.components), 0)
 
     def test_method_append_component(self):
-        """TODO"""
-        self.assertEqual(True, False)
+        """Method append component in suit"""
+        suit = ComponentSuit()
 
-    def test_method_suit_start(self):
-        """TODO"""
-        self.assertEqual(True, False)
+        suit.add_component(self.mock_components[0])
 
-    def test_method_suit_exit(self):
-        """TODO"""
-        self.assertEqual(True, False)
+        self.assertEqual(len(suit.components), 1)
+        self.assertEqual(suit.components[0].name, 'Alpha')
+
+    def test_property_components_in_sort(self):
+        """Property components will be sort by key."""
+        suit = ComponentSuit()
+
+        suit.add_component(Component())
+        suit.add_component(self.alpha)
+        suit.add_component(self.gamma)
+
+        self.assertEqual(suit.components[0].name, 'Alpha')
+        self.assertEqual(suit.components[1].name, 'Component')
+        self.assertEqual(suit.components[2].name, 'Gamma')
+
+    def test_method_on_start(self):
+        """Method start components"""
+        suit = ComponentSuit()
+
+        suit.suit_start()
+
+    def test_method_on_exit(self):
+        """exit components"""
+        suit = ComponentSuit()
+
+        suit.suit_exit()
+
+    def test_method_on_start_error_components(self):
+        """Some components error."""
+        suit = ComponentSuit(self.mock_components)
+        suit.add_component(self.error_start)
+        suit.add_component(self.error_exit)
+
+        # success append
+        self.assertEqual(len(suit.components), 5)
+
+        error = suit.suit_start()
+
+        # remove error components
+        self.assertEqual(len(suit.components), 4)
+
+        self.assertEqual(error[0].name, 'ErrorStart')
+
+    def test_method_on_exit_error_components(self):
+        """Some components error."""
+        suit = ComponentSuit(self.mock_components)
+        suit.add_component(self.error_start)
+        suit.add_component(self.error_exit)
+
+        # success append
+        self.assertEqual(len(suit.components), 5)
+
+        error = suit.suit_exit()
+
+        # remove error components
+        self.assertEqual(len(suit.components), 4)
+
+        self.assertEqual(error[0].name, 'ErrorExit')
 
 
 if __name__ == '__main__':

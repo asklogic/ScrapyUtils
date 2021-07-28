@@ -23,5 +23,4 @@ t.setDaemon(True)
 t.start()
 
 # test url
-
 cookie_test_url = 'https://ip.cn/'

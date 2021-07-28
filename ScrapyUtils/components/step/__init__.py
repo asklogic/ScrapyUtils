@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Step module for http action.
+"""Step module.
 
-Todo:
-    * For module TODOs
-    
+
 """
 
 from ScrapyUtils.components import Component

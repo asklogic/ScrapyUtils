@@ -21,18 +21,19 @@ from ScrapyUtils.libs.scraper import Scraper
 # default logger
 logger = getLogger('firefox')
 
+global_webdriver_set: Set[Firefox] = set()
+"""set: The set to store all the webdriver instances."""
+
 # system switch
 if 'Win' in platform.system():
-    platform_suffix = '.exe'
+    PLATFORM_SUFFIX = '.exe'
 else:
-    platform_suffix = ''
+    PLATFORM_SUFFIX = ''
 
-firefox_path = ''.join(['firefox', os.sep, 'firefox', platform_suffix])
+FIREFOX_PATH = ''.join(['firefox', os.sep, 'firefox', PLATFORM_SUFFIX])
 """str: The firefox path"""
-driver_path = ''.join(['firefox', os.sep, 'geckodriver', platform_suffix])
+DRIVER_PATH = ''.join(['firefox', os.sep, 'geckodriver', PLATFORM_SUFFIX])
 """str: The geckodriver path"""
-
-global_webdriver_set: Set[Firefox] = set()
 
 
 # setter function
@@ -46,8 +47,8 @@ def set_firefox_path(path: str) -> NoReturn:
     Args:
         path (str): The path of browser.
     """
-    global firefox_path
-    firefox_path = path
+    global FIREFOX_PATH
+    FIREFOX_PATH = path
 
 
 def set_driver_path(path: str) -> NoReturn:
@@ -60,8 +61,8 @@ def set_driver_path(path: str) -> NoReturn:
     Args:
         path (str): The path of geckodriver
     """
-    global driver_path
-    driver_path = path
+    global DRIVER_PATH
+    DRIVER_PATH = path
 
 
 def exit_all_firefox_webdriver() -> NoReturn:
@@ -71,11 +72,11 @@ def exit_all_firefox_webdriver() -> NoReturn:
         webdriver.quit()
 
 
-class FireFoxBase(object):
+class FireFoxBase:
     firefox: Firefox = None
 
 
-class FireFoxOptionsBase(object):
+class FireFoxOptionsBase:
     options: FirefoxOptions = None
 
 
@@ -125,15 +126,15 @@ class FirefoxHttpMixin(FireFoxBase):
 
 class FirefoxBinaryBase(FireFoxBase, FireFoxOptionsBase):
     binary: FirefoxBinary = None
-    driver_path: str = None
+    DRIVER_PATH: str = None
 
     def __init__(self):
-        assert os.path.isfile(driver_path), f'Path: {driver_path} no geckodriver file.'
-        assert os.path.isfile(firefox_path), f'Path: {firefox_path} no firefox file.'
+        assert os.path.isfile(DRIVER_PATH), f'Path: {DRIVER_PATH} no geckodriver file.'
+        assert os.path.isfile(FIREFOX_PATH), f'Path: {FIREFOX_PATH} no firefox file.'
 
         self.options = FirefoxOptions()
-        self.binary = FirefoxBinary(firefox_path)
-        self.driver_path = driver_path
+        self.binary = FirefoxBinary(FIREFOX_PATH)
+        self.driver_path = DRIVER_PATH
 
 
 class FireFoxScraper(

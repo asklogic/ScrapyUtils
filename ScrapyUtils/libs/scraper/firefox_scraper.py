@@ -151,7 +151,7 @@ class FireFoxScraper(
     def __init__(self,
                  headless: bool = False,
                  js: bool = True,
-                 image: bool = False,
+                 image: bool = True,
                  attach: bool = False
                  ):
         # execute init method.

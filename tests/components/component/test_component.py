@@ -37,6 +37,14 @@ class ComponentTestCase(unittest.TestCase):
         """Abstract method: on_exit."""
         Mock().on_exit()
 
+    def test_method_ready_state(self):
+        """Abstract method: ready_state."""
+        self.assertTrue(Mock().ready_state())
+
+    def test_method_exit_state(self):
+        """Abstract method: exit_state."""
+        self.assertTrue(Mock().exit_state())
+
 
 if __name__ == '__main__':
     unittest.main()

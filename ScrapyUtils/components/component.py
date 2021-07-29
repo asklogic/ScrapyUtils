@@ -29,7 +29,7 @@ Note:
 """
 
 from abc import abstractmethod
-from typing import List, Iterable, Type, Union, Optional, Sequence
+from typing import List, Iterable, Type, Union, Optional, Sequence, NoReturn
 from logging import getLogger
 
 _logger = getLogger('component')
@@ -65,16 +65,29 @@ class Component(object, metaclass=ComponentMeta):
     """int: Priority of a component."""
 
     @abstractmethod
-    def on_start(self):
+    def on_start(self) -> NoReturn:
         """The on_start method will invoke when component.suit start.
         """
         pass
 
     @abstractmethod
-    def on_exit(self):
+    def on_exit(self) -> NoReturn:
         """The on_exit method will invoke when component.suit start.
         """
         pass
+
+    @abstractmethod
+    def ready_state(self) -> bool:
+        """Return True if it ready to work.
+
+        通常情况下应该会执行多次。
+        """
+        return True
+
+    @abstractmethod
+    def exit_state(self) -> bool:
+        """Return True if it has exit."""
+        return True
 
 
 class ComponentSuit(object):

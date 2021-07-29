@@ -1,9 +1,8 @@
 import unittest
 
 
-class DoScrapyTestCase(unittest.TestCase):
+class MyTestCase(unittest.TestCase):
     def test_something(self):
-        """TODO: finish test case"""
         self.assertEqual(True, False)
 
 

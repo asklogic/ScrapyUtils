@@ -10,18 +10,7 @@ class ActionTest(Action):
     pass
 
 
-class CountAction(Action):
-    count = 0
 
-    def scraping(self, task: Task, scraper: Scraper) -> str:
-        self.count += 1
-
-
-class CountParse(Parse):
-    count = 0
-
-    def parsing(self, content: str) -> List[Model]:
-        self.count += 1
 
 
 task = Task(url='1', param=5)
@@ -87,6 +76,9 @@ class StepSuitTestCase(unittest.TestCase):
 
         self.assertIs(res, step)
         self.assertEqual(len(self.suit.components), 1)
+
+    def test_method_do_scrape(self):
+        """Unittest case for do_scrape in tests/components/steps/test_do_scrape.py"""
 
 
 if __name__ == '__main__':

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """StepSuit module.
 
-Todo:
-    * For module TODOs
-    
+执行一系列Step动作的的最小单元。
+
 """
-import random
-from typing import Union, Type, Optional, List, Callable
+from typing import Union, Type, Optional, List, Callable, Sequence
 from collections import deque
 
 from ScrapyUtils.libs import Task, Scraper
@@ -16,39 +14,61 @@ from . import Step, Action, Parse
 
 
 class StepSuit(ComponentSuit):
-    # common
-    components: List[Step] = []
+    """SuitSuit class for execute a task.
+
+    StepSuit用于集中管理一系列的Step的启停和执行顺序，同时通过这些Step来执行一次流程。
+
+    StepSuit通过传入一个Task对象来执行一次流程。
+    """
     target_components = Step
 
     context: dict = None
-    models: deque = None
-    scraper: Scraper = None
+    """dict: 共享字典用于同一个Suit下Steps之间的数据交换"""
 
-    def __init__(self, components: List[Union[Type[Component], Component]] = []):
+    scraper: Scraper = None
+    """Scraper: StepSuit的爬取类"""
+
+    def __init__(self, components: Sequence[Component] = None):
         self.context = dict()
-        self.models = deque()
+
         super().__init__(components)
 
-    def add_component(self, component: Union[Type[Step], Step]) -> Optional[Step]:
-        # fixed super method
-        step = ComponentSuit.add_component(self, component)
+    def add_component(self, component: Step) -> Optional[Step]:
+        """Override from Component.add_component
 
-        if step:
-            step.suit = self
-            return step
+        添加前需要将Suit的共用context赋给Step
+
+        Args:
+            component (Step): Step类
+
+        Returns:
+            Optional[Component]: 如果成功添加，则返回Step类本身；否则返回None。
+        """
+        if success_component := super().add_component(component):
+            success_component.__context = self.context
+            return success_component
 
     def set_scraper(self, scraper: Scraper) -> Scraper:
+        """Set a scraper.
+
+        如果Scraper类没有正常开启，则会自动调用scraper_attach
+
+        Args:
+            scraper (Scraper): Suit的scraper类。
+
+        Returns:
+            Scraper: Scraper类本身。
+        """
         assert isinstance(scraper, Scraper), 'Need Scraper instance.'
 
         self.scraper = scraper
 
         if not scraper.attached:
             scraper.scraper_attach()
-
         return self.scraper
 
-    def generate_scrapy_callable(self) -> Callable[[Task], bool]:
-        return lambda task: do_scrapy(self, task)
+    # def generate_scrapy_callable(self) -> Callable[[Task], bool]:
+    #     return lambda task: do_scrapy(self, task)
 
 
 def do_scrapy(suit: StepSuit, task: Task) -> bool:
@@ -68,28 +88,3 @@ def do_scrapy(suit: StepSuit, task: Task) -> bool:
                     suit.models.append(model)
 
     return True
-
-# from typing import Dict, Tuple, Literal
-# import random
-#
-# names: List[str] = ['Ana', 'John', 'Lil']
-#
-# line_count: Dict[str, int] = {
-#     'logger.py': 80,
-#     'engine.py': 200,
-#     'listener.py': 251,
-# }
-#
-#
-# def inner(contents: List[str]) -> bool:
-#     return True
-#
-#
-# inner: Callable[[List[str]], bool]
-#
-# point: Literal[int, int] = [314, 156]
-#
-#
-# def ran() -> Union[int, str]:
-#     return random.choice([134, 'message'])
-StepSuit.__annotations__

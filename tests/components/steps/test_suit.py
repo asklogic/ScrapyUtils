@@ -2,7 +2,7 @@ import unittest
 from typing import List
 from collections import deque
 
-from ScrapyUtils.components import StepSuit, Action, Step, ComponentSuit, Parse
+from ScrapyUtils.components import StepSuit, Action, Step, ComponentSuit, Parse, Component
 from ScrapyUtils.libs import RequestScraper, Task, Scraper, Model
 
 
@@ -32,99 +32,61 @@ class StepSuitTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.suit = StepSuit()
 
-    def test_sample(self):
-        assert issubclass(StepSuit, ComponentSuit)
-        assert isinstance(self.suit, ComponentSuit)
+        self.scraper = RequestScraper()
+        self.scraper.scraper_attach()
 
-    def test_attribute_components_default(self):
-        """Default attribute components: []"""
-
-        assert self.suit.components == []
+        self.scraper_without_attach = RequestScraper()
 
     def test_attribute_target_component_default(self):
-        """Default attribute target_component s: Step"""
+        """Default attribute target_components is Step"""
+        self.assertEqual(self.suit.target_components, Step)
 
-        assert self.suit.target_components == Step
+    def test_property_components_default(self):
+        """Default property components: []"""
+        self.assertEqual(self.suit.components, [])
 
-    def test_attribute_context_default(self):
-        """Default attribute target_components: {}"""
+    def test_property_context_default(self):
+        """Default context: {}"""
+        self.assertEqual(self.suit.context, {})
 
-        assert self.suit.context == {}
+    def test_property_scraper_default(self):
+        """Default scraper: None"""
+        self.assertEqual(self.suit.scraper, None)
 
-    def test_attribute_models_default(self):
-        """Default attribute models: deque"""
+    def test_method_add_component_wrong_type(self):
+        """Wrong type will return None"""
+        res = self.suit.add_component(Component())
 
-        assert self.suit.models == deque()
-
-    def test_attribute_scraper_default(self):
-        """Default attribute scraper: {}"""
-
-        assert self.suit.scraper == None
+        self.assertEqual(res, None)
 
     def test_method_set_scraper(self):
-        """Method set_scraper for suit"""
-        from ScrapyUtils.libs import RequestScraper
-
-        r = RequestScraper()
-        r.scraper_attach()
-
-        assert self.suit.scraper == None
-        self.suit.set_scraper(r)
-        assert self.suit.scraper == r
+        """set scraper"""
+        self.suit.set_scraper(self.scraper)
+        self.assertIs(self.scraper, self.suit.scraper)
 
     def test_method_set_scraper_auto_attach(self):
-        """Method set_scraper will attach scraper if hasn't attached."""
-        from ScrapyUtils.libs import RequestScraper
+        """set_scraper will attach scraper if scraper hasn't attached."""
+        self.assertFalse(self.scraper_without_attach.attached)
 
-        r = RequestScraper()
+        self.suit.set_scraper(self.scraper_without_attach)
 
-        assert self.suit.scraper == None
-        self.suit.set_scraper(r)
+        self.assertIs(self.suit.scraper, self.scraper_without_attach)
+        self.assertTrue(self.suit.scraper.attached)
+        self.assertTrue(self.scraper_without_attach.attached)
 
-        assert self.suit.scraper == r
-        assert self.suit.scraper.attached == True
+    def test_method_set_scraper_incorrect(self):
+        """set_scraper in wrong type"""
+        with self.assertRaises(AssertionError) as ae:
+            self.suit.set_scraper(RequestScraper)
+        self.assertIn('Need Scraper instance.', str(ae.exception))
 
     def test_method_add_component(self):
         """Method add_component will append step into suit.components"""
+        step = ActionTest()
+        res = self.suit.add_component(step)
 
-        assert self.suit.components == []
-        res = self.suit.add_component(ActionTest)
-
-        assert res
-
-        assert len(self.suit.components) == 1
-        assert self.suit.components[0].__class__ == ActionTest
-
-    def test_method_add_component_wrong_type(self):
-        """If add a wrong object the method will skip and return None"""
-
-        res = self.suit.add_component(dict())
-
-        assert not res
-        assert res == None
-
-    def test_method_generate(self):
-        """Method generate will return a function to process task."""
-        self.suit.add_component(CountAction)
-        self.suit.add_component(CountParse)
-        func = self.suit.generate_scrapy_callable()
-
-        func(task)
-
-        assert self.suit.components[0].count == 1
-        assert self.suit.components[1].count == 1
-
-    def test_method_generate_empty_component(self):
-        """Generate from a empty component"""
-        assert self.suit.components == []
-
-        func = self.suit.generate_scrapy_callable()
-
-        func(task)
-
-    def test_function_do_scrapy(self):
-        """To tests.step.test_do_scrapy module."""
-        assert True
+        self.assertIs(res, step)
+        self.assertEqual(len(self.suit.components), 1)
 
 
 if __name__ == '__main__':

@@ -84,9 +84,9 @@ class ComponentSuit(object):
 
     """
     components: List[Component] = None
-    """The component instances of this suit."""
+    """List[Component]: The component instances of this suit."""
     target_components: Type[Component] = Component
-    """The expect type of component"""
+    """Type[Component]: The expect type of component"""
 
     def __init__(self, components: Sequence[Component] = None):
         """Append all the components when it initial."""

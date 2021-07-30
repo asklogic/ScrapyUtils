@@ -152,6 +152,7 @@ class FireFoxScraper(
                  headless: bool = False,
                  js: bool = True,
                  image: bool = True,
+                 timeout: Union[int, float] = 10,
                  attach: bool = False
                  ):
         # execute init method.
@@ -160,6 +161,7 @@ class FireFoxScraper(
         self.set_js(js)
         self.set_headless(headless)
         self.set_image(image)
+        self.set_timeout(timeout)
 
         Scraper.__init__(self, attach)
 

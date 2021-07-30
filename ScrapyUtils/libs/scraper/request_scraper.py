@@ -13,11 +13,10 @@ Todo:
     * unittest.
 
 """
-
+from copy import deepcopy
 from typing import *
 
 from ScrapyUtils.libs.scraper import Scraper
-
 
 try:
     from requests import Session, Response
@@ -44,61 +43,46 @@ default_headers = {
 }
 
 
-class RequestSettingMixin(object):
-    _headers: Dict[str, str] = None
+class RequestsBase:
+    timeout: Union[int, float] = 10
+    headers: Dict[str, str] = {}
+    req: Session = None
+
+
+class RequestsKeepAliveMixin(RequestsBase):
     _keep_alive: bool = True
 
-    def __init__(self, headers: dict = None, **kwargs):
-        self.headers = headers if headers else default_headers.copy()
-
-        super().__init__(**kwargs)
-
-    @property
-    def headers(self) -> dict:
-        return self._headers
-
-    @headers.setter
-    def headers(self, value):
-        if type(value) is dict:
-            self._headers = value
-        else:
-            self._headers = default_headers
-
-    @property
-    def keep_alive(self):
-        return self._keep_alive
-
-    @keep_alive.setter
-    def keep_alive(self, value):
-        if value:
-            self.headers['Connection'] = 'keep-alive'
-            self._keep_alive = True
-
-        else:
-            self.headers['Connection'] = 'close'
-            self._keep_alive = False
+    def set_keep_alive(self, state: bool):
+        self._keep_alive = bool(state)
+        self.headers['Connection'] = 'keep-alive' if bool(state) else 'close'
 
 
-class RequestHttpMixin(object):
+class RequestsHeadersMixin(RequestsBase):
+    _headers = deepcopy(default_headers)
+
+    def set_headers(self, headers: Dict[str, str]):
+        self._headers = headers if headers else default_headers.copy()
+
+
+class RequestsTimeoutMixin(RequestsBase):
+    timeout = 10
+
+    def set_timeout(self, timeout: Union[int, float] = 10):
+        self.timeout = timeout
+
+
+class RequestHttpMixin(RequestsBase):
     current: Response = None
     req: Session = None
 
-    def get(self, url: str, params: Dict = None, timeout: int = None, status_limit: int = 300):
+    def get(self, url: str, params: Dict = None, timeout: int = None, status_limit: int = 400):
         timeout = timeout if timeout else self.timeout
-        # proxy = {
-        #     "http": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
-        #     "https": r"http://{0}".format(":".join((self.proxy.ip, self.proxy.port))),
-        # }
 
-        # TODO: proxy
-        # response = self.req.get(url=url, timeout=timeout, proxies=self.request_proxy_dict(), params=params,
-        #                         stream=False, verify=False)
         response = self.req.get(url=url, timeout=timeout, params=params, headers=self.headers,
                                 stream=False, verify=False)
 
         self.current = response
-
-        if response.status_code / 100 > status_limit / 100:
+        if response.status_code > status_limit:
             raise Exception('RequestScraper http status Exception. status code: ' + str(response.status_code))
 
         return response.text
@@ -112,29 +96,42 @@ class RequestHttpMixin(object):
                                  stream=False, verify=False)
         self.current = response
 
-        if response.status_code / 100 > status_limit / 100:
+        if response.status_code > status_limit:
             raise Exception('RequestScraper http status Exception. status code: ' + str(response.status_code))
 
         return response.text
 
 
 class RequestScraper(
-    RequestSettingMixin,
+    RequestsBase,
+    RequestsHeadersMixin,
+    RequestsKeepAliveMixin,
+    RequestsTimeoutMixin,
     RequestHttpMixin,
     Scraper
 ):
+    def __init__(self,
+                 headers: Dict[str, str] = None,
+                 keep_alive: bool = True,
+                 timeout: Union[int, float] = 10,
+                 attach: bool = False):
+        headers = headers if headers else default_headers.copy()
+
+        self.set_headers(headers)
+        self.set_keep_alive(keep_alive)
+        self.set_timeout(timeout)
+
+        Scraper.__init__(self, attach)
 
     def _attach(self) -> NoReturn:
         """
         Create the requests.Session instance.
 
         Modify session in RequestSettingMixin.
-        Session.keep_alive : True
         Session.headers : default_header
         """
         req = Session()
 
-        req.keep_alive = self.keep_alive
         req.headers = self.headers
 
         self.req = req

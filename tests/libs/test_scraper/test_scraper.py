@@ -47,7 +47,7 @@ class ScraperTestCase(unittest.TestCase):
 
         scraper.scraper_detach()
 
-        assert scraper.attached is False
+        assert scraper.attached is True
 
 
 

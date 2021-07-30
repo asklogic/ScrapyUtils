@@ -1,9 +1,6 @@
-# from .scraper import Scraper, FirefoxScraper, AppiumScraper, wait_block
-from .scraper import Scraper
+from ScrapyUtils.libs.scraper import Scraper
 from .scraper.request_scraper import RequestScraper
-from .scraper.firefox_scraper import FireFoxScraper
-
-from .scraper.firefox_scraper import set_firefox_path, set_driver_path
+from .scraper.firefox_scraper import FireFoxScraper, set_firefox_path, set_driver_path
 
 from .model import Model, field, Task, Proxy
 

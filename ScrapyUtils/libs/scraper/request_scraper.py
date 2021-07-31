@@ -46,7 +46,7 @@ default_headers = {
 class RequestsBase:
     timeout: Union[int, float] = 10
     headers: Dict[str, str] = {}
-    req: Session = None
+    session: Session = None
 
 
 class RequestsKeepAliveMixin(RequestsBase):
@@ -72,16 +72,16 @@ class RequestsTimeoutMixin(RequestsBase):
 
 
 class RequestHttpMixin(RequestsBase):
-    current: Response = None
-    req: Session = None
+    last_response: Response = None
+    session: Session = None
 
     def get(self, url: str, params: Dict = None, timeout: int = None, status_limit: int = 400):
         timeout = timeout if timeout else self.timeout
 
-        response = self.req.get(url=url, timeout=timeout, params=params, headers=self.headers,
-                                stream=False, verify=False)
+        response = self.session.get(url=url, timeout=timeout, params=params, headers=self.headers,
+                                    stream=False, verify=False)
 
-        self.current = response
+        self.last_response = response
         if response.status_code > status_limit:
             raise Exception('RequestScraper http status Exception. status code: ' + str(response.status_code))
 
@@ -92,9 +92,9 @@ class RequestHttpMixin(RequestsBase):
         timeout = timeout if timeout else self.timeout
 
         # TODO: proxy
-        response = self.req.post(url=url, data=data, json=json, timeout=timeout, params=params, headers=self.headers,
-                                 stream=False, verify=False)
-        self.current = response
+        response = self.session.post(url=url, data=data, json=json, timeout=timeout, params=params, headers=self.headers,
+                                     stream=False, verify=False)
+        self.last_response = response
 
         if response.status_code > status_limit:
             raise Exception('RequestScraper http status Exception. status code: ' + str(response.status_code))
@@ -103,7 +103,6 @@ class RequestHttpMixin(RequestsBase):
 
 
 class RequestScraper(
-    RequestsBase,
     RequestsHeadersMixin,
     RequestsKeepAliveMixin,
     RequestsTimeoutMixin,
@@ -130,17 +129,17 @@ class RequestScraper(
         Modify session in RequestSettingMixin.
         Session.headers : default_header
         """
-        req = Session()
+        session = Session()
 
-        req.headers = self.headers
+        session.headers = self.headers
 
-        self.req = req
+        self.session = session
 
     def _detach(self) -> NoReturn:
         """
         Close the requests.Session adapters.
         """
-        self.req.close()
+        self.session.close()
 
     def _clear(self):
         """
@@ -152,4 +151,4 @@ class RequestScraper(
         """
         requests.Session.
         """
-        return self.req
+        return self.session

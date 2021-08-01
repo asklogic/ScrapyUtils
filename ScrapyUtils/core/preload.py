@@ -27,7 +27,6 @@
 Todo:
     * 异常处理: Python加载异常（包含代码格式、缺少包）
 """
-from importlib import import_module
 from os import path
 from typing import List, Type, NoReturn
 from types import ModuleType
@@ -100,6 +99,10 @@ def collect_processors(module: ModuleType) -> List[Type[Processor]]:
     # sort by priority
     current_processor.sort(key=lambda x: x.priority, reverse=True)
     return current_processor
+
+
+def collect_setting(module: ModuleType) -> NoReturn:
+    pass
 
 
 def initial_configure(settings_module: ModuleType) -> NoReturn:

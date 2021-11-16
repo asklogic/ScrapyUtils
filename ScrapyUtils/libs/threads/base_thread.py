@@ -183,10 +183,15 @@ class BaseThread(Thread):
 
 
 class BasicThread(threading.Thread):
-    """基础线程类"""
+    """最简单的基础线程类
+    
+    只提供基本的启动和循环方法，以及终止循环和异常处理的方法。
+
+    要使用需要重写do_loop函数。
+    """
 
     def __init__(self, source, delay: int = 1, daemon: Optional[bool] = ...) -> None:
-        """屏蔽一些Thread类的initial参数."""
+        """屏蔽了大多数Thread类的init参数"""
 
         self._source = source
         self.delay = delay
@@ -194,6 +199,8 @@ class BasicThread(threading.Thread):
 
     @abstractmethod
     def on_start(self):
+        """on_start 线程类开始时执行的方法。
+        """
         pass
 
     def start(self) -> None:
@@ -205,20 +212,34 @@ class BasicThread(threading.Thread):
         pass
 
     @abstractmethod
-    def continue_loop(self) -> bool:
+    def break_condition(self) -> bool:
+        """break_condition 退出循环的条件，返回为True则退出循环进而退出线程。每次循环前都会执行此方法。
+
+        Returns:
+            bool: 是否退出循环的标志，如果返回值布尔运算为True则退出。
+        """
         pass
 
     @abstractmethod
-    def exception_loop(self, exception: Exception):
+    def exception_callback(self, exception: Exception):
+        """exception_callback 处理异常的方法，当do_loop出现异常时执行此方法。
+
+        Args:
+            exception (Exception): do_loop抛出的异常。
+        """
         pass
 
     def run(self) -> None:
         while True:
-            if self.continue_loop():
+            # 先检查是否退出循环
+            if self.break_condition():
                 break
+            # 执行do_loop方法
             try:
                 self.do_loop()
+            # 如果捕获异常
             except Exception as e:
-                self.exception_loop(e)
+                # 执行相关方法
+                self.exception_callback(e)
             finally:
                 time.sleep(max(0, self.delay))

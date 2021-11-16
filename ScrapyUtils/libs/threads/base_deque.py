@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Example Google style docstrings.
+"""基于Python原生双端队列的消费者、生产者类。
 
-Todo:
-    * For module TODOs
-    
+双端队列可以非常简单的挤出队列中的旧数据
 """
 
 from abc import abstractmethod
@@ -32,6 +30,7 @@ class Consumer(DequeThread):
 
 
 class Producer(DequeThread):
+
     @abstractmethod
     def producing(self, item: Any) -> NoReturn:
         pass

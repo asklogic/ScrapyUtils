@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Example Google style docstrings.
+"""基于Python原生队列的消费者、生产者类。
 
-Todo:
-    * For module TODOs
-    
+兼容各种与原生队列相同的数据源
 """
 from abc import abstractmethod
-from typing import Optional, Any, NoReturn
+from typing import Any, NoReturn
 from queue import Queue
 
 from .base_thread import BasicThread
@@ -31,6 +29,7 @@ class Consumer(QueueThread):
 
 
 class Producer(QueueThread):
+
     @abstractmethod
     def producing(self, item: Any) -> NoReturn:
         pass

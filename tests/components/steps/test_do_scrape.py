@@ -10,7 +10,7 @@ class CountAction(Action):
     count = 0
 
     def scraping(self, task: Task, scraper: Scraper) -> Optional[str]:
-        self.count +=1
+        self.count += 1
 
 
 class CountParse(Parse):
@@ -19,8 +19,10 @@ class CountParse(Parse):
     def parsing(self, content: str) -> Union[Iterable[Model], Sequence[Model]]:
         self.count += 1
 
+
 class ErrorAction(Action):
     priority = 550
+
     def scraping(self, task: Task, scraper: Scraper) -> Optional[str]:
         assert False
 
@@ -40,7 +42,7 @@ class DoScrapeTestCase(unittest.TestCase):
         self.suit.add_component(self.count_action)
         self.suit.add_component(self.count_parse)
 
-        execute_number = random.randint(5,10)
+        execute_number = random.randint(5, 10)
 
         [self.suit.do_scrape(self.task) for x in range(execute_number)]
 
@@ -55,8 +57,6 @@ class DoScrapeTestCase(unittest.TestCase):
 
         with self.assertRaises(AssertionError) as ae:
             self.suit.do_scrape(self.task)
-
-
 
 
 if __name__ == '__main__':

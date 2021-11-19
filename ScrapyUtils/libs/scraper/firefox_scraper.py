@@ -16,7 +16,7 @@ from typing import Set, Union, NoReturn
 from selenium.webdriver import Firefox, FirefoxOptions
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
-from ScrapyUtils.libs.scraper import Scraper
+from ._base_scraper import Scraper
 
 # default logger
 logger = getLogger('firefox')

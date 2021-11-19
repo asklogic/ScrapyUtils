@@ -21,7 +21,7 @@ from types import MethodType
 from queue import Queue, Full
 from time import sleep
 
-from ScrapyUtils.libs.threads import BaseThread
+from ScrapyUtils.libs.threads.base_thread import BaseThread
 
 logger = getLogger('producing')
 

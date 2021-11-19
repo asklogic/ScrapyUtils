@@ -1,5 +1,1 @@
-from logging import getLogger
-
-logger = getLogger('core')
-
-from .preload import collect_steps, collect_processors, initial_configure
+from .preload import collect_action, collect_parse, collect_processors, initial_configure

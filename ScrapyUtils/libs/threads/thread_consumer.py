@@ -21,7 +21,7 @@ from queue import Queue, Empty
 from threading import Lock, Event
 from time import sleep
 
-from . import BaseThread
+from .base_thread import BaseThread
 
 logger = getLogger('consumer')
 

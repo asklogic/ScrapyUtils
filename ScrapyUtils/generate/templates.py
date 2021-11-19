@@ -3,13 +3,13 @@
 
 # action
 
-action_template = """from ScrapyUtils.components import ActionStep, active
+action_template = """from ScrapyUtils.components import Action, active
 from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper
 from ScrapyUtils.common import Task
 
 
 @active
-class ${class_name}Action(ActionStep):
+class ${class_name}Action(Action):
     def scraping(self, task, scraper):
         content = scraper.get(url=task.url)
 
@@ -23,7 +23,7 @@ class ${class_name}Action(ActionStep):
 
 parse_template = """from typing import Generator, List
 
-from ScrapyUtils.components import ParseStep, active, set_active
+from ScrapyUtils.components import Parse, active, set_active
 from .model import *
 
 from ScrapyUtils.common import HiddenInputParse
@@ -31,7 +31,7 @@ from ScrapyUtils.tool import xpathParse, xpathParseList, XpathParser
 
 
 @active
-class ${class_name}Parse(ParseStep):
+class ${class_name}Parse(Parse):
 
     def parsing(self, content: str) -> Model or Generator[Model]:
         parser = XpathParser(content)

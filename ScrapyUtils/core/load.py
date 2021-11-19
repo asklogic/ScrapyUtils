@@ -22,7 +22,7 @@ from ScrapyUtils import configure
 
 def _build_suits() -> Tuple[List[StepSuit], ProcessorSuit]:
     step_suits = [StepSuit(steps=configure.steps_class) for i in range(configure.THREAD)]
-    processor_suit = ProcessorSuit(configure.processors_class)
+    processor_suit = ProcessorSuit(configure.processor_classes)
 
     return step_suits, processor_suit
 
@@ -35,7 +35,7 @@ def _build_scraper() -> List[Scraper]:
 def scheme_initial(**command_kwargs):
     # build suits
     step_suits = [StepSuit(steps=configure.steps_class) for i in range(configure.THREAD)]
-    processor_suit = ProcessorSuit(configure.processors_class)
+    processor_suit = ProcessorSuit(configure.processor_classes)
 
 
 default_flag = True

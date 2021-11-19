@@ -27,7 +27,7 @@ def generate_tasks(**kwargs):
 get task from step 2 and use scraper to download page.
 ```python
 @active
-class DemoAction(ActionStep):
+class DemoAction(Action):
     def scraping(self, task: Task):
         scraper: Scraper = self.scraper
         return scraper.get(url=task.url)
@@ -40,7 +40,7 @@ class DemoAction(ActionStep):
 get content from step 3 and parse it, then yield model objects.
 ```python
 @active
-class DemoAction(ActionStep):
+class DemoAction(Action):
     def scraping(self, task: Task):
         scraper: Scraper = self.scraper
         return scraper.get(url=task.url)

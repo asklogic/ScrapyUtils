@@ -16,7 +16,7 @@ Todo:
 from copy import deepcopy
 from typing import *
 
-from ScrapyUtils.libs.scraper import Scraper
+from ._base_scraper import Scraper
 
 try:
     from requests import Session, Response

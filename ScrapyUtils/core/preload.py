@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Preload module to load components and other configuration from a python module.
 
-包含了加载一个Scheme包的各式加载函数，其主要存在于一个项目的__init__.py文件中。
+包含了加载一个Scrape Scheme包的各式加载函数，其主要存在于一个项目的__init__.py文件中。
 
 只需要import指定的包就可以自动加载各项设置、组件components和其他函数到全局变量中，以用于各类初始化函数中。
 
@@ -31,7 +31,7 @@ from os import path
 from typing import List, Type, NoReturn
 from types import ModuleType
 
-from ScrapyUtils.components import Component, Step, ActionStep, ParseStep, Processor
+from ScrapyUtils.components import Component, Action, Parse, Processor
 
 from ScrapyUtils import configure
 
@@ -63,46 +63,33 @@ def _load_components(module: ModuleType, component_type: Type[Component] = Compo
     return components
 
 
-def collect_steps(*modules: ModuleType) -> List[Type[Step]]:
-    """Load Step classes from some python modules.
+def _collect_base(module: ModuleType, config_name: str, collect_type: Type[Component]) -> NoReturn:
+    """The common function for collect component.
 
-    Returns:
-        List[Type[Step]]: The list of Step classes.
+    Load the target components from a module the save them in module configure.
     """
-    current_steps = list()
-    for module in modules:
-        current_steps.extend(_load_components(module, ActionStep))
-        current_steps.extend(_load_components(module, ParseStep))
+    target_components = _load_components(module, collect_type)
 
-    # duplication steps
-    current_steps = list(set(current_steps))
+    # filter deactivated components
+    activated_components = [x for x in target_components if x.active]
 
-    # remove inactive steps
-    current_steps = [x for x in current_steps if x.active]
-
-    # sort by priority
-    current_steps.sort(key=lambda x: x.priority, reverse=True)
-    return current_steps
+    setattr(configure, config_name, activated_components)
 
 
-def collect_processors(module: ModuleType) -> List[Type[Processor]]:
-    """Load Processor classes from some python modules.
-
-    Returns:
-        List[Type[Processor]]: The list of Processor classes.
-    """
-    current_processor = _load_components(module, Processor)
-
-    # remove inactive processors
-    current_processor = [x for x in current_processor if x.active]
-
-    # sort by priority
-    current_processor.sort(key=lambda x: x.priority, reverse=True)
-    return current_processor
+# The collect functions:
+def collect_action(module: ModuleType) -> NoReturn:
+    """Collect Action"""
+    _collect_base(module, 'action_classes', Action)
 
 
-def collect_setting(module: ModuleType) -> NoReturn:
-    pass
+def collect_parse(module: ModuleType) -> NoReturn:
+    """Collect Parse"""
+    _collect_base(module, 'parse_classes', collect_type=Parse)
+
+
+def collect_processors(module: ModuleType) -> NoReturn:
+    """Collect Processor"""
+    _collect_base(module, 'processor_classes', Processor)
 
 
 def initial_configure(settings_module: ModuleType) -> NoReturn:

@@ -1,23 +1,22 @@
-from typing import Callable, Dict, List, Type, Union, Iterator
+from typing import Callable, Dict, List, Type, Union, Iterator, Optional
 from types import ModuleType
 
 from os import path
 from queue import Queue
 
-from ScrapyUtils.components import Component, Step, StepSuit, ActionStep, ParseStep, Processor, ProcessorSuit
-from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper, Task
-
-from ScrapyUtils.libs import Producer, Consumer
+from ScrapyUtils.components import Component, Step, StepSuit, Action, Parse, Processor, ProcessorSuit
+from ScrapyUtils.libs import Scraper, Task
 
 # preload
 # ----------------------------------------------------------------------
 # callable
-tasks_callable: Iterator[Task] = None
-scraper_callable: Callable = None
+tasks_callable: Optional[Iterator[Task]] = None
+scraper_callable: Optional[Callable] = None
 
 # components
-processors_class: List[Type[Step]] = None
-steps_class: List[Type[Step]] = None
+action_classes: List[Type[Action]] = []
+parse_classes: List[Type[Parse]] = []
+processor_classes: List[Type[Step]] = []
 
 # initial
 # ----------------------------------------------------------------------
@@ -31,9 +30,6 @@ step_suits: List[StepSuit] = None
 processor_suit: ProcessorSuit = None
 
 # models_pipeline: Pipeline = None
-
-# other
-proxy: Producer = None
 
 # settings variable
 # ----------------------------------------------------------------------

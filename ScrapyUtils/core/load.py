@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Initial module to initial scheme's components and other settings.
+"""Step Load - Load the components and the scrapers for scraping.
+
+1. 初始化Scraper
 
 加载scheme中的各组件以及scraper和task。
 执行 generate_tasks 和 generate_scraper 函数，加载至configure中。
@@ -12,74 +14,34 @@ Todo:
     * 异常处理: Python加载异常（包含代码格式、缺少包）
 """
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import *
 
-from ScrapyUtils.components import StepSuit, ProcessorSuit
-from ScrapyUtils.libs import Scraper, RequestScraper
-
+from ScrapyUtils.libs.scraper.request_scraper import RequestScraper, Scraper
 from ScrapyUtils import configure
+from queue import PriorityQueue
 
 
-def _build_suits() -> Tuple[List[StepSuit], ProcessorSuit]:
-    step_suits = [StepSuit(steps=configure.steps_class) for i in range(configure.THREAD)]
-    processor_suit = ProcessorSuit(configure.processor_classes)
+def _load_scraper():
+    """initial scrapers"""
+    scrapers = []
 
-    return step_suits, processor_suit
+    with ThreadPoolExecutor(configure.THREAD) as pool:
+        future = pool.submit(configure.scraper_callable)
+        future.add_done_callback(lambda f: scrapers.append(f.result()))
+    pool.shutdown(wait=True)
 
+    # filter scraper
+    scrapers = [scraper for scraper in scrapers if isinstance(scraper, Scraper)]
 
-def _build_scraper() -> List[Scraper]:
-    gen = _default_scraper(configure.scraper_callable)
-    scrapers = list_builder(gen, configure.THREAD, timeout=configure.SCRAPER_TIMEOUT)
+    # TODO: scraper build failed
+    if not scrapers:
+        scrapers = [RequestScraper() for _ in range(configure.THREAD)]
+        [scraper.scraper_attach() for scraper in scrapers]
 
+    configure.scrapers = scrapers
 
-def scheme_initial(**command_kwargs):
-    # build suits
-    step_suits = [StepSuit(steps=configure.steps_class) for i in range(configure.THREAD)]
-    processor_suit = ProcessorSuit(configure.processor_classes)
-
-
-default_flag = True
-
-
-def _default_scraper(scraper_callable) -> Callable:
-    def inner():
-        current_scraper = None
-        global default_flag
-        try:
-            current_scraper = scraper_callable()
-            assert isinstance(current_scraper, Scraper)
-        except Exception as e:
-            current_scraper = RequestScraper()
-            if default_flag:
-                # TODO: wtf is that?
-                # log.exception('Scraper', e)
-                # log.warning('able default RequestScraper.', 'components')
-                log.warning('able default RequestScraper.')
-                default_flag = False
-        finally:
-            if not current_scraper.activated:
-                current_scraper.scraper_activate()
-
-        return current_scraper
-
-    return inner
-
-
-def list_builder(invoker: Callable, number: int, result: list = None, timeout=10):
-    def inner():
-        res = invoker()
-        result.append(res)
-
-    with ThreadPoolExecutor(number) as executor:
-        futures = [executor.submit(inner) for x in range(number)]
-        [x.result(timeout) for x in futures]
-
-    return result
+def _load_tasks():
+    """generate tasks"""
 
 
 if __name__ == '__main__':
-    def f():
-        pass
-    res = list_builder(f,5, [])
-
-    print(res)
+    pass

@@ -23,11 +23,11 @@ processor_classes: List[Type[Step]] = []
 
 # instances
 tasks: Queue = Queue()
-scrapers: List[Scraper] = None
+scrapers: List[Scraper] = []
 
 # suits
-step_suits: List[StepSuit] = None
-processor_suit: ProcessorSuit = None
+step_suits: Optional[List[StepSuit]] = None
+processor_suit: Optional[ProcessorSuit] = None
 
 # models_pipeline: Pipeline = None
 

@@ -30,26 +30,11 @@ class StepSuit(ComponentSuit):
     scraper: Scraper = None
     """Scraper: StepSuit的爬取类"""
 
-    def __init__(self, components: Sequence[Component] = None):
+    def __init__(self, *components: Union[Type[Component], Component]):
         self.context = dict()
         self.step_result_list = list()
 
-        super().__init__(components)
-
-    def add_component(self, component: Step) -> Optional[Step]:
-        """Override from Component.add_component
-
-        添加前需要将Suit的共用context赋给Step
-
-        Args:
-            component (Step): Step类
-
-        Returns:
-            Optional[Component]: 如果成功添加，则返回Step类本身；否则返回None。
-        """
-        if success_component := super().add_component(component):
-            success_component.__context = self.context
-            return success_component
+        super().__init__(*components)
 
     def set_scraper(self, scraper: Scraper) -> Scraper:
         """Set a scraper.
@@ -64,14 +49,40 @@ class StepSuit(ComponentSuit):
         """
         assert isinstance(scraper, Scraper), 'Need Scraper instance.'
 
-        self.scraper = scraper
-
         if not scraper.attached:
             scraper.scraper_attach()
+
+        self.scraper = scraper
         return self.scraper
 
-    # def generate_scrapy_callable(self) -> Callable[[Task], bool]:
-    #     return lambda task: do_scrapy(self, task)
+    def generate(self, task: Task):
+        task_deque = deque()
+        self.components: List[Step]
+
+        [task_deque.append(_.execute) for _ in self.components]
+
+        current_content = ''
+        models = deque()
+
+        while len(task_deque):
+            execute_callback = task_deque.popleft()
+
+            next_execute, content, yield_models = execute_callback(task=task,
+                                                                   scraper=self.scraper,
+                                                                   content=current_content)
+
+            # 指定下一个事件
+            if next_execute:
+                task_deque.appendleft(next_execute)
+
+            # 如果返回的是页面
+            if content is not None:
+                current_content = content
+
+            # case:
+            # 如果返回的
+            if yield_models:
+                models.extend(yield_models)
 
     def do_scrape(self, task: Task):
 
@@ -94,21 +105,3 @@ class StepSuit(ComponentSuit):
 
                 parse_result = step.parsing(content=current_content)
                 self.step_result_list.append((index, step, parse_result))
-
-# def do_scrapy(suit: StepSuit, task: Task) -> bool:
-#     current_content = ''
-#
-#     for step in suit.components:
-#         # case: action
-#         if isinstance(step, Action):
-#             current_content = step.scraping(task, suit.scraper)
-#             if current_content:
-#                 current_content = current_content
-#         # case: parse
-#         elif isinstance(step, Parse):
-#             parsed = step.parsing(current_content)
-#             if parsed:
-#                 for model in parsed:
-#                     suit.models.append(model)
-#
-#     return True

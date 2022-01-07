@@ -8,7 +8,7 @@ Todo:
     * binary or options.binary
 """
 from abc import abstractmethod
-from typing import NoReturn, Any
+from typing import NoReturn, Any, Union
 
 
 class Scraper(object):
@@ -40,7 +40,7 @@ class Scraper(object):
         """
         return self._attached
 
-    def scraper_attach(self) -> bool:
+    def scraper_attach(self) -> 'Scraper':
         """
         Attach the driver.
 
@@ -58,9 +58,9 @@ class Scraper(object):
             else:
                 self._attached = True
 
-        return self.attached
+        return self
 
-    def scraper_detach(self) -> bool:
+    def scraper_detach(self) -> 'Scraper':
         """
         Detach the driver.
 
@@ -77,9 +77,9 @@ class Scraper(object):
             else:
                 self._attached = False
 
-        return self.attached
+        return self
 
-    def scraper_clear(self) -> bool:
+    def scraper_clear(self) -> 'Scraper':
         """
         clear the driver.
 
@@ -92,15 +92,15 @@ class Scraper(object):
             self._clear()
         except Exception as e:
             print(e)
-            return False
-        else:
-            return True
+        finally:
+            return self
 
-    def scraper_restart(self) -> NoReturn:
-        """Restart the driver.
-        """
+    def scraper_restart(self) -> 'Scraper':
+        """Restart the driver"""
         self.scraper_detach()
         self.scraper_attach()
+
+        return self
 
     # abstract methods
 
@@ -129,28 +129,13 @@ class Scraper(object):
         """
 
 
+# common mixin
 class TimeoutMixin(object):
     """Common Mixin: Timeout
 
     提供了基本的timeout属性，默认值为10。
-
-    通过 @TimeoutMixin.timeout.setter 来重写setter。
-    Attributes:
-        timeout (int): Default timeout value(int).
-
     """
+    timeout: int = 10
 
-    _timeout: int = 10
-
-    @property
-    def timeout(self) -> int:
-        return self._timeout
-
-    @timeout.setter
-    def timeout(self, value):
-        """Default timeout setter
-
-        Args:
-            value (int): Value of Timeout.
-        """
-        self._timeout = value
+    def set_timeout(self, timeout: Union[int, float] = 10):
+        self.timeout = timeout

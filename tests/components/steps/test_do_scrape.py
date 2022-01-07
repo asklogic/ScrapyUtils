@@ -39,24 +39,22 @@ class DoScrapeTestCase(unittest.TestCase):
 
     def test_do_scrape(self):
         """Method do scrape will execute all the step."""
-        self.suit.add_component(self.count_action)
-        self.suit.add_component(self.count_parse)
+        suit = StepSuit(self.count_action, self.count_parse)
 
         execute_number = random.randint(5, 10)
 
-        [self.suit.do_scrape(self.task) for x in range(execute_number)]
+        [suit.do_scrape(self.task) for x in range(execute_number)]
 
         self.assertEqual(self.count_action.count, execute_number)
         self.assertEqual(self.count_parse.count, execute_number)
 
     def test_do_scrape_error_step(self):
         """Raise the exception if steps raise."""
-        self.suit.add_component(self.count_action)
-        self.suit.add_component(self.error_action)
-        self.suit.add_component(self.count_parse)
+
+        suit = StepSuit(self.count_action, self.error_action, self.count_parse)
 
         with self.assertRaises(AssertionError) as ae:
-            self.suit.do_scrape(self.task)
+            suit.do_scrape(self.task)
 
 
 if __name__ == '__main__':

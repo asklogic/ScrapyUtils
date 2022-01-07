@@ -5,6 +5,7 @@ from ScrapyUtils.libs.scraper.firefox_scraper import set_firefox_path, set_drive
 from tests.libs.test_scraper import cookie_test_url
 
 
+@unittest.skip
 class MyTestCase(unittest.TestCase):
     scraper: FireFoxScraper
 

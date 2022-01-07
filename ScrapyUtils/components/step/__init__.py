@@ -21,6 +21,7 @@ Package结构:
 """
 from abc import abstractmethod
 from ScrapyUtils.components import Component
+from ...libs import Task, Scraper
 
 
 class Step(Component):
@@ -45,8 +46,16 @@ class Step(Component):
         """
         return self._context
 
+    @abstractmethod
+    def execute_step(self, task: Task, scraper: Scraper, content):
+        pass
 
-# relative
+    def execute_wrapper(self, task: Task, scraper: Scraper, content):
+        self.execute_step()
+
+        pass
+
+
 from .action import Action
 from .parse import Parse
 from .suit import StepSuit

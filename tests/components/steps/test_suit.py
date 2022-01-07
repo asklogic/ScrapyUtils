@@ -3,14 +3,12 @@ from typing import List
 from collections import deque
 
 from ScrapyUtils.components import StepSuit, Action, Step, ComponentSuit, Parse, Component
-from ScrapyUtils.libs import RequestScraper, Task, Scraper, Model
+from ScrapyUtils.libs import Task, Scraper, Model
+from ScrapyUtils.libs.scraper.request_scraper import RequestScraper
 
 
 class ActionTest(Action):
     pass
-
-
-
 
 
 task = Task(url='1', param=5)
@@ -26,10 +24,6 @@ class StepSuitTestCase(unittest.TestCase):
 
         self.scraper_without_attach = RequestScraper()
 
-    def test_attribute_target_component_default(self):
-        """Default attribute target_components is Step"""
-        self.assertEqual(self.suit.target_components, Step)
-
     def test_property_components_default(self):
         """Default property components: []"""
         self.assertEqual(self.suit.components, [])
@@ -41,12 +35,6 @@ class StepSuitTestCase(unittest.TestCase):
     def test_property_scraper_default(self):
         """Default scraper: None"""
         self.assertEqual(self.suit.scraper, None)
-
-    def test_method_add_component_wrong_type(self):
-        """Wrong type will return None"""
-        res = self.suit.add_component(Component())
-
-        self.assertEqual(res, None)
 
     def test_method_set_scraper(self):
         """set scraper"""
@@ -68,14 +56,6 @@ class StepSuitTestCase(unittest.TestCase):
         with self.assertRaises(AssertionError) as ae:
             self.suit.set_scraper(RequestScraper)
         self.assertIn('Need Scraper instance.', str(ae.exception))
-
-    def test_method_add_component(self):
-        """Method add_component will append step into suit.components"""
-        step = ActionTest()
-        res = self.suit.add_component(step)
-
-        self.assertIs(res, step)
-        self.assertEqual(len(self.suit.components), 1)
 
     def test_method_do_scrape(self):
         """Unittest case for do_scrape in tests/components/steps/test_do_scrape.py"""

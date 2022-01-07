@@ -14,9 +14,13 @@ Todo:
 
 """
 from copy import deepcopy
+from logging import getLogger
 from typing import *
 
-from ._base_scraper import Scraper
+from ._base_scraper import Scraper, TimeoutMixin
+
+logger = getLogger(__name__)
+"""Common logger"""
 
 try:
     from requests import Session, Response
@@ -28,8 +32,7 @@ try:
     adapters.DEFAULT_RETRIES = 5
     packages.urllib3.disable_warnings(InsecureRequestWarning)
 except ImportError as e:
-    # TODO: libs log
-    pass
+    logger.error('Import error', exc_info=e)
 
 default_headers = {
     'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
@@ -41,6 +44,7 @@ default_headers = {
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
 }
+"""Default requests header"""
 
 
 class RequestsBase:
@@ -50,34 +54,27 @@ class RequestsBase:
 
 
 class RequestsKeepAliveMixin(RequestsBase):
-    _keep_alive: bool = True
+    keep_alive: bool = True
 
     def set_keep_alive(self, state: bool):
-        self._keep_alive = bool(state)
+        self.keep_alive = bool(state)
         self.headers['Connection'] = 'keep-alive' if bool(state) else 'close'
 
 
 class RequestsHeadersMixin(RequestsBase):
-    _headers = deepcopy(default_headers)
+    headers = deepcopy(default_headers)
 
     def set_headers(self, headers: Dict[str, str]):
-        self._headers = headers if headers else default_headers.copy()
-
-
-class RequestsTimeoutMixin(RequestsBase):
-    timeout = 10
-
-    def set_timeout(self, timeout: Union[int, float] = 10):
-        self.timeout = timeout
+        self.headers = headers if headers else default_headers.copy()
 
 
 class RequestHttpMixin(RequestsBase):
     last_response: Response = None
-    session: Session = None
 
-    def get(self, url: str, params: Dict = None, timeout: int = None, status_limit: int = 400):
+    def get(self, url: str, params: Dict = None, timeout: int = None, status_limit: int = 400) -> str:
         timeout = timeout if timeout else self.timeout
 
+        # TODO: Proxy
         response = self.session.get(url=url, timeout=timeout, params=params, headers=self.headers,
                                     stream=False, verify=False)
 
@@ -88,11 +85,12 @@ class RequestHttpMixin(RequestsBase):
         return response.text
 
     def post(self, url: str, params: Dict = None, data: Dict = None, json=None, timeout: int = None,
-             status_limit: int = 300):
+             status_limit: int = 300) -> str:
         timeout = timeout if timeout else self.timeout
 
         # TODO: proxy
-        response = self.session.post(url=url, data=data, json=json, timeout=timeout, params=params, headers=self.headers,
+        response = self.session.post(url=url, data=data, json=json, timeout=timeout, params=params,
+                                     headers=self.headers,
                                      stream=False, verify=False)
         self.last_response = response
 
@@ -105,8 +103,8 @@ class RequestHttpMixin(RequestsBase):
 class RequestScraper(
     RequestsHeadersMixin,
     RequestsKeepAliveMixin,
-    RequestsTimeoutMixin,
     RequestHttpMixin,
+    TimeoutMixin,
     Scraper
 ):
     def __init__(self,

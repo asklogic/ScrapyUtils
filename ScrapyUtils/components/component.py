@@ -76,19 +76,6 @@ class Component(object, metaclass=ComponentMeta):
         """
         pass
 
-    @abstractmethod
-    def ready_state(self) -> bool:
-        """Return True if it ready to work.
-
-        通常情况下应该会执行多次。
-        """
-        return True
-
-    @abstractmethod
-    def exit_state(self) -> bool:
-        """Return True if it has exit."""
-        return True
-
 
 class ComponentSuit(object):
     """The collection for series components.
@@ -101,32 +88,19 @@ class ComponentSuit(object):
     target_components: Type[Component] = Component
     """Type[Component]: The expect type of component"""
 
-    def __init__(self, components: Sequence[Component] = None):
-        """Append all the components when it initial."""
-        self.components = []
-        components = components if components else []
+    def __init__(self, *components: Union[Type[Component], Component]):
+        """Initial components and add into components list"""
 
-        for component in components:
-            self.add_component(component)
+        self.components = [
+            component if isinstance(component, Component) else component() for component in components
+            if
+            # or 短路过滤掉
+            isinstance(component, Component)
+            or
+            issubclass(component, Component)
+        ]
+
         self.components.sort(key=lambda x: x.priority, reverse=True)
-
-    def add_component(self, component: Component) -> Optional[Component]:
-        """Add a component instance or class into suit.
-
-        向suit中添加一个组件对象。
-
-        返回对象本身代表成功添加，返回None代表传入了错误的类型导致没有成功添加。
-
-        Args:
-            component (Union[Type[Component], Component]): The component instance.
-
-        Returns:
-            Optional[Component]: If success, return the component instance.
-        """
-        if isinstance(component, self.target_components):
-            self.components.append(component)
-            self.components.sort(key=lambda x: x.priority, reverse=True)
-            return component
 
     def suit_start(self) -> List[Component]:
         """Start all the components.
@@ -173,7 +147,7 @@ def active(component_class: Type[Component]):
 
 
 def set_active(component_class: Type[Component]):
-    """单独的激活函数，将组件类手动开启。
+    """单独的组件激活函数，将组件类手动开启。
 
     Args:
         component_class (Type[Component]): 将要被开启的组件。

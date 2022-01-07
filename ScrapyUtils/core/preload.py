@@ -31,7 +31,7 @@ from os import path
 from typing import List, Type, NoReturn
 from types import ModuleType
 
-from ScrapyUtils.components import Component, Action, Parse, Processor
+from ScrapyUtils.components import Component, Action, Processor
 
 from ScrapyUtils import configure
 
@@ -80,11 +80,6 @@ def _collect_base(module: ModuleType, config_name: str, collect_type: Type[Compo
 def collect_action(module: ModuleType) -> NoReturn:
     """Collect Action"""
     _collect_base(module, 'action_classes', Action)
-
-
-def collect_parse(module: ModuleType) -> NoReturn:
-    """Collect Parse"""
-    _collect_base(module, 'parse_classes', collect_type=Parse)
 
 
 def collect_processors(module: ModuleType) -> NoReturn:

@@ -14,12 +14,15 @@ from logging import getLogger
 from typing import Set, Union, NoReturn
 
 from selenium.webdriver import Firefox, FirefoxOptions
+from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
-from ._base_scraper import Scraper
+# from ._base_scraper import Scraper
+from ScrapyUtils.libs.scraper import Scraper
 
 # default logger
-logger = getLogger('firefox')
+logger = getLogger('__name__')
+"""Common logger"""
 
 global_webdriver_set: Set[Firefox] = set()
 """set: The set to store all the webdriver instances."""
@@ -42,7 +45,7 @@ def set_firefox_path(path: str) -> NoReturn:
 
     The firefox will attach the browser with this path.
 
-    Default value is "{project}/firefox/firefox"
+    Default value is "{work_path}/firefox/firefox"
 
     Args:
         path (str): The path of browser.
@@ -56,7 +59,7 @@ def set_driver_path(path: str) -> NoReturn:
 
     The driver_path is the path of webdriver.
 
-    Default value is "{project}/firefox/geckodriver"
+    Default value is "{work_path}/firefox/geckodriver"
 
     Args:
         path (str): The path of geckodriver
@@ -125,7 +128,6 @@ class FirefoxHttpMixin(FireFoxBase):
 
 
 class FirefoxBinaryBase(FireFoxBase, FireFoxOptionsBase):
-    binary: FirefoxBinary = None
     DRIVER_PATH: str = None
 
     def __init__(self):
@@ -133,8 +135,11 @@ class FirefoxBinaryBase(FireFoxBase, FireFoxOptionsBase):
         assert os.path.isfile(FIREFOX_PATH), f'Path: {FIREFOX_PATH} no firefox file.'
 
         self.options = FirefoxOptions()
-        self.binary = FirefoxBinary(FIREFOX_PATH)
         self.driver_path = DRIVER_PATH
+
+    @property
+    def binary(self) -> FirefoxBinary:
+        return FirefoxBinary(FIREFOX_PATH)
 
 
 class FireFoxScraper(
@@ -176,8 +181,12 @@ class FireFoxScraper(
                                executable_path=self.driver_path)
 
         self.firefox.get("about:config")
-        self.firefox.find_element_by_id("showWarningNextTime").click()
-        self.firefox.find_element_by_id("warningButton").click()
+        if el := self.firefox.find_elements(By.ID, 'showWarningNextTime'):
+            el[0].click()
+        if el := self.firefox.find_elements(By.ID, 'warningButton'):
+            el[0].click()
+        if el := self.firefox.find_elements(By.ID, 'about-config-show-only-modified'):
+            el[0].click()
         self.firefox.get("about:blank")
 
         self.set_timeout(10)

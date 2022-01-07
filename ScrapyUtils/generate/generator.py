@@ -5,7 +5,6 @@ from string import Template
 
 generator_mapper = {
     "action.py": "action_template",
-    "parse.py": "parse_template",
     "processor.py": "process_template",
     "model.py": "model_template",
     "settings.py": "settings_template",

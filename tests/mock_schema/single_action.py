@@ -1,4 +1,4 @@
-from ScrapyUtils.components import Action, Parse, set_active, active
+from ScrapyUtils.components import Action, set_active, active
 
 
 @active

@@ -7,7 +7,6 @@ from typing import List
 from ScrapyUtils.libs import Model
 
 from ..component import Component, ComponentSuit
-from ..step import Step
 from . import Processor
 
 

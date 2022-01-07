@@ -51,7 +51,6 @@ class Scraper(object):
         """
         if not self.attached:
             try:
-
                 self._attach()
             except Exception as e:
                 print(e)

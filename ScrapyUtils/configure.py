@@ -4,19 +4,18 @@ from types import ModuleType
 from os import path
 from queue import Queue
 
-from ScrapyUtils.components import Component, Step, StepSuit, Action, Parse, Processor, ProcessorSuit
+from ScrapyUtils.components import Component, ActionSuit, Action, Processor, ProcessorSuit
 from ScrapyUtils.libs import Scraper, Task
 
 # preload
 # ----------------------------------------------------------------------
 # callable
-tasks_callable: Optional[Iterator[Task]] = None
+tasks_callable: Callable[[], Iterator[Task]]
 scraper_callable: Optional[Callable] = None
 
 # components
 action_classes: List[Type[Action]] = []
-parse_classes: List[Type[Parse]] = []
-processor_classes: List[Type[Step]] = []
+processor_classes: List[Type[Processor]] = []
 
 # initial
 # ----------------------------------------------------------------------
@@ -26,7 +25,7 @@ tasks: Queue = Queue()
 scrapers: List[Scraper] = []
 
 # suits
-step_suits: Optional[List[StepSuit]] = None
+action_suits: List[Action] = []
 processor_suit: Optional[ProcessorSuit] = None
 
 # models_pipeline: Pipeline = None

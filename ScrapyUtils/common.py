@@ -9,7 +9,7 @@ import csv
 from ScrapyUtils import configure
 from ScrapyUtils.libs import Model, Field, Task, Scraper
 from ScrapyUtils.components import Processor
-from ScrapyUtils.components import Action, Parse
+from ScrapyUtils.components import Action
 from ScrapyUtils.tool import xpathParse
 
 from ScrapyUtils.log import common as log

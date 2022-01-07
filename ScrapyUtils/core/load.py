@@ -13,6 +13,7 @@
 Todo:
     * 异常处理: Python加载异常（包含代码格式、缺少包）
 """
+from collections.abc import Iterable, Iterator
 from concurrent.futures.thread import ThreadPoolExecutor
 
 from ScrapyUtils.libs.scraper.request_scraper import RequestScraper, Scraper
@@ -39,8 +40,14 @@ def _load_scraper():
 
     configure.scrapers = scrapers
 
+
 def _load_tasks():
     """generate tasks"""
+
+    iterator = configure.tasks_callable()
+    if iterator and isinstance(iterator, Iterable):
+        for task in iterator:
+            configure.tasks.put(task)
 
 
 if __name__ == '__main__':

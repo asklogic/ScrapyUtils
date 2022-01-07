@@ -3,21 +3,7 @@
 
 """
 
-from ScrapyUtils.components import Action, Parse, set_active, active, Processor
-
-
-@active
-class FirstParse(Parse):
-    pass
-
-
-@active
-class SecondParse(Parse):
-    pass
-
-
-class ThirdParse(Parse):
-    pass
+from ScrapyUtils.components import Action, set_active, active, Processor
 
 
 @active

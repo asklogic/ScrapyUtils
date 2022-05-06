@@ -42,7 +42,7 @@ from ScrapyUtils import configure
 
 from logging import getLogger
 
-logger = getLogger(__name__)
+logger = getLogger('preload')
 
 
 def _load_components(module: ModuleType, component_type: Type[Component] = Component) -> List[Type[Component]]:

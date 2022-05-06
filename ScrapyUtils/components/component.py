@@ -32,7 +32,7 @@ from abc import abstractmethod
 from typing import List, Iterable, Type, Union, Optional, Sequence, NoReturn
 from logging import getLogger
 
-_logger = getLogger('component')
+logger = getLogger('component')
 
 
 class ComponentMeta(type):
@@ -115,7 +115,7 @@ class ComponentSuit(object):
             try:
                 component.on_start()
             except Exception as e:
-                _logger.error(f'Suit start component: {component.name} failed.')
+                logger.error(f'Suit start component: {component.name} failed.')
                 self.components.remove(component)
                 error_components.append(component)
 
@@ -134,7 +134,7 @@ class ComponentSuit(object):
             try:
                 component.on_exit()
             except Exception as e:
-                _logger.error(f'Suit exit component: {component.name} failed.')
+                logger.error(f'Suit exit component: {component.name} failed.')
                 self.components.remove(component)
                 error_components.append(component)
         return error_components

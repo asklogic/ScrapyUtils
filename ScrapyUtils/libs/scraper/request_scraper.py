@@ -19,7 +19,7 @@ from typing import *
 
 from ._base_scraper import Scraper, TimeoutMixin
 
-logger = getLogger(__name__)
+logger = getLogger('scraper')
 """Common logger"""
 
 try:

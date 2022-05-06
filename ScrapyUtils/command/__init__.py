@@ -1,27 +1,20 @@
-from ScrapyUtils.command.entity.check import Check
-from ScrapyUtils.command.entity.generate import Generate
-from ScrapyUtils.command.entity.single import Single
-from ScrapyUtils.command.entity.thread_ import Thread
-from ScrapyUtils.command.entity.download import Download
-from ScrapyUtils.command.entity.parsing import Parsing
-from ScrapyUtils.command.entity.background import Background
+# -*- coding: utf-8 -*-
+"""整合命令.
 
-from ScrapyUtils.command.entity import Command
+Todo:
+    * For module TODOs
 
-command_map = {
-    'check': Check,
-    'generate': Generate,
-    'single': Single,
-    'thread': Thread,
-    'download': Download,
-    'parsing': Parsing,
-    'background': Background,
-}
+"""
+from .execute import execute
+from .generate import generate
+
+import click
 
 
-def get_command_type(command_name: str) -> Command:
-    """
-    Args:
-        command_name (str):
-    """
-    return command_map[command_name]
+@click.group()
+def cli():
+    pass
+
+
+cli.add_command(execute)
+cli.add_command(generate)

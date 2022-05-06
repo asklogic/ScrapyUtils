@@ -1,5 +1,4 @@
 import logging
-import linecache
 import prettytable
 
 from logging import DEBUG, INFO, WARNING, ERROR
@@ -7,16 +6,8 @@ from logging import Logger, getLogger, StreamHandler, Formatter
 
 from linecache import getlines
 
-common_time_format = '%m.%d %H:%M:%S'
-common_format_str = r'%(asctime)s [%(levelname)s] %(message)s'
-
-common_format = logging.Formatter(r'%(asctime)s [%(levelname)s] %(message)s', r'%H:%M:%S')
-basic_format = logging.Formatter(r" * %(message)s", r'%H:%M:%S')
-
 # pretty table
 tb = prettytable.PrettyTable(border=False)
-"""common prettytable"""
-
 tb.field_names = ['line', 'content']
 
 
@@ -26,7 +17,7 @@ def error_lines(logger, message: str, exception: Exception):
 
     current_traceback = exception.__traceback__
 
-    # forward to
+    # forward to the bottom
     while current_traceback.tb_next:
         current_traceback = current_traceback.tb_next
 
@@ -37,58 +28,51 @@ def error_lines(logger, message: str, exception: Exception):
     logger.error('\n'.join((message, tb.get_string())))
 
 
-def set_log_file_name(file_name):
-    """
-    Args:
-        file_name:
-    """
-    logger = common.log
-    if not '.out' in file_name:
-        file_name = file_name + '.out'
-    fh = logging.FileHandler(filename=file_name)
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter(r"%(asctime)s [%(levelname)s]|%(message)s", r'%H:%M:%S'))
-
-    logger.addHandler(fh)
-
-
-def build_defalut_logger(logger_name: str,
-                         format_str: str = common_format_str,
-                         time_format: str = common_time_format,
-                         level=DEBUG) -> Logger:
+def set_stream_logger(logger_name: str, formatter: Formatter):
+    """设置通用日志"""
     logger = getLogger(logger_name)
-    logger.setLevel(level)
+    logger.setLevel(DEBUG)
 
-    stream = StreamHandler()
-    stream.setFormatter(Formatter(format_str, time_format))
-    stream.setLevel(level)
+    stream_handler = StreamHandler()
+    stream_handler.setFormatter(formatter)
+    stream_handler.setLevel(DEBUG)
 
-    # fs = FileHandler()
-
-    logger.addHandler(stream)
-
-    return logger
+    logger.addHandler(stream_handler)
 
 
-build_defalut_logger('core', format_str='(%(levelname)s) %(message)s', time_format='%H:%M:%S')
-build_defalut_logger('base', format_str=' * %(message)s', time_format='%H:%M:%S')
+common_loggers = ['common', 'ScrapyUtils']
+"""通用日志"""
 
-build_defalut_logger('scheme_state', format_str="[%(state)s in '%(method)s'] - %(message)s", time_format='%H:%M:%S')
-build_defalut_logger('scheme_load', format_str='(%(levelname)s) %(message)s', time_format='%H:%M:%S')
-# build_defalut_logger('Common')
+command_loggers = ['command', 'execute', 'generate']
+"""命令日志列表"""
+command_format = Formatter('%(asctime)s [%(name)s] (%(levelname)s): %(message)s', r'%Y/%m/%d %H:%M:%S')
+"""命令日志格式"""
 
-common = getLogger('core')
-basic = getLogger('base')
+# 设置命令日志格式, 通用日志
+[set_stream_logger(logger_name, command_format) for logger_name in command_loggers + common_loggers]
+
+core_loggers = ['preload', 'load', 'scrape', 'persist', 'pipeline', ]
+"""爬虫核心的日志列表"""
+core_format = Formatter('%(asctime)s [%(levelname)s] <%(name)s @ %(threadName)s>: %(message)s', r'%H:%M:%S')
+"""爬虫核心的日志格式"""
+
+[set_stream_logger(logger_name, core_format) for logger_name in core_loggers]
+
+component_loggers = ['component']
+"""组件以及其他通用组件的日志"""
+component_format = Formatter('%(asctime)s [%(levelname)s] <%(name)s> in %(funcName)s: %(message)s', r'%H:%M:%S')
+"""组件的日志格式"""
+
+[set_stream_logger(logger_name, component_format) for logger_name in component_loggers]
 
 if __name__ == '__main__':
     print('logger test!')
 
-    common.info('hello')
-    common.info('scraper', 'System')
-    common.info('listener', 'System')
-    common.info('success. temp text')
-    common.info('failed. temp text')
+    getLogger('command').info('infos')
+    getLogger('generate').debug('debug')
 
-    basic.info('basic')
-    basic.info('port: 1234')
-    basic.info('output: /base/log.py')
+    getLogger('preload').debug('debug')
+    getLogger('load').info('infos')
+    getLogger('scrape').error('error')
+
+    getLogger('component').error('error')

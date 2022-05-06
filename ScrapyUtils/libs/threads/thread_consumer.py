@@ -35,8 +35,6 @@ def _queue_get_item(self):
     source: Queue = self.source
     item = source.get(timeout=0.01)
 
-    # for queue.join
-    source.task_done()
     return item
 
 
@@ -115,6 +113,8 @@ class Consumer(BaseThread):
             except Exception as e:
                 logger.exception(exc_info=e, msg='consuming error')
                 self.pause(False)
+            else:
+                self.source.task_done()
 
     @abstractmethod
     def consuming(self, obj: Any) -> NoReturn:

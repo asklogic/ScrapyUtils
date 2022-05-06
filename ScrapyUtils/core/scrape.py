@@ -23,7 +23,7 @@ from ScrapyUtils.libs import Consumer, Task
 
 from ScrapyUtils import configure
 
-logger = getLogger(__name__)
+logger = getLogger('scrape')
 
 event = Event()
 """ScrapyConsumer common event"""
@@ -59,6 +59,7 @@ class ScrapyConsumer(Consumer):
             else:
                 configure.models.extend(future.result())
                 logger.info(f'Task success! {task}')
+
         # case: too many failed
         else:
             logger.info(f'Task failed. {task}')

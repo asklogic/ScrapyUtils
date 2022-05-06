@@ -1,7 +1,10 @@
 import os
+from logging import getLogger
 
 from ScrapyUtils.generate import templates
 from string import Template
+
+logger = getLogger('generate')
 
 generator_mapper = {
     "action.py": "action_template",
@@ -26,46 +29,42 @@ def create_folder(path: str):
     target_data_path = os.path.join(path, 'data')
     if not os.path.isdir(target_data_path):
         os.makedirs(target_data_path)
+        logger.debug(f'Created folder: {target_data_path}')
 
     target_data_path = os.path.join(path, 'download')
     if not os.path.isdir(target_data_path):
         os.makedirs(target_data_path)
+        logger.debug(f'Created folder: {target_data_path}')
 
     target_data_path = os.path.join(path, 'tasks')
     if not os.path.isdir(target_data_path):
         os.makedirs(target_data_path)
-
-    # init file
-    with open(os.path.join(path, "__init__.py"), "w") as f:
-        f.writelines(generator_mapper['__init__.py'])
+        logger.debug(f'Created folder: {target_data_path}')
 
 
 def create_components(path: str):
-    """
-    Args:
-        path (str):
-    """
+    """创建文件"""
+    # 目标路径
     target = os.path.basename(path)
+
+    # 遍历模板字典
     for component in generator_mapper:
+        # 创建文件绝对路径
         component_path = os.path.join(path, component)
 
         if not os.path.isfile(component_path):
             with open(os.path.join(path, component), "w") as f:
-                # template = Template(getattr(templates, generator_mapper[component]))
                 template = Template(generator_mapper[component])
 
                 code = template.substitute(class_name=target.capitalize())
-                code = template.substitute(class_name=target)
                 f.writelines(code)
+            logger.debug(f'Created file: {component_path}')
+
+        else:
+            logger.error(f'Exist file named: {component_path}')
 
 
 def remove(target):
-    """
-    Args:
-        target:
-    """
-    import os
-
     # files
     for file in list(os.walk(target))[0][2]:
         file_path = os.path.join(os.getcwd(), target, file)
@@ -82,5 +81,5 @@ def remove(target):
 
 if __name__ == '__main__':
     target = "ProxyKuai"
-    # dir_generator(target)
-    # component_generate(target)
+    create_folder(target)
+    create_components(target)

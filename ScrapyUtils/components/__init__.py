@@ -1,7 +1,3 @@
-from logging import getLogger, Logger
-
-logger: Logger = getLogger(__name__)
-
 # submodules
 from .component import Component, ComponentSuit, active, set_active
 from .processor import Processor, ProcessorSuit

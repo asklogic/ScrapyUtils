@@ -63,7 +63,7 @@ def mock_trigger(command_name: str, **kwargs):
 
         # TODO: proxy start.
         if command.proxy:
-            command.proxy.start()
+            command.proxy.execute()
         set_syntax(command.syntax)
 
     try:

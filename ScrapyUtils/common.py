@@ -1,6 +1,7 @@
 import json
 import os
 import time
+from logging import getLogger
 from typing import List, Dict, Generator, Any
 from collections import deque
 
@@ -12,7 +13,7 @@ from ScrapyUtils.components import Processor
 from ScrapyUtils.components import Action
 from ScrapyUtils.tool import xpathParse
 
-from ScrapyUtils.log import common as log
+logger = getLogger('component')
 
 import openpyxl
 
@@ -55,9 +56,9 @@ class FileProcessorMixin(Processor):
 
         self.data = deque()
 
-        # log.info('folder: {}'.format(self.file_folder), self.name)
-        # log.info('file name: {}'.format(self.file_name), self.name)
-        log.info('path: {}'.format(self.file_path), self.name)
+        # logger.info('folder: {}'.format(self.file_folder), self.name)
+        # logger.info('file name: {}'.format(self.file_name), self.name)
+        logger.info('path: {}'.format(self.file_path), self.name)
 
     def on_start(self):
         temp_path = os.path.join(self.file_folder, 'touch')
@@ -65,9 +66,9 @@ class FileProcessorMixin(Processor):
             pass
         os.remove(temp_path)
 
-        # log.info('folder: {}'.format(self.file_folder), self.name)
-        # log.info('file name: {}'.format(self.file_name), self.name)
-        # log.info('path: {}'.format(self.file_path), self.name)
+        # logger.info('folder: {}'.format(self.file_folder), self.name)
+        # logger.info('file name: {}'.format(self.file_name), self.name)
+        # logger.info('path: {}'.format(self.file_path), self.name)
 
     def process_item(self, model: Model) -> Any:
         self.data.append(model.pure_data)
@@ -116,14 +117,14 @@ class ExeclFileProcessor(FileProcessorMixin, Processor):
             self.ws.append(list(model.pure_data.values()))
         except Exception as e:
             # TODO: add callback
-            log.error('insert row failed', 'Execl')
+            logger.error('insert row failed', 'Execl')
 
     def on_exit(self):
 
         self.wb.save(self.file_path)
 
 
-class XpathMappingParse(Parse):
+class XpathMappingParse(Action):
     models: List[type(Model)] = []
     full: bool = False
     autoyield: bool = True
@@ -194,7 +195,7 @@ class XpathMappingParse(Parse):
                 self.context['mappers.' + model.get_name()] = parsed_result
 
 
-class HiddenInputParse(Parse):
+class HiddenInputParse(Action):
     target_tag: str = 'input'
     target_property: str = 'type'
     target_property_value: str = 'hidden'

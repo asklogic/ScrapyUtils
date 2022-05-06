@@ -15,7 +15,7 @@ from ScrapyUtils.components import ProcessorSuit
 
 from ScrapyUtils.libs import Consumer, Model
 
-logger = getLogger(__name__)
+logger = getLogger('pipeline')
 
 
 class Pipeline(Consumer):

@@ -1,47 +1,22 @@
-#
-
-
 # action
 
-action_template = """from ScrapyUtils.components import Action, active
-from ScrapyUtils.libs import Scraper, RequestScraper, FireFoxScraper
-from ScrapyUtils.common import Task
+action_template = """from typing import Optional, Iterator
+
+from ScrapyUtils.components import Action, active
+from ScrapyUtils.components.action import ActionContent
+from ScrapyUtils.libs import Task, Scraper, Model
+
+from ScrapyUtils.libs.scraper.request_scraper import RequestScraper
+from ScrapyUtils.libs.scraper.firefox_scraper import FireFoxScraper
 
 
 @active
 class ${class_name}Action(Action):
-    def scraping(self, task, scraper):
-        content = scraper.get(url=task.url)
 
-        return content
+    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
+        page_content = scraper.get(task.url)
+        content.str_content = page_content
 
-    def check(self, content):
-        pass
-"""
-
-# parse
-
-parse_template = """from typing import Generator, List
-
-from ScrapyUtils.components import Parse, active, set_active
-from .model import *
-
-from ScrapyUtils.common import HiddenInputParse
-from ScrapyUtils.tool import xpathParse, xpathParseList, XpathParser
-
-
-@active
-class ${class_name}Parse(Parse):
-
-    def parsing(self, content: str) -> Model or Generator[Model]:
-        parser = XpathParser(content)
-        
-        m = ${class_name}Model()
-        m.filed = "filed content"
-        yield m
-
-    def check(self, models: List[Model]):
-        pass
 """
 
 # model
@@ -102,37 +77,25 @@ class ${class_name}Prepare(Prepare):
         yield task
 """
 
-# config
-
-config_template = r"""
-{0} = {{
-    'name': '{0}',
-    'allow': [
-        '{1}Action',
-        '{1}Parse',
-    ],
-    'prepare': '{1}Prepare',
-    'process': '{1}Process',
-}}
-
-"""
-
 # settings
 
 settings_template = r'''# -*- coding: utf-8 -*-
 """
-scheme's profile for atom scheme.
+Setting for ${class_name} scheme.
 
 generate by Generate command.
 """
 
 from ScrapyUtils.libs import Task
 
-THREAD = 2
-TIMEOUT = 2
-
-PROXY = False
-PROXY_URL = ''
+THREAD: int = 2
+"""The thread number"""
+DELAY = 2
+"""The delay for every task."""
+RETRY: int = 3
+"""The retry times."""
+TIMEOUT: int = 15
+"""The limit of a single task execute time."""
 
 
 # generator your tasks in here.
@@ -156,11 +119,11 @@ def generate_scraper(**kwargs):
 
 '''
 
-init_template = """from ScrapyUtils.core.collect import collect_steps, collect_processors, initial_configure
+init_template = """from ScrapyUtils.core.preload import collect_action, collect_processors, initial_configure
 
-from . import action, parse, processor, settings
+from . import action, processor, settings
 
-steps_class = collect_steps(action, parse)
+steps_class = collect_action(action)
 processors_class = collect_processors(processor)
 initial_configure(settings)
 """

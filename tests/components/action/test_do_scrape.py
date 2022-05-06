@@ -13,7 +13,7 @@ class CountAction(Action):
         super().__init__()
         self.count = 0
 
-    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Optional[Iterator[Model]]:
+    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
         self.count += 1
 
 
@@ -22,7 +22,7 @@ class DelayErrorAction(Action):
         super().__init__()
         self.count = 0
 
-    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Optional[Iterator[Model]]:
+    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
         self.count += 1
         if self.count == 3:
             raise Exception('delay error')
@@ -34,7 +34,7 @@ class MockModel(Model):
 
 class ParseAction(Action):
 
-    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Optional[Iterator[Model]]:
+    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
         for i in range(5):
             yield MockModel()
 

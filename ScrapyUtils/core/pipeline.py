@@ -6,6 +6,7 @@ Todo:
     
 """
 from collections import deque
+from logging import getLogger
 from queue import Queue
 from threading import Lock, Event
 from typing import Any, NoReturn, Union
@@ -14,7 +15,7 @@ from ScrapyUtils.components import ProcessorSuit
 
 from ScrapyUtils.libs import Consumer, Model
 
-from . import logger
+logger = getLogger(__name__)
 
 
 class Pipeline(Consumer):
@@ -26,7 +27,7 @@ class Pipeline(Consumer):
     def __init__(self,
                  source: Union[Queue, deque],
                  suit: ProcessorSuit,
-                 delay: Union[int, float] = 0.1, lock: Lock = None,
+                 delay: Union[int, float] = 0, lock: Lock = None,
                  event: Event = Event(), start_thread: bool = None, **kwargs):
         assert isinstance(suit, ProcessorSuit), 'Pipeline need a suit instance.'
 

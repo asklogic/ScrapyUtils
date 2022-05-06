@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 """Preload module to load components and other configuration from a python module.
 
-包含了加载一个Scrape Scheme包的各式加载函数，其主要存在于一个项目的__init__.py文件中。
+启动爬虫流程的第零步：预加载 - Preload。
 
-只需要import指定的包就可以自动加载各项设置、组件components和其他函数到全局变量中，以用于各类初始化函数中。
+预加载模块，全部由工具函数组成，用于一个爬虫Python包的__init__.py中。
 
+由于单独的爬虫项目是以一个符合项目规范的Python包的形式呈现，爬虫核心程序只需要import该Python包即可加载需要的爬虫项目。
+因此将一个爬虫项目中的各项依赖包全部放置于__init__.py中，同时将一些需要预先执行的流程，诸如开启某个组件、加载项目配置等操作放置一并放入其中。
 
-函数:
+在执行爬虫项目时，因为基于Python特性，import此该爬虫项目时就会自动执行__init__.py中的流程，不需要在爬虫核心中执行额外步骤，
+所以将这类函数归于预加载模块。
+
+工具函数:
 
     1. _load_components::
 

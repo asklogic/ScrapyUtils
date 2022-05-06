@@ -1,6 +1,6 @@
 import unittest
 
-from ScrapyUtils.core.load import _load_scraper, _load_tasks
+from ScrapyUtils.core.load import _load_scraper, _load_tasks, load
 from ScrapyUtils import configure
 
 from ScrapyUtils.libs import Scraper, Task
@@ -36,6 +36,9 @@ class MyTestCase(unittest.TestCase):
         assert configure.tasks.qsize() == 10
 
         assert isinstance(configure.tasks.get(), Task)
+
+    # def test_load(self):
+    #     load()
 
 
 if __name__ == '__main__':

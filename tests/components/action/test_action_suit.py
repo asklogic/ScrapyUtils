@@ -18,7 +18,7 @@ class CountAction(Action):
     def __init__(self):
         self.count = 0
 
-    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Optional[Iterator[Model]]:
+    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
         self.count += 1
 
 
@@ -55,9 +55,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_do_scrape(self):
         """Do scrape callback"""
-
         suit = ActionSuit(CountAction)
-        suit._scraper = 'a'
 
         suit.generate_callback(Task())()
 

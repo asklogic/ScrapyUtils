@@ -1,7 +1,7 @@
 import unittest
 from typing import Iterator, Optional, Union
 
-from ScrapyUtils.components import Processor
+from ScrapyUtils.components.processor import Processor
 from ScrapyUtils.libs import Model, Proxy
 
 

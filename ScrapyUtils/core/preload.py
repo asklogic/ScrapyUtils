@@ -36,7 +36,8 @@ from os import path
 from typing import List, Type, NoReturn
 from types import ModuleType
 
-from ScrapyUtils.components import Component, Action, Processor
+from ScrapyUtils.components import Component, Action
+from ScrapyUtils.components.processor import Processor
 
 from ScrapyUtils import configure
 

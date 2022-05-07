@@ -34,7 +34,8 @@ from collections.abc import Iterable
 from concurrent.futures.thread import ThreadPoolExecutor
 from typing import NoReturn
 
-from ScrapyUtils.components import ActionSuit, ProcessorSuit
+from ScrapyUtils.components import ActionSuit
+from ScrapyUtils.components.processor import ProcessorSuit
 from ScrapyUtils.libs.scraper.request_scraper import RequestScraper, Scraper
 from ScrapyUtils import configure
 

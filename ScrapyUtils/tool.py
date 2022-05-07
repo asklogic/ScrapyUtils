@@ -2,7 +2,6 @@ from lxml import etree
 from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
 import requests
 import time
-# import peewee
 import redis
 
 headers = {
@@ -101,28 +100,3 @@ def xpathParseList(htmlContent: str, xpathContent: str, separator: str = "") -> 
     data = xpathParse(htmlContent, xpathContent)
 
     return separator.join(data)
-
-
-# TODO
-def jinglin(number):
-    """
-    Args:
-        number:
-    """
-    status_code = 1000
-    r = None
-    while status_code > 300:
-        time.sleep(1)
-        print("wait for get proxy. number: ", number)
-
-        r = requests.get(
-            r"http://ip.11jsq.com/index.php/api/entry?method=proxyServer.generate_api_url&packid=0&fa=0&fetch_key=&qty=" + str(
-                number) + "&time=1&pro=&city=&port=1&format=txt&ss=1&css=&dt=1&specialTxt=3&specialJson=", timeout=15,
-            headers=headers)
-
-        print("finish. status: {}".format(r.status_code))
-        status_code = r.status_code
-
-    proxyList = r.content.decode("utf-8").split("\r\n")
-
-    return proxyList

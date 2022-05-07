@@ -33,7 +33,7 @@ class ${class_name}Model(Model):
 process_template = """from typing import Any
 
 from ScrapyUtils.components import Processor, active, set_active
-from ScrapyUtils.common import DuplicateProcessor, JsonFileProcessor, CSVFileProcessor, ExeclFileProcessor
+from ScrapyUtils.common import JsonFileProcessor, CSVFileProcessor, ExeclFileProcessor
 
 from .model import *
 

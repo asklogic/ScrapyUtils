@@ -18,8 +18,8 @@ class MyTestCase(unittest.TestCase):
         cls.other_components = __import__('other_components')
 
     def tearDown(self) -> None:
-        configure.action_classes = None
-        configure.processor_classes = None
+        configure.action_classes = []
+        configure.processor_classes = []
 
     def test_preload_action(self):
         """从一个模块中加载指定的组件（action），并置入全局的configure模块中"""

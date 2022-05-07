@@ -1,6 +1,6 @@
 import unittest
 
-from ScrapyUtils.components import ProcessorSuit, Processor
+from ScrapyUtils.components.processor import Processor, ProcessorSuit
 from ScrapyUtils.libs import Proxy
 
 

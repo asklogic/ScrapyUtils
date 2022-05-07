@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""整合命令.
+"""命令集.
 
 Todo:
     * For module TODOs

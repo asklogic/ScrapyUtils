@@ -5,7 +5,8 @@ from types import ModuleType
 from os import path
 from queue import Queue
 
-from ScrapyUtils.components import Component, ActionSuit, Action, Processor, ProcessorSuit
+from ScrapyUtils.components import Component, ActionSuit, Action
+from ScrapyUtils.components.processor import Processor, ProcessorSuit
 from ScrapyUtils.core.pipeline import Pipeline
 from ScrapyUtils.libs import Scraper, Task, Consumer
 
@@ -19,7 +20,7 @@ scraper_callable: Optional[Callable] = None
 
 # components
 action_classes: List[Type[Action]] = []
-processor_classes: List[Type[Processor]] = []
+processor_classes: List[Type[Processor]] = list()
 
 # initial
 # ----------------------------------------------------------------------
@@ -51,11 +52,10 @@ registered_keys = [
     # 日志
     'KEEP_LOG',
 
-    # 线程数
     'THREAD',
-
-    # 超时时间
+    'DELAY',
     'TIMEOUT',
+    'RETRY',
 
     # global
     'GLOBAL_KEY',

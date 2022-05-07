@@ -1,7 +1,7 @@
 import unittest
 from typing import Optional, Union
 
-from ScrapyUtils.components import ProcessorSuit, Processor
+from ScrapyUtils.components.processor import Processor, ProcessorSuit
 from ScrapyUtils.libs import Proxy, Model, Field
 
 
@@ -83,8 +83,7 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_not_return(self):
         """No return will continue process flow."""
-        self.suit.add_component(CounterAlpha)
-        self.suit.add_component(CounterBeta)
+        self.suit = ProcessorSuit(CounterAlpha, CounterBeta)
 
         self.suit.process(Count())
 
@@ -95,9 +94,7 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_break(self):
         """Return False will break process flow."""
-        self.suit.add_component(CounterAlpha)
-        self.suit.add_component(ReturnFalse)
-        self.suit.add_component(CounterBeta)
+        self.suit = ProcessorSuit(CounterAlpha, ReturnFalse, CounterBeta)
 
         self.suit.process(Count())
 
@@ -106,9 +103,7 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_return_object(self):
         """Return [] == return None and will continue process flow."""
-        self.suit.add_component(CounterAlpha)
-        self.suit.add_component(ReturnOther)
-        self.suit.add_component(CounterBeta)
+        self.suit = ProcessorSuit(CounterAlpha, ReturnOther, CounterBeta)
 
         self.suit.process(Count())
 
@@ -117,9 +112,7 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_return_true(self):
         """Return False will continue process flow."""
-        self.suit.add_component(CounterAlpha)
-        self.suit.add_component(ReturnTrue)
-        self.suit.add_component(CounterBeta)
+        self.suit = ProcessorSuit(CounterAlpha, ReturnTrue, CounterBeta)
 
         self.suit.process(Count())
 
@@ -128,10 +121,7 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_return_model(self):
         """Return model will modify model."""
-        self.suit.add_component(CounterAlpha)
-        self.suit.add_component(Increase)
-        self.suit.add_component(IncreaseCheck)
-        self.suit.add_component(CounterBeta)
+        self.suit = ProcessorSuit(CounterAlpha, Increase, IncreaseCheck, CounterBeta)
 
         count = Count()
         count.count = 0
@@ -144,17 +134,14 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_error(self):
         """Method will not except exception"""
-        self.suit.add_component(Error)
+        self.suit = ProcessorSuit(Error)
 
         with self.assertRaises(AssertionError) as ae:
             self.suit.process(Count())
 
     def test_case_target_filter_skip(self):
         """Attribute target will filter out model which is not the instance of target model."""
-
-        self.suit.add_component(CounterAlpha)
-        self.suit.add_component(TargetCheck)
-        self.suit.add_component(CounterBeta)
+        self.suit = ProcessorSuit(CounterAlpha, TargetCheck, CounterBeta)
 
         self.suit.process(Count())
 
@@ -163,8 +150,7 @@ class MethodProcessTestCase(unittest.TestCase):
 
     def test_case_target_filter(self):
         """And Proxy will skip."""
-
-        self.suit.add_component(TargetCheck)
+        self.suit = ProcessorSuit(TargetCheck)
 
         with self.assertRaises(AssertionError) as ae:
             self.suit.process(Proxy())

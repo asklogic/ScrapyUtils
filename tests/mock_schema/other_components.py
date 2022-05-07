@@ -3,7 +3,8 @@
 
 """
 
-from ScrapyUtils.components import Action, set_active, active, Processor
+from ScrapyUtils.components import Action, set_active, active
+from ScrapyUtils.components.processor import Processor
 
 
 @active

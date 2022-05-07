@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
-"""ProcessorSuit module.
+"""Processor.
 
+Todo:
+    * For module TODOs
+    
 """
-from typing import List
+from abc import abstractmethod
+from typing import Type, Optional, Union, List
 
+from ScrapyUtils.components import Component, ComponentSuit
 from ScrapyUtils.libs import Model
 
-from ..component import Component, ComponentSuit
-from . import Processor
+
+class Processor(Component):
+    target: Type[Model] = Model
+
+    @abstractmethod
+    def process_item(self, model: Model) -> Optional[Union[Model, bool]]:
+        pass
 
 
 class ProcessorSuit(ComponentSuit):
@@ -15,13 +25,11 @@ class ProcessorSuit(ComponentSuit):
     components: List[Processor] = []
 
     def process(self, model: Model):
-
         current = model
 
         for processor in self.components:
 
             if isinstance(current, processor.target):
-
                 next_model = processor.process_item(current)
 
                 # case 1: Return a modified model.

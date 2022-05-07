@@ -11,7 +11,7 @@ from queue import Queue
 from threading import Lock, Event
 from typing import Any, NoReturn, Union
 
-from ScrapyUtils.components import ProcessorSuit
+from ScrapyUtils.components.processor import ProcessorSuit
 
 from ScrapyUtils.libs import Consumer, Model
 

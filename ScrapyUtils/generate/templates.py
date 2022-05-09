@@ -18,6 +18,29 @@ class ${class_name}Action(Action):
         content.str_content = page_content
 
 """
+# parser
+parser_template = """from collections import Iterator
+
+from ScrapyUtils.components import active, Action
+from ScrapyUtils.components.action import ActionContent
+from ScrapyUtils.libs import Task, Scraper, Model
+from ScrapyUtils.tool import XpathParser
+
+from .model import ${class_name}Model
+
+
+@active
+class ${class_name}Action(Action):
+    is_parser = True
+
+    def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
+        parser = XpathParser(self.content)
+
+        m = ${class_name}Model()
+        m.filed = "filed content"
+        yield m
+
+"""
 
 # model
 
@@ -121,9 +144,9 @@ def generate_scraper(**kwargs):
 
 init_template = """from ScrapyUtils.core.preload import collect_action, collect_processors, initial_configure
 
-from . import action, processor, settings
+from . import action, parser, processor, settings
 
-steps_class = collect_action(action)
-processors_class = collect_processors(processor)
+collect_action(action, parser)
+collect_processors(processor)
 initial_configure(settings)
 """

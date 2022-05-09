@@ -8,6 +8,7 @@ logger = getLogger('generate')
 
 generator_mapper = {
     "action.py": "action_template",
+    "parser.py": "parser_template",
     "processor.py": "process_template",
     "model.py": "model_template",
     "settings.py": "settings_template",

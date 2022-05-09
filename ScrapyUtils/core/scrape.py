@@ -54,7 +54,7 @@ class ScrapyConsumer(Consumer):
                 task.count += 1
 
                 configure.tasks.put(task)
-                logger.info(f'Task scraping error. <{task.count}>. {task} ')
+                logger.error(f'Task scraping error. <{task.count}>. {task}', exc_info=e)
             # case success
             else:
                 configure.models.extend(future.result())

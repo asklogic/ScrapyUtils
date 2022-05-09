@@ -12,6 +12,7 @@ import click
 
 from ScrapyUtils import configure
 from ScrapyUtils.core import load, scrape
+from ScrapyUtils.core.end import end
 
 logger = getLogger('execute')
 
@@ -22,7 +23,7 @@ logger = getLogger('execute')
 def execute(scheme: str, path):
     """普通爬取"""
 
-    logger.info(f'start execute command. Target: {scheme}')
+    logger.info(f'start command. Target: {scheme}')
 
     # 设置Scheme
     configure.target_name = scheme
@@ -37,3 +38,5 @@ def execute(scheme: str, path):
 
     # TODO: 阻塞
     configure.tasks.join()
+
+    end()

@@ -7,6 +7,7 @@ Todo:
 """
 from .execute import execute
 from .generate import generate
+from .download import download
 
 import click
 
@@ -18,3 +19,4 @@ def cli():
 
 cli.add_command(execute)
 cli.add_command(generate)
+cli.add_command(download)

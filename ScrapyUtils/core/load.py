@@ -77,6 +77,10 @@ def _load_suit():
 
     configure.processor_suit = ProcessorSuit(*configure.processor_classes)
 
+    # on_start
+    [suit.suit_start() for suit in configure.action_suits]
+    configure.processor_suit.suit_start()
+
 
 def load() -> NoReturn:
     """
@@ -94,7 +98,6 @@ def load() -> NoReturn:
         suit.set_scraper(scraper)
 
     _load_tasks()
-
 
 if __name__ == '__main__':
     pass

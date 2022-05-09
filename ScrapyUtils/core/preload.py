@@ -69,12 +69,14 @@ def _load_components(module: ModuleType, component_type: Type[Component] = Compo
     return components
 
 
-def _collect_base(module: ModuleType, config_name: str, collect_type: Type[Component]) -> NoReturn:
+def _collect_base(*modules: ModuleType, config_name: str, collect_type: Type[Component]) -> NoReturn:
     """The common function for collect component.
 
     Load the target components from a module the save them in module configure.
     """
-    target_components = _load_components(module, collect_type)
+    target_components = []
+    for module in modules:
+        target_components.extend(_load_components(module, collect_type))
 
     # filter deactivated components
     activated_components = [x for x in target_components if x.active]
@@ -83,20 +85,18 @@ def _collect_base(module: ModuleType, config_name: str, collect_type: Type[Compo
 
 
 # The collect functions:
-def collect_action(module: ModuleType) -> NoReturn:
+def collect_action(*modules: ModuleType) -> NoReturn:
     """Collect Action"""
-    _collect_base(module, 'action_classes', Action)
+    _collect_base(*modules, config_name='action_classes', collect_type=Action)
 
 
 def collect_processors(module: ModuleType) -> NoReturn:
     """Collect Processor"""
-    _collect_base(module, 'processor_classes', Processor)
+    _collect_base(module, config_name='processor_classes', collect_type=Processor)
 
 
 def initial_configure(settings_module: ModuleType) -> NoReturn:
-    current_file_path = path.dirname(settings_module.__file__)
-
-    configure.SCHEME_PATH = path.dirname(current_file_path)
+    configure.SCHEME_PATH = path.dirname(settings_module.__file__)
 
     configure.DATA_FOLDER_PATH = path.join(configure.SCHEME_PATH, 'data')
 

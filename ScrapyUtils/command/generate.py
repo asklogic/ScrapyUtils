@@ -20,7 +20,7 @@ logger = getLogger('generate')
 @click.option('path', '--path', default=getcwd(), type=click.Path())
 def generate(scheme: str, overwrite: bool, path):
     """生成Scheme模板"""
-    logger.info(f'start execute command. Target: {scheme}')
+    logger.info(f'start command. Target: {scheme}')
 
     if overwrite:
         logger.warning(f'Remove the exist folder {path + sep + scheme}')

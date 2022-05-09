@@ -18,7 +18,7 @@ class ActionContent(Model):
     """
     str_content: str = Field()
     bytes_content: bytes = Field()
-    parameters: Any = Field()
+    parameters: Any = Field(default_factory=dict)
 
 
 class Action(Component):
@@ -27,6 +27,7 @@ class Action(Component):
 
     Different Actions means different actual action in web scraping.
     """
+    is_parser: bool = False
 
     @abstractmethod
     def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:

@@ -29,7 +29,7 @@ def execute(scheme: str, path):
     configure.target_name = scheme
 
     # 引入Scheme包 - 预加载
-    target_module = __import__(scheme)
+    __import__(scheme)
 
     # 加载各类组件
     load()

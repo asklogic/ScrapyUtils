@@ -94,4 +94,5 @@ def scrape():
 
     configure.scrape_consumers = consumers
 
-    configure.models_pipeline = Pipeline(source=configure.models, suit=configure.processor_suit)
+    configure.models_pipeline = Pipeline(source=configure.models, suit=configure.processor_suit, start_thread=True)
+    configure.models_pipeline.resume()

@@ -19,7 +19,7 @@ class ${class_name}Action(Action):
 
 """
 # parser
-parser_template = """from collections import Iterator
+parser_template = """from typing import Iterator
 
 from ScrapyUtils.components import active, Action
 from ScrapyUtils.components.action import ActionContent

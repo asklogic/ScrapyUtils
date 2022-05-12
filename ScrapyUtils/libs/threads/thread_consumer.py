@@ -114,7 +114,9 @@ class Consumer(BaseThread):
                 logger.exception(exc_info=e, msg='consuming error')
                 self.pause(False)
             else:
-                self.source.task_done()
+                # TODO:
+                if issubclass(self.source.__class__, Queue):
+                    self.source.task_done()
 
     @abstractmethod
     def consuming(self, obj: Any) -> NoReturn:

@@ -34,10 +34,10 @@ class ${class_name}Action(Action):
     is_parser = True
 
     def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
-        parser = XpathParser(self.content)
+        parser = XpathParser(content.str_content)
 
         m = ${class_name}Model()
-        m.filed = "filed content"
+        m.field = "filed content"
         yield m
 
 """

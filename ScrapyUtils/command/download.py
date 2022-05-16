@@ -50,7 +50,10 @@ def download(scheme: str, path):
     scrape()
 
     # TODO: 阻塞
-    configure.tasks.join()
+    exit_flag = False
+    while not configure.tasks.join() and not exit_flag:
+        time.sleep(configure.EXIT_WAIT)
+        exit_flag = configure.tasks.qsize() == 0
 
     end()
 

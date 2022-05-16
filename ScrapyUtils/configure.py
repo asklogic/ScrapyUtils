@@ -94,3 +94,7 @@ DATA_FOLDER_PATH: str = path.join('data')
 DOWNLOAD_FOLDER_PATH: str = 'download'
 DOWNLOAD_SUFFIX: str = '.html'
 DOWNLOAD_PATH: str = None
+
+# exit
+EXIT_WAIT = 3
+"""任务退出时等待时间"""

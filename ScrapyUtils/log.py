@@ -43,7 +43,7 @@ def set_stream_logger(logger_name: str, formatter: Formatter):
 common_loggers = ['common', 'ScrapyUtils']
 """通用日志"""
 
-command_loggers = ['command', 'execute', 'generate', 'download']
+command_loggers = ['command', 'execute', 'generate', 'download', 'parsing']
 """命令日志列表"""
 command_format = Formatter('%(asctime)s [%(name)s] (%(levelname)s): %(message)s', r'%Y/%m/%d %H:%M:%S')
 """命令日志格式"""

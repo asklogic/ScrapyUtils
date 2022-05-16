@@ -42,7 +42,7 @@ class ScrapyConsumer(Consumer):
 
     def consuming(self, task: Task) -> NoReturn:
         # case: task in scraping
-        if task.count < configure.RETRY:
+        if task.count <= configure.RETRY - 1:
             task_callback = self.suit.generate_callback(task=task)
 
             try:
@@ -54,15 +54,15 @@ class ScrapyConsumer(Consumer):
                 task.count += 1
 
                 configure.tasks.put(task)
-                logger.error(f'Task scraping error. <{task.count}>. {task}', exc_info=e)
+                logger.error(f'Task scraping error. <{task.count}>. {task.url}', exc_info=e)
             # case success
             else:
                 configure.models.extend(future.result())
-                logger.info(f'Task success! {task}')
+                logger.info(f'Task success! {task.url}')
 
         # case: too many failed
         else:
-            logger.info(f'Task failed. {task}')
+            logger.info(f'Task failed. {task.url}')
             configure.failed.put(task)
 
     def build_pool(self):

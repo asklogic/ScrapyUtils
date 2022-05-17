@@ -1,8 +1,4 @@
 from lxml import etree
-from typing import TypeVar, Generic, Tuple, List, Dict, Union, Generator
-import requests
-import time
-import redis
 
 headers = {
     'user-agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
@@ -15,88 +11,40 @@ headers = {
 }
 
 
-def xpathParse(htmlContent: str, xpathContent: str) -> List[str]:
-    """
-    Args:
-        htmlContent (str):
-        xpathContent (str):
-    """
-    assert bool(htmlContent), "empty content"
-    assert bool(xpathContent), "empty xpath"
-
-    html = etree.HTML(htmlContent)
-    result = html.xpath(xpathContent)
-
-    pure_data = []
-    for el in result:
-        if isinstance(el, etree._ElementUnicodeResult):
-            el = str(el)
-            pure_data.append(el)
-        elif isinstance(el, etree._Element):
-            el = str(el.text)
-            pure_data.append(el)
-        else:
-            pure_data.append(el)
-
-    return pure_data
-
-
 class XpathParser(object):
     etree: etree.HTML
-    single: bool = False
 
     def __init__(self, html):
-        """
-        Args:
-            html:
-        """
-        assert html, "empty content."
         assert type(html) == str, "html content must be str."
 
         self.etree = etree.HTML(html)
 
-    def xpath(self, xpath, child_text=False):
-        """
-        Args:
-            xpath:
-        """
-        assert xpath, "empty xpath."
-        assert type(xpath) == str, "xpath content must be str."
+    def find_elements(self, xpath: str, child_text: bool = True):
+        return self._get_result(xpath, child_text)
 
-        result = self.etree.xpath(xpath)
+    def find_element(self, xpath: str, child_text: bool = True):
+        if res := self._get_result(xpath, child_text):
+            return res[0]
 
-        pure_data = []
-        for el in result:
-            if isinstance(el, etree._ElementUnicodeResult):
-                el = str(el)
-                pure_data.append(el)
-            elif isinstance(el, etree._Element):
-                if child_text:
-                    el = str(list(filter(None, el.xpath('text()')))[-1])
-                    pure_data.append(el)
-                else:
-                    el = str(el.text)
-                    pure_data.append(el)
+    def _get_result(self, xpath: str, child_text: bool):
+        """根据xpath从etree解析结果中获取text结果
+
+        child_text: 向下获取text不为空的结果
+        """
+        elements = self.etree.xpath(xpath)
+
+        text_result = []
+        for el in elements:
+            if child_text:
+                # 遍历子节点 直到找到有text的节点
+                # next自动短路判断
+                if (next := el.getchildren()) and (not el.text):
+                    el = next[0]
+                text_result.append(el.text)
             else:
-                pure_data.append(el)
+                text_result.append(el.text)
 
-        return pure_data
+        return text_result
 
     def origin_xpath(self, xpath):
-        """
-        Args:
-            xpath:
-        """
         return self.etree.xpath(xpath)
-
-
-def xpathParseList(htmlContent: str, xpathContent: str, separator: str = "") -> str:
-    """
-    Args:
-        htmlContent (str):
-        xpathContent (str):
-        separator (str):
-    """
-    data = xpathParse(htmlContent, xpathContent)
-
-    return separator.join(data)

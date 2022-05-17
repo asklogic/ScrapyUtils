@@ -15,7 +15,10 @@
 ### 升级优化流程
 
 1. 分离下载和解析命令
-2. 重写工具类
+2. 重写工具类  
+   2.1 XpathParser重构  
+   2.2 完成JsonFileProcessor, ExeclFileProcessor; CSVFileProcessor存在中文编码
+
 3. 优化并整理打包脚本
 4. 修改基于Selenium的Scraper并且完成测试
 5. 删除老代码并且完成一些遗留工作

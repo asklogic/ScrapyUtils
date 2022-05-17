@@ -36,6 +36,9 @@ class ${class_name}Action(Action):
     def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
         parser = XpathParser(content.str_content)
 
+        elements = parser.find_elements('/xpath_for_sequence_target')
+        element = parser.find_element('/xpath_for_single_target')
+
         m = ${class_name}Model()
         m.field = "filed content"
         yield m

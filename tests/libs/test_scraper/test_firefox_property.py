@@ -4,7 +4,6 @@ from ScrapyUtils.libs.scraper.firefox_scraper import FireFoxScraper
 from selenium.webdriver import Firefox, FirefoxOptions
 
 
-@unittest.skip
 class FirefoxPropertyTestCase(unittest.TestCase):
     """Testcase without attach."""
 

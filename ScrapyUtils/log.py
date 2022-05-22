@@ -1,4 +1,3 @@
-import logging
 import prettytable
 
 from logging import DEBUG, INFO, WARNING, ERROR

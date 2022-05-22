@@ -50,31 +50,13 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-
-.idea/
-
-redis/
-*.json
-
-*.csv
-*.xlsx
-
-
-*.out
-
-# virtual environment
-venv/
-
-doc/
-
-firefox/
-
-#_*
-#_*.*
-#_*/
+# whitelist
+*
+!*/firefox
+ScrapyUtils/
+tests/
+.gitignore
+LICENSE
+README.md
+roadmap.md
+trigger.py

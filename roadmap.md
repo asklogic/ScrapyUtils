@@ -17,10 +17,15 @@
 1. 分离下载和解析命令
 2. 重写工具类  
    2.1 XpathParser重构  
-   2.2 完成JsonFileProcessor, ExeclFileProcessor; CSVFileProcessor存在中文编码
-
-3. 优化并整理打包脚本
-4. 修改基于Selenium的Scraper并且完成测试
+   2.2 完成JsonFileProcessor, ExeclFileProcessor; CSVFileProcessor存在中文编码  
+   2.3 TODO
+3. 优化并整理打包脚本    
+   3.1 Windows打包  
+   3.2 Linux打包
+4. 修改基于Selenium的Scraper并且完成测试  
+   4.1 新环境中的加载方式    
+   4.2 Windows版测试    
+   4.3 Linux版测试
 5. 删除老代码并且完成一些遗留工作
 6. 完成Watch模式
 7. 完成3个不同论坛的抓取样例

@@ -38,7 +38,7 @@ from ._base_scraper import Scraper
 
 # dynamic import
 module_mapper = {
-    'appium_scraper': [],
+    # 'appium_scraper': [],
     'chrome_scraper': ['selenium'],
     'firefox_scraper': ['selenium'],
     'request_scraper': ['requests'],

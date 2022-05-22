@@ -21,7 +21,7 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from ScrapyUtils.libs.scraper import Scraper
 
 # default logger
-logger = getLogger('__name__')
+logger = getLogger('scraper')
 """Common logger"""
 
 global_webdriver_set: Set[Firefox] = set()
@@ -131,15 +131,22 @@ class FirefoxBinaryBase(FireFoxBase, FireFoxOptionsBase):
     DRIVER_PATH: str = None
 
     def __init__(self):
-        assert os.path.isfile(DRIVER_PATH), f'Path: {DRIVER_PATH} no geckodriver file.'
-        assert os.path.isfile(FIREFOX_PATH), f'Path: {FIREFOX_PATH} no firefox file.'
+        # assert os.path.isfile(DRIVER_PATH), f'Path: {DRIVER_PATH} no geckodriver file.'
+        # assert os.path.isfile(FIREFOX_PATH), f'Path: {FIREFOX_PATH} no firefox file.'
 
         self.options = FirefoxOptions()
-        self.driver_path = DRIVER_PATH
+
+        if os.path.isfile(DRIVER_PATH):
+            self.driver_path = DRIVER_PATH
+        else:
+            self.driver_path = None
 
     @property
     def binary(self) -> FirefoxBinary:
-        return FirefoxBinary(FIREFOX_PATH)
+        if os.path.isfile(FIREFOX_PATH):
+            return FirefoxBinary(FIREFOX_PATH)
+        else:
+            return FirefoxBinary()
 
 
 class FireFoxScraper(

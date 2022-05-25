@@ -1,3 +1,15 @@
+# whitelist
+*.*
+
+!/ScrapyUtils/**/*.*
+!/tests/**/*.*
+.gitignore
+LICENSE
+README.md
+roadmap.md
+trigger.py
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -50,13 +62,3 @@ coverage.xml
 # Django stuff:
 *.log
 
-# whitelist
-*
-!*/firefox
-ScrapyUtils/
-tests/
-.gitignore
-LICENSE
-README.md
-roadmap.md
-trigger.py

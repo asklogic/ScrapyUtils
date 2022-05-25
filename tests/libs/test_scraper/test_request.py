@@ -42,9 +42,8 @@ class RequestScraperTestCase(unittest.TestCase):
         """Http get"""
 
         assert self.scraper.last_response is None
-        content = self.scraper.get(r'http://127.0.0.1:9009/test/get')
+        content = self.scraper.get(r'https://httpbin.org/get')
 
-        assert 'success mock get.' in content
         assert self.scraper.last_response is not None
 
 

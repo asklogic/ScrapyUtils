@@ -109,6 +109,7 @@ class ScrapeCase(unittest.TestCase):
         configure.action_classes = [Normal]
         load()
         scrape()
+        configure.models_pipeline.pause()
         time.sleep(0.1)
 
         assert configure.tasks.qsize() == 0
@@ -120,7 +121,7 @@ class ScrapeCase(unittest.TestCase):
         load()
         scrape()
 
-        time.sleep(0.1)
+        time.sleep(0.15)
         assert configure.tasks.qsize() == 0
         assert configure.failed.qsize() == 10
 

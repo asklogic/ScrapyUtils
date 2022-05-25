@@ -36,7 +36,7 @@ class BaseThread(Thread):
     barrier: Barrier
     event: Event
 
-    def __init__(self, event: Event = Event(), start_thread: bool = None, **kwargs):
+    def __init__(self, event: Event = Event(), start_thread: bool = True, **kwargs):
         """Override the Thread.__init__.
 
         默认设置为守护进程，也可以添加Thread的参数。

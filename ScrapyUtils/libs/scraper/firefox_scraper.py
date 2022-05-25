@@ -131,9 +131,6 @@ class FirefoxBinaryBase(FireFoxBase, FireFoxOptionsBase):
     DRIVER_PATH: str = None
 
     def __init__(self):
-        # assert os.path.isfile(DRIVER_PATH), f'Path: {DRIVER_PATH} no geckodriver file.'
-        # assert os.path.isfile(FIREFOX_PATH), f'Path: {FIREFOX_PATH} no firefox file.'
-
         self.options = FirefoxOptions()
 
         if os.path.isfile(DRIVER_PATH):
@@ -201,7 +198,7 @@ class FireFoxScraper(
         global_webdriver_set.add(self.firefox)
 
     def _detach(self) -> NoReturn:
-        """Detach the firefox instacne.
+        """Detach the firefox instance.
 
         Quit the firefox and remove the instance from global set.
 

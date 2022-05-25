@@ -1,48 +1,46 @@
 import unittest
+import os
 
 from ScrapyUtils.libs.scraper.firefox_scraper import FireFoxScraper
 from ScrapyUtils.libs.scraper.firefox_scraper import set_firefox_path, set_driver_path, exit_all_firefox_webdriver
-from tests.libs.test_scraper import cookie_test_url
+from tests.test_switch import firefox_scraper_switch, http_switch
+
+cookie_test_url = 'http://httpbin.org/cookies'
+driver_path = os.path.join('firefox', 'geckodriver.exe')
 
 
-class MyTestCase(unittest.TestCase):
+@unittest.skipUnless(condition=firefox_scraper_switch and http_switch, reason='start firefox browser')
+class FirefoxTestCase(unittest.TestCase):
     scraper: FireFoxScraper
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        set_firefox_path(r'firefox\App\Firefox\firefox.exe')
-
-        cls.scraper = FireFoxScraper(headless=False)
-        cls.scraper.scraper_attach()
+    def setUp(self) -> None:
+        set_driver_path(driver_path)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls.scraper.scraper_detach()
         exit_all_firefox_webdriver()
 
-    def test_method_get(self):
-        """Method from http mixin"""
-        content = self.scraper.get(r'http://127.0.0.1:9009/test/get')
-        assert 'success mock get.' in content
+    def test_method_attach_common(self):
+        """Methods in scraper attach"""
+        scraper = FireFoxScraper()
 
-    def test_scraper_property_attached(self):
-        """Property from scraper"""
-        self.assertTrue(self.scraper.attached)
+        with self.subTest(msg='scraper attach'):
+            assert scraper.attached is False
+            scraper.scraper_attach()
+            assert scraper.attached is True
 
-    def test_scraper_method_detach(self):
-        """Method from scraper"""
-        scraper = FireFoxScraper(headless=False, attach=True)
-        self.assertTrue(scraper.attached)
+        with self.subTest(msg='scraper get'):
+            content = scraper.get(r'https://httpbin.org/get')
+            assert 'headers' in content
 
-        scraper.scraper_detach()
+        with self.subTest(msg='scraper get driver'):
+            from selenium.webdriver import Firefox
+            self.assertIsInstance(self.scraper.get_driver(), Firefox)
 
-        self.assertFalse(scraper.attached)
-
-    def test_scraper_method_get_driver(self):
-        """Method from scraper, return the webdriver instance"""
-        from selenium.webdriver import Firefox
-
-        self.assertIsInstance(self.scraper.get_driver(), Firefox)
+        with self.subTest(msg='scraper detach'):
+            assert scraper.attached is True
+            scraper.scraper_detach()
+            assert scraper.attached is False
 
     def test_scraper_method_clear(self):
         """Method from scraper"""

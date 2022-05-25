@@ -58,6 +58,7 @@ class ScrapyConsumer(Consumer):
             # case success
             else:
                 configure.models.extend(future.result())
+                print('result', len(future.result()), len(configure.models))
                 logger.info(f'Task success! {task.url}')
 
         # case: too many failed

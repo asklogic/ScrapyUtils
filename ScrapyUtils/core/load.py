@@ -44,9 +44,12 @@ def _load_scraper():
     """initial scrapers"""
     scrapers = []
 
+    # TODO: Limit
     with ThreadPoolExecutor(configure.THREAD) as pool:
-        future = pool.submit(configure.scraper_callable)
-        future.add_done_callback(lambda f: scrapers.append(f.result()))
+        # futures and done callback
+        futures = [pool.submit(configure.scraper_callable) for _ in range(configure.THREAD)]
+        [future.add_done_callback(lambda f: scrapers.append(f.result())) for future in futures]
+
     pool.shutdown(wait=True)
 
     # filter scraper
@@ -98,6 +101,7 @@ def load() -> NoReturn:
         suit.set_scraper(scraper)
 
     _load_tasks()
+
 
 if __name__ == '__main__':
     pass

@@ -3,6 +3,8 @@ import unittest
 from ScrapyUtils.libs.scraper.firefox_scraper import FireFoxScraper
 from selenium.webdriver import Firefox, FirefoxOptions
 
+from tests.test_switch import firefox_scraper_switch
+
 
 class FirefoxPropertyTestCase(unittest.TestCase):
     """Testcase without attach."""
@@ -10,7 +12,6 @@ class FirefoxPropertyTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         f = FireFoxScraper(headless=True)
-        # f.scraper_attach()
         cls.f = f
 
     def setUp(self) -> None:
@@ -37,6 +38,7 @@ class FirefoxPropertyTestCase(unittest.TestCase):
         # print(self.scraper.options.binary_location)
         self.assertIsInstance(self.scraper.options.binary, FirefoxBinary)
 
+    @unittest.skip
     def test_property_driver_path(self):
         """Property driver_path is path of WebDriver: default is firefox/geckodriver.exe or firefox/geckodriver if Linux"""
         import platform
@@ -82,7 +84,7 @@ class FirefoxPropertyTestCase(unittest.TestCase):
     def test_argument_js(self):
         """TODO: Argument image, default is False"""
 
-    # @unittest.skip
+    @unittest.skipUnless(condition=firefox_scraper_switch, reason='start firefox browser')
     def test_argument_attach(self):
         """Argument attach, default is False"""
         scraper = FireFoxScraper(headless=True, attach=True)

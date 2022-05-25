@@ -8,7 +8,12 @@ Todo:
     * binary or options.binary
 """
 from abc import abstractmethod
+from logging import getLogger
 from typing import NoReturn, Any, Union
+
+# default logger
+logger = getLogger('scraper')
+"""Common logger"""
 
 
 class Scraper(object):
@@ -53,7 +58,7 @@ class Scraper(object):
             try:
                 self._attach()
             except Exception as e:
-                print(e)
+                logger.error(msg='Scraper attach error.', exc_info=e)
             else:
                 self._attached = True
 

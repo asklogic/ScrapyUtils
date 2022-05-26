@@ -1,22 +1,31 @@
 import os
 from logging import getLogger
+from typing import Dict
 
 from ScrapyUtils.generate import templates
 from string import Template
 
 logger = getLogger('generate')
 
+templates_folder_path: str = os.path.join(os.path.dirname(__file__), 'templates')
+
 generator_mapper = {
-    "action.py": "action_template",
-    "parser.py": "parser_template",
-    "processor.py": "process_template",
-    "model.py": "model_template",
-    "settings.py": "settings_template",
-    '__init__.py': 'init_template',
+    "web_action.template": "action_template",
+    "parse_action.template": "parser_template",
+    "processor.template": "process_template",
+    "model.template": "model_template",
+    "settings.template": "settings_template",
+    '__init__.template': 'init_template',
 }
 
+templates_mapper: Dict[str, str] = {}
+"""文件名和模板内容的映射"""
+
 for key, value in generator_mapper.items():
-    generator_mapper[key] = getattr(templates, value)
+    template_file_path = os.path.join(templates_folder_path, key)
+
+    with open(template_file_path, encoding='utf-8') as f:
+        templates_mapper[key] = f.read()
 
 
 def create_folder(path: str):
@@ -49,13 +58,13 @@ def create_components(path: str):
     target = os.path.basename(path)
 
     # 遍历模板字典
-    for component in generator_mapper:
+    for template_name, template_content in templates_mapper.items():
         # 创建文件绝对路径
-        component_path = os.path.join(path, component)
+        component_path = os.path.join(path, template_name)
 
         if not os.path.isfile(component_path):
-            with open(os.path.join(path, component), "w") as f:
-                template = Template(generator_mapper[component])
+            with open(os.path.join(path, f'{template_name.split(".")[0]}.py'), "w") as f:
+                template = Template(template_content)
 
                 code = template.substitute(class_name=target.capitalize())
                 f.writelines(code)
@@ -78,9 +87,3 @@ def remove(target):
 
     # target itself
     os.rmdir(os.path.join(os.getcwd(), target))
-
-
-if __name__ == '__main__':
-    target = "ProxyKuai"
-    create_folder(target)
-    create_components(target)

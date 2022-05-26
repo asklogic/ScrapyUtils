@@ -1,8 +1,9 @@
 import unittest
+import os
 
 
 class TestGenerate(unittest.TestCase):
-    def test_something(self):
+    def test_generate(self):
         """TODO:"""
         self.assertEqual(True, False)
 

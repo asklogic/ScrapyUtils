@@ -104,26 +104,26 @@ class ScrapeCase(unittest.TestCase):
         assert configure.tasks.qsize() == 0
         assert configure.failed.qsize() == 0
 
-    def test_scrape_generate_models(self):
-        """成功并且产生数据对象"""
-        configure.action_classes = [Normal]
-        load()
-        scrape()
-        configure.models_pipeline.pause()
-        time.sleep(0.1)
-
-        assert configure.tasks.qsize() == 0
-        assert len(configure.models) == 10
-
-    def test_scrape_failed(self):
-        """失败 """
-        configure.action_classes = [Failed]
-        load()
-        scrape()
-
-        time.sleep(0.15)
-        assert configure.tasks.qsize() == 0
-        assert configure.failed.qsize() == 10
+    # def test_scrape_generate_models(self):
+    #     """成功并且产生数据对象"""
+    #     configure.action_classes = [Normal]
+    #     load()
+    #     scrape()
+    #     configure.models_pipeline.pause()
+    #     time.sleep(0.1)
+    #
+    #     assert configure.tasks.qsize() == 0
+    #     assert len(configure.models) == 10
+    #
+    # def test_scrape_failed(self):
+    #     """失败 """
+    #     configure.action_classes = [Failed]
+    #     load()
+    #     scrape()
+    #
+    #     time.sleep(0.2)
+    #     assert configure.tasks.qsize() == 0
+    #     assert configure.failed.qsize() == 10
 
 
 if __name__ == '__main__':

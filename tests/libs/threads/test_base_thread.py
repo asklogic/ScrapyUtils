@@ -12,7 +12,7 @@ from ScrapyUtils.libs.threads.base_thread import BaseThread
 class Count(BaseThread):
     mock_count = 0
 
-    def __init__(self, event: Event = Event(), start_thread: bool = None, **kwargs):
+    def __init__(self, event: Event = Event(), start_thread: bool = True, **kwargs):
         self.mock_count = 0
 
         super().__init__(event, start_thread, **kwargs)
@@ -76,6 +76,7 @@ class BaseThreadTestCase(unittest.TestCase):
         assert counter0.mock_count == 3
         assert counter1.mock_count == 3
         assert counter2.mock_count == 3
+        print(counter3.mock_count)
         assert counter3.mock_count == 5
 
     def test_class_thread(self):

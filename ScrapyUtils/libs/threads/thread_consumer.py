@@ -72,7 +72,7 @@ class Consumer(BaseThread):
                  delay: Union[int, float] = 0.1,
                  lock: Lock = None,
                  event: Event = Event(),
-                 start_thread: bool = None,
+                 start_thread: bool = True,
                  **kwargs):
         assert type(source) in support_source, 'Source not support'
 

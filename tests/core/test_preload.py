@@ -1,6 +1,7 @@
 import unittest
 import os
 import sys
+from os.path import dirname, abspath
 
 from ScrapyUtils.core import collect_action, collect_processors
 from ScrapyUtils import configure
@@ -10,9 +11,8 @@ class MyTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        mock_schema_home = os.path.join(os.getcwd(), 'tests', 'mock_schema')
+        mock_schema_home = os.path.join(dirname(dirname(abspath(__file__))), 'mock_schema')
         sys.path.insert(0, mock_schema_home)
-
         # the mock modules
         cls.single_action = __import__('single_action')
         cls.other_components = __import__('other_components')

@@ -23,7 +23,8 @@ from threading import Event, Thread, Condition, Barrier
 # global setting:
 from typing import Optional, Callable, Any, Iterable, Mapping
 
-initial_start_thread = False
+INITIAL_START_THREAD: bool = False
+"""Start thread before initial."""
 
 
 class BaseThread(Thread):
@@ -43,7 +44,7 @@ class BaseThread(Thread):
         """
 
         # Default barrier.
-        # The parties is 2 thread : main thread and sub thread.
+        # The parties include 2 thread : main thread and sub thread.
         self.barrier = Barrier(2)
 
         # The optional arguments: shared event.
@@ -58,7 +59,7 @@ class BaseThread(Thread):
         # The optional arguments: start_thread
         # start_thread = dict(kwargs).pop('start_thread', initial_start_thread)
 
-        flag = start_thread if start_thread is not None else initial_start_thread
+        flag = start_thread if start_thread else INITIAL_START_THREAD
         if flag:
             Thread.start(self)
 
@@ -164,9 +165,11 @@ class BaseThread(Thread):
         """
         Resume a BaseThread from thread_wait.
 
-        Set the paused_flag to fasle and check the n_waiting.
+        Set the paused_flag to False and check the n_waiting.
 
         If the sub thread is waiting, the main thread will wait.
+
+
         """
         if self.paused_flag:
             self.paused_flag = False
@@ -180,66 +183,3 @@ class BaseThread(Thread):
     @abstractmethod
     def on_resume(self):
         pass
-
-
-class BasicThread(threading.Thread):
-    """最简单的基础线程类
-    
-    只提供基本的启动和循环方法，以及终止循环和异常处理的方法。
-
-    要使用需要重写do_loop函数。
-    """
-
-    def __init__(self, source, delay: int = 1, daemon: Optional[bool] = ...) -> None:
-        """屏蔽了大多数Thread类的init参数"""
-
-        self._source = source
-        self.delay = delay
-        super().__init__(daemon=daemon)
-
-    @abstractmethod
-    def on_start(self):
-        """on_start 线程类开始时执行的方法。
-        """
-        pass
-
-    def start(self) -> None:
-        self.on_start()
-        super().start()
-
-    @abstractmethod
-    def do_loop(self):
-        pass
-
-    @abstractmethod
-    def break_condition(self) -> bool:
-        """break_condition 退出循环的条件，返回为True则退出循环进而退出线程。每次循环前都会执行此方法。
-
-        Returns:
-            bool: 是否退出循环的标志，如果返回值布尔运算为True则退出。
-        """
-        pass
-
-    @abstractmethod
-    def exception_callback(self, exception: Exception):
-        """exception_callback 处理异常的方法，当do_loop出现异常时执行此方法。
-
-        Args:
-            exception (Exception): do_loop抛出的异常。
-        """
-        pass
-
-    def run(self) -> None:
-        while True:
-            # 先检查是否退出循环
-            if self.break_condition():
-                break
-            # 执行do_loop方法
-            try:
-                self.do_loop()
-            # 如果捕获异常
-            except Exception as e:
-                # 执行相关方法
-                self.exception_callback(e)
-            finally:
-                time.sleep(max(0, self.delay))

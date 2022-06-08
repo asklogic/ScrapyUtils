@@ -4,9 +4,10 @@ import time
 from queue import Queue
 from threading import Event, Lock
 from time import sleep
-from typing import Union
+from typing import Union, Any
 
-from ScrapyUtils.libs.threads.thread_consumer import Consumer
+from ScrapyUtils.libs import Consumer
+from ScrapyUtils.libs.threads.consumer import BaseConsumer
 from ScrapyUtils.libs import BaseThread
 
 
@@ -17,10 +18,11 @@ class Custom(Consumer):
 
 class Count(Consumer):
 
-    def __init__(self, source: Queue, delay: Union[int, float] = 0.1, lock: Lock = None, **kwargs):
+    def __init__(self, source: Any, delay: Union[int, float] = 0.1, lock: Lock = None, event: Event = None,
+                 start_thread: bool = True, **kwargs):
         self.mock_count = 0
 
-        super().__init__(source, delay, lock, **kwargs)
+        super().__init__(source, delay, lock, event, start_thread, **kwargs)
 
     def consuming(self, obj):
         self.mock_count += 1
@@ -33,12 +35,32 @@ class ConsumerTestCase(unittest.TestCase):
         for i in range(5):
             self.queue.put(i)
 
-    def test_class_base_thread(self):
+    def test_arguments(self):
+        """arguments in Consumer"""
+        base = Custom(source=Queue())
+
+        with self.subTest('source'):
+            queue = Queue()
+            base = Custom(source=queue)
+            assert base.source == queue
+
+        with self.subTest('lock'):
+            lock = Lock()
+            base = Custom(queue, lock=lock)
+            assert base.lock is lock
+
+        with self.subTest('delay'):
+            assert base.delay == 0.1
+
+    def test_class_and_subclass(self):
         """The subclass of BaseThread
         """
 
         assert issubclass(Consumer, BaseThread)
         assert issubclass(Custom, BaseThread)
+
+        with self.assertRaises(TypeError) as te:
+            base = Consumer(source=Queue())
 
     def test_sample_consume(self):
         """Consume items without delay.
@@ -46,11 +68,10 @@ class ConsumerTestCase(unittest.TestCase):
         Consume all items in 0.1 second.
         """
 
-        custom = Custom(self.queue, delay=0)
+        custom = Custom(source=self.queue, delay=0)
         custom.resume()
         sleep(0.1)
 
-        print(custom.source.qsize())
         assert custom.source.qsize() == 0
 
     def test_sample_delay(self):
@@ -58,9 +79,9 @@ class ConsumerTestCase(unittest.TestCase):
 
         Delay before consuming!
         """
-        custom = Custom(self.queue, 0.1)
-        custom.resume()
+        custom = Custom(source=self.queue, delay=0.1)
         assert self.queue.qsize() == 5
+        custom.resume()
         sleep(0.15)
         assert self.queue.qsize() == 4
 

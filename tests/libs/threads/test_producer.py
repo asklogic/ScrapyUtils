@@ -12,7 +12,7 @@ from threading import Event, Lock
 from typing import Union
 
 from ScrapyUtils.libs.threads import BaseThread
-from ScrapyUtils.libs.threads.thread_producer import Producer
+from ScrapyUtils.libs.threads.producer import Producer
 
 
 class Custom(Producer):
@@ -47,10 +47,7 @@ class ProducerTestCase(unittest.TestCase):
         """
         count = Count(Queue(), delay=0)
         count.resume()
-
-        sleep(0.001)
-
-        print(count.get_size())
+        sleep(0.1)
         assert count.get_size() > 100
 
     def test_sample_produce_delay(self):

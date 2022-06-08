@@ -18,17 +18,23 @@ class Count(BaseThread):
         super().__init__(event, start_thread, **kwargs)
 
     def run(self) -> None:
-        while True:
-            self.thread_wait()
-            # self.count += 1
-            self.mock_count = self.mock_count + 1
+        while self.thread_wait():
+            self.mock_count += 1
             time.sleep(0.2)
+
+
+class Max(BaseThread):
+    max_count = 0
+
+    def run(self):
+        while self.thread_wait():
+            self.max_count += 1
 
 
 class BaseThreadTestCase(unittest.TestCase):
 
     def test_samples_count(self):
-        """The sample count thread.
+        """The sample thread for count.
 
         Count类每次工作时间花费0.2秒。
 
@@ -36,9 +42,8 @@ class BaseThreadTestCase(unittest.TestCase):
 
         此时调用非阻塞调用stop方法，线程暂停，当前工作结束后将会被event阻塞。
         """
-        count = Count(start_thread=False)
+        count = Count(start_thread=True)
         assert count.mock_count == 0
-        count.start()
         count.resume()
         sleep(0.1)
         count.pause(True)
@@ -63,78 +68,59 @@ class BaseThreadTestCase(unittest.TestCase):
         counter3.resume()
 
         # 三次计数
-        time.sleep(0.5)
+        time.sleep(0.21)
 
         # 暂停
         event.clear()
-        # event.clear()
 
-        time.sleep(0.5)
+        time.sleep(0.21)
 
         assert counter0.event is counter1.event is counter2.event
 
-        assert counter0.mock_count == 3
-        assert counter1.mock_count == 3
-        assert counter2.mock_count == 3
-        print(counter3.mock_count)
-        assert counter3.mock_count == 5
+        assert counter0.mock_count >= 1
+        assert counter1.mock_count >= 1
+        assert counter2.mock_count >= 1
+        assert counter3.mock_count >= 2
 
-    def test_class_thread(self):
-        """The subclass of threading.Thread
-        """
+    def test_arguments(self):
+        """Arguments for BaseThread"""
+
         assert issubclass(BaseThread, threading.Thread)
         assert issubclass(Count, threading.Thread)
 
-    def test_property_daemon(self):
-        """BaseThread is a daemon thread by default.
-        """
+        with self.subTest('start_thread: Default is True. 自动启动'):
+            base = BaseThread()
+            assert base.is_alive() is True
+
+        with self.subTest('start_thread is False. 不自动启动'):
+            base = BaseThread(start_thread=False)
+            assert base.is_alive() is False
+
+        with self.subTest('event. Event property'):
+            event = Event()
+            base = BaseThread(event=event)
+            assert base.event is event
+
+    def test_properties(self):
+        """property in BaseThread"""
         base = BaseThread()
-        assert base.daemon is True
 
-    def test_argument_start_thread(self):
-        """The argument start_thread: the default global variable is True.
+        with self.subTest('daemon is Fixed:True'):
+            base = BaseThread()
+            assert base.daemon is True
 
-        初始化后会自动运行线程。
-        """
-        base = BaseThread()
-        assert base.is_alive() is True
+        with self.subTest('paused_flag'):
+            base = BaseThread()
+            assert base.paused_flag is True
+            base.resume()
+            assert base.paused_flag is False
 
-    def test_argument_start_thread_false(self):
-        """The argument start_thread is False
-
-        不自动运行，需要手动运行
-        """
-        base = BaseThread(start_thread=False)
-        assert base.is_alive() is False
-
-        base.start()
-        assert base.is_alive() is True
-
-    def test_argument_event(self):
-        """The argument event: to get a shared event.
-
-        可以传入event对象，默认为false状态。
-
-        如果没有传，将会自动生成一个event。
-        """
-        event = threading.Event()
-        base = BaseThread(event)
-
-        assert base.event is event
-
-    # def test_parameter_start_thread(self):
-    #     """
-    #     初始化参数start_thread默认为False，设置为False后将不会自动运行线程。
-    #     """
-    #     base = BaseThread(start_thread=False)
-    #     assert base.is_alive() is False
-
-    # def test_parameter_start_thread_true(self):
-    #     base = BaseThread(start_thread=True)
-    #     assert base.is_alive() is True
+        with self.subTest('event'):
+            base = BaseThread()
+            assert base.event.is_set() is True
 
     def test_method_pause(self):
-        """Pause by barrier.wait in method thread_wait.
+        """Pause by barrier.wait() in method thread_wait.
         """
         count = Count()
         count.resume()
@@ -143,10 +129,31 @@ class BaseThreadTestCase(unittest.TestCase):
         assert count.mock_count == 1
         count.pause()
         assert count.mock_count == 1
-
-        sleep(0.4)
-
+        sleep(0.1)
         assert count.mock_count == 1
+
+    def test_method_idempotent(self):
+        """pause and resume is idempotent."""
+        count = Count()
+
+        with self.subTest('resume'):
+            count.resume()
+            count.resume()
+
+        with self.subTest('pause but block'):
+            count.pause(block=True)
+            count.pause(block=True)
+
+        with self.subTest('pause'):
+            count.pause()
+            count.pause()
+
+    # @unittest.skip
+    def test_sample_max_count(self):
+        max_counter = Max()
+        max_counter.resume()
+        time.sleep(0.001)
+        print(max_counter.max_count)
 
 
 if __name__ == '__main__':

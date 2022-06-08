@@ -11,13 +11,12 @@ Todo:
     * For module TODOs
 
 """
-from abc import abstractmethod
-from typing import List, NoReturn, Any, Union, Dict, ClassVar, Tuple, Callable
-from types import MethodType
+from abc import abstractmethod, ABCMeta
+from typing import NoReturn, Any, Union
 from logging import getLogger
 
 from collections import deque
-from queue import Queue, Empty
+from queue import Queue
 from threading import Lock, Event
 from time import sleep
 
@@ -25,35 +24,8 @@ from .base_thread import BaseThread
 
 logger = getLogger('consumer')
 
-support_source = [
-    Queue,
-    deque,
-]
 
-
-def _queue_get_item(self):
-    source: Queue = self.source
-    item = source.get(timeout=0.01)
-
-    return item
-
-
-def _queue_get_size(self):
-    source: Queue = self.source
-    return source.qsize()
-
-
-def _deque_get_item(self):
-    source: deque = self.source
-    return source.popleft()
-
-
-def _deque_get_size(self):
-    source: deque = self.source
-    return len(source)
-
-
-class Consumer(BaseThread):
+class BaseConsumer(BaseThread, metaclass=ABCMeta):
     """Base consumer. Extend it and override the consuming method to build custom consumer.
 
     只需要简单地继承并重写consuming方法，就可以快速创建各类的消费者线程类。
@@ -62,37 +34,39 @@ class Consumer(BaseThread):
     lock: Lock
     delay: Union[int, float]
 
-    _get_item_mapper: Dict[type, Tuple[Callable, Callable]] = {
-        Queue: (_queue_get_item, _queue_get_size),
-        deque: (_deque_get_item, _queue_get_size),
-    }
-
     def __init__(self,
-                 source: Union[Queue, deque],
+                 source: Any,
                  delay: Union[int, float] = 0.1,
                  lock: Lock = None,
-                 event: Event = Event(),
+                 event: Event = None,
                  start_thread: bool = True,
                  **kwargs):
-        assert type(source) in support_source, 'Source not support'
+        """除了BaseThread的参数，还需要source数据源、delay和lock作为同步延时锁。
 
-        for cls, methods in self._get_item_mapper.items():
-            if isinstance(source, cls):
-                self.get_item = MethodType(methods[0], self)
-                self.get_size = MethodType(methods[1], self)
+        Args:
+            source (Any): 消费者数据源
+            delay (Union[int, float], optional): 每一次消费之间的间隔时间. Defaults to 0.1.
+            lock (Lock, optional): 同步若干个消费者之间的间隔时间的锁. Defaults to None.
+            event (Event, optional): 控制启停的event. Defaults to None.
+            start_thread (bool, optional): 自动开启标志，True为自动开启. Defaults to True.
+        """
 
         self.source = source
-
         self.delay = delay
         self.lock = lock if lock else Lock()
 
         BaseThread.__init__(self, event, start_thread, **kwargs)
 
+    @abstractmethod
     def get_item(self) -> Any:
-        assert False
+        pass
 
+    @abstractmethod
     def get_size(self) -> int:
-        return 0
+        pass
+
+    def consuming_done(self):
+        pass
 
     def run(self) -> NoReturn:
         while self.thread_wait():
@@ -114,28 +88,33 @@ class Consumer(BaseThread):
                 logger.exception(exc_info=e, msg='consuming error')
                 self.pause(False)
             else:
-                # TODO:
-                if issubclass(self.source.__class__, Queue):
-                    self.source.task_done()
+                self.consuming_done()
 
     @abstractmethod
     def consuming(self, obj: Any) -> NoReturn:
         pass
 
 
-if __name__ == '__main__':
-    number = 0
+class QueueConsumer(BaseConsumer):
+    """基于队列的消费者"""
+    source: Queue
+
+    def get_item(self) -> Any:
+        return self.source.get(timeout=0.01)
+
+    def get_size(self) -> int:
+        return self.source.qsize()
+
+    def consuming_done(self):
+        self.source.task_done()
 
 
-    class Count(Consumer):
-        def consuming(self, obj: Any) -> NoReturn:
-            global number
-            number += 0
-            print(obj)
+class DequeConsumer(BaseConsumer):
+    """基于双端队列的消费者"""
+    source: deque
 
+    def get_item(self) -> Any:
+        return self.source.pop()
 
-    queue = Queue()
-
-    [queue.put(x) for x in range(100)]
-
-    count = Count(source=queue)
+    def get_size(self) -> int:
+        return len(self.source)

@@ -37,7 +37,7 @@ class BaseThread(Thread):
     barrier: Barrier
     event: Event
 
-    def __init__(self, event: Event = Event(), start_thread: bool = True, **kwargs):
+    def __init__(self, event: Event = None, start_thread: bool = True, **kwargs):
         """Override the Thread.__init__.
 
         默认设置为守护进程，也可以添加Thread的参数。
@@ -48,7 +48,7 @@ class BaseThread(Thread):
         self.barrier = Barrier(2)
 
         # The optional arguments: shared event.
-        self.event = event
+        self.event = event if event else Event()
         self.event.set()
 
         # Default daemon.
@@ -155,11 +155,10 @@ class BaseThread(Thread):
         Args:
             block (bool, optional): Block pause or not. Defaults to True.
         """
-        if not self.paused_flag:
-            self.paused_flag = True
+        self.paused_flag = True
 
-            if block:
-                self.barrier.wait()
+        if block:
+            self.barrier.wait()
 
     def resume(self):
         """
@@ -171,10 +170,9 @@ class BaseThread(Thread):
 
 
         """
-        if self.paused_flag:
-            self.paused_flag = False
-            if self.barrier.n_waiting != 0:
-                self.barrier.wait()
+        self.paused_flag = False
+        if self.barrier.n_waiting != 0:
+            self.barrier.wait()
 
     @abstractmethod
     def on_pause(self):

@@ -2,7 +2,6 @@ import os
 from logging import getLogger
 from typing import Dict
 
-from ScrapyUtils.generate import templates
 from string import Template
 
 logger = getLogger('generate')
@@ -12,7 +11,7 @@ templates_folder_path: str = os.path.join(os.path.dirname(__file__), 'templates'
 generator_mapper = {
     "web_action.template": "action_template",
     "parse_action.template": "parser_template",
-    "processor.template": "process_template",
+    "process.template": "process_template",
     "model.template": "model_template",
     "settings.template": "settings_template",
     '__init__.template': 'init_template',

@@ -3,7 +3,7 @@ related_matches.
 
 
 #### 1.create
-in command line. create a scheme 
+in command line. create a project 
 ``` 
 > python trigger.py generate demo
 

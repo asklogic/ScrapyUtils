@@ -27,7 +27,7 @@ class ConfigureException(Exception):
         super().__init__(*args)
 
 
-class SchemeException(Exception):
+class projectException(Exception):
     def __init__(self, *args: object) -> None:
         """
         Args:

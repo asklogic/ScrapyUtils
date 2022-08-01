@@ -3,13 +3,10 @@
 
 """
 from abc import abstractmethod
-from collections import deque
-from functools import partial
-from typing import List, Sequence, Any, Iterator, Optional, Union, NoReturn, Type, Callable
+from typing import List, Any, Iterator, Callable
 
-from ScrapyUtils.components import Component, ComponentSuit
+from ScrapyUtils.components import Component
 from ScrapyUtils.libs import Task, Scraper, Model, Field
-from ScrapyUtils.libs.scraper.request_scraper import RequestScraper
 
 
 class ActionContent(Model):
@@ -28,6 +25,10 @@ class Action(Component):
     Different Actions means different actual action in web scraping.
     """
     is_parser: bool = False
+    """bool: The flag of parser. True == parser."""
+
+    next = None
+    """Action: Next action on the chain."""
 
     @abstractmethod
     def action_step(self, task: Task, scraper: Scraper, content: ActionContent) -> Iterator[Model]:
@@ -39,58 +40,41 @@ class Action(Component):
             scraper (Scraper): The scraper to do actual HTTP action.
             content (ActionContent): The content in a single Task process.
 
-        Returns:
-            Iterator[Model]: The Infomation that need to be scraped will be wrapped as model and yield.
+        Yields:
+            Model: Scraped Model.
         """
         pass
 
-
-class ActionSuit(ComponentSuit):
-    """
-    The action suit for execute a task mission.
-
-    Each threads have one ActionSuit and it's Scraper.
-    
-    Scraper need to be set by method: set_scraper and Scraper will be activated automatically.
-    """
-    components: Sequence[Action]
-    _scraper: Scraper = None
-
-    def __init__(self, *components: Union[Type[Component], Component]):
-        super().__init__(*components)
-
-    @property
-    def scraper(self) -> Scraper:
-        if not self._scraper:
-            self._scraper = RequestScraper()
-        if not self._scraper.attached:
-            return self._scraper.scraper_attach()
-        return self._scraper
-
-    def set_scraper(self, scraper: Scraper) -> Scraper:
-        self._scraper = scraper
-        return self._scraper
-
-    def __do_scrape(self, task: Task) -> Sequence[Model]:
-        action_content = ActionContent()
-
-        parsed_model = deque()
-        for action in self.components:
-            # gathering
-            if model_generator := action.action_step(task=task, scraper=self.scraper, content=action_content):
-                for model in model_generator:
-                    parsed_model.append(model)
-
-        return parsed_model
-
-    def generate_callback(self, task: Task) -> Callable[[], Sequence[Model]]:
-        """
-        Return a callback for the method can run without the suit object.
+    def do_action_linked(self, task: Task, scraper: Scraper, content: ActionContent = None) -> Iterator[Model]:
+        """Execute all action_step() in chain. 
 
         Args:
-            task (Task): Task instance.
+            task (Task): Scrape Task.
+            scraper (Scraper): Scraper for HTTP.
+            content (ActionContent, optional): The content in task processing. Defaults to None.
+
+        Yields:
+            Model: Scraped Model.
+        """
+        # create new content.
+        content = content if content else ActionContent()
+
+        # current linked node.
+        if generator := self.action_step(task, scraper, content):
+            yield from generator
+
+        # next linked node.
+        if self.next:
+            yield from self.next.do_action_linked(task, scraper, content)
+
+    def generate_callback(self, task: Task, scraper: Scraper) -> Callable[[], List[Model]]:
+        """Generate a callback for pool.
+
+        Args:
+            task (Task): Scrape task.
+            scraper (Scraper): Scraper for HTTP.
 
         Returns:
-            Callable[[], Sequence[Model]]: The callback
+            Callable[[Task, Scraper], List[Model]]: The Scraped models from one single scrape task processing.
         """
-        return partial(self.__do_scrape, task=task)
+        return lambda: list(self.do_action_linked(task, scraper))

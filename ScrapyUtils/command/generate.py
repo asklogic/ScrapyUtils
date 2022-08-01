@@ -15,19 +15,19 @@ logger = getLogger('generate')
 
 
 @click.command()
-@click.argument('scheme')
+@click.argument('project')
 @click.option('overwrite', '--overwrite/--no-overwrite', default=False, is_flag=True)
 @click.option('path', '--path', default=getcwd(), type=click.Path())
-def generate(scheme: str, overwrite: bool, path):
-    """生成Scheme模板"""
-    logger.info(f'start command. Target: {scheme}')
+def generate(project: str, overwrite: bool, path):
+    """生成project模板"""
+    logger.info(f'start command. Target: {project}')
 
     if overwrite:
-        logger.warning(f'Remove the exist folder {path + sep + scheme}')
-        remove(scheme)
+        logger.warning(f'Remove the exist folder {path + sep + project}')
+        remove(project)
 
-    create_folder(scheme)
+    create_folder(project)
     logger.info('Folder is created.')
 
-    create_components(scheme)
+    create_components(project)
     logger.info('Files is created.')

@@ -4,9 +4,9 @@
 """
 
 from ScrapyUtils.components import Action, set_active, active
-from ScrapyUtils.components.processor import Processor
+from ScrapyUtils.components.process import Process
 
 
 @active
-class TestProcessor(Processor):
+class TestProcessor(Process):
     pass

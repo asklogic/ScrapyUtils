@@ -5,38 +5,31 @@ Todo:
     * For module TODOs
     
 """
-from os import getcwd
-from logging import getLogger
 
-import click
-
+from ScrapyUtils.command import UtilsCommand
 from ScrapyUtils import configure
-from ScrapyUtils.core import load, scrape
+from ScrapyUtils.core import start_engine
 from ScrapyUtils.core.end import end
+from ScrapyUtils.core.engine import exit_engine
 
-logger = getLogger('execute')
 
+class Execute(UtilsCommand):
+    """Execute some fixed tasks which generate by task_generate()."""
 
-@click.command()
-@click.argument('scheme')
-@click.option('path', '--path', default=getcwd(), type=click.Path())
-def execute(scheme: str, path):
-    """普通爬取"""
+    name: str = 'execute'
 
-    logger.info(f'start command. Target: {scheme}')
+    # some fixed option
+    activated_common_options = ['path', 'project']
 
-    # 设置Scheme
-    configure.target_name = scheme
+    @classmethod
+    def command_callback(cls, **kwargs):
+        """"""
+        start_engine()
 
-    # 引入Scheme包 - 预加载
-    __import__(scheme)
+        # Load Task
+        for task in configure.tasks_callable():
+            configure.tasks.put(task)
 
-    # 加载各类组件
-    load()
-    # 开启爬取
-    scrape()
+        configure.tasks.join()
 
-    # TODO: 阻塞
-    configure.tasks.join()
-
-    end()
+        exit_engine()

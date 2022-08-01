@@ -3,11 +3,11 @@
 
 !/ScrapyUtils/**/*.*
 !/tests/**/*.*
-.gitignore
-LICENSE
-README.md
-roadmap.md
-trigger.py
+!.gitignore
+!LICENSE
+!README.md
+!roadmap.md
+!trigger.py
 
 
 # Byte-compiled / optimized / DLL files

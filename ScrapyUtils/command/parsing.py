@@ -18,7 +18,7 @@ from os import getcwd, sep
 
 from ScrapyUtils import configure
 from ScrapyUtils.components.action import ActionContent
-from ScrapyUtils.core import load, scrape
+from ScrapyUtils.core import start_engine
 from ScrapyUtils.components import Action
 from ScrapyUtils.core.end import end
 from ScrapyUtils.libs import Task, Scraper, Model
@@ -27,18 +27,18 @@ logger = getLogger('generate')
 
 
 @click.command()
-@click.argument('scheme')
+@click.argument('project')
 @click.option('overwrite', '--overwrite/--no-overwrite', default=False, is_flag=True)
 @click.option('path', '--path', default=getcwd(), type=click.Path())
-def parsing(scheme: str, overwrite: bool, path):
+def parsing(project: str, overwrite: bool, path):
     """仅分析"""
-    logger.info(f'start command. Target: {scheme}')
+    logger.info(f'start command. Target: {project}')
 
-    # 设置Scheme
-    configure.target_name = scheme
+    # 设置project
+    configure.project_package_path = project
 
-    # 引入Scheme包 - 预加载
-    __import__(scheme)
+    # 引入project包 - 预加载
+    __import__(project)
 
     # 修改设置
     # 重试次数为1次 线程数为1个 任务间隔为0秒
@@ -54,7 +54,7 @@ def parsing(scheme: str, overwrite: bool, path):
     configure.tasks_callable = load_parsing_task
 
     # 加载各类组件
-    load()
+    start_engine()
     # 开启爬取
     scrape()
 

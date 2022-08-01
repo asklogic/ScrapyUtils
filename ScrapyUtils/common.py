@@ -10,14 +10,14 @@ import openpyxl
 
 from ScrapyUtils import configure
 from ScrapyUtils.libs import Model, Field, Task, Scraper
-from ScrapyUtils.components.processor import Processor
+from ScrapyUtils.components.process import Process
 from ScrapyUtils.components import Action
 from ScrapyUtils.tool import XpathParser
 
 logger = getLogger('common')
 
 
-class FileProcessorMixin(Processor):
+class FileProcessMixin(Process):
     file_folder: str = None
     """str: 文件存放地址 == DataFolder"""
     file_name: str = None
@@ -30,7 +30,7 @@ class FileProcessorMixin(Processor):
 
     def __init__(self):
         # File's folder.
-        # Default : /<scheme>/data
+        # Default : /<project>/data
         # Keep blank str will save into the work folder.
         if not (hasattr(self, 'file_folder') and self.file_folder != None):
             self.file_folder = configure.DATA_FOLDER_PATH
@@ -41,7 +41,7 @@ class FileProcessorMixin(Processor):
             self.file_name = str(int(time.time()))
 
         # Fixed file path.
-        # Default : /scheme/data
+        # Default : /project/data
         if not (hasattr(self, 'file_path') and self.file_path):
             self.file_path = os.path.join(self.file_folder, self.file_name)
 
@@ -64,7 +64,7 @@ class FileProcessorMixin(Processor):
         self.data.append(model.pure_data)
 
 
-class JsonFileProcessor(FileProcessorMixin, Processor):
+class JsonFileProcess(FileProcessMixin, Process):
     file_suffix = '.json'
 
     def on_exit(self):
@@ -73,7 +73,7 @@ class JsonFileProcessor(FileProcessorMixin, Processor):
         logger.info(f'JSON file saved as: {self.file_path}')
 
 
-class CSVFileProcessor(FileProcessorMixin, Processor):
+class CSVFileProcess(FileProcessMixin, Process):
     file_suffix = '.csv'
 
     def on_exit(self):
@@ -87,7 +87,7 @@ class CSVFileProcessor(FileProcessorMixin, Processor):
         logger.info(f'CSV file saved as: {self.file_path}')
 
 
-class ExeclFileProcessor(FileProcessorMixin, Processor):
+class ExeclFileProcess(FileProcessMixin, Process):
     file_suffix = '.xlsx'
 
     def on_start(self):

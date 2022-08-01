@@ -19,7 +19,7 @@ def _suit_exit():
     # suits:
     # actions
     [suit.suit_exit() for suit in configure.action_suits]
-    # processor
+    # process
     configure.processor_suit.suit_exit()
 
 

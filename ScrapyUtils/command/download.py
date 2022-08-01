@@ -16,8 +16,8 @@ import click
 
 from ScrapyUtils import configure
 from ScrapyUtils.components.action import ActionContent
-from ScrapyUtils.core import load, scrape
-from ScrapyUtils.components import Action, Processor
+from ScrapyUtils.core import start_engine
+from ScrapyUtils.components import Action, Process
 from ScrapyUtils.core.end import end
 from ScrapyUtils.libs import Task, Scraper, Model, Field
 
@@ -25,27 +25,27 @@ logger = getLogger('download')
 
 
 @click.command()
-@click.argument('scheme')
+@click.argument('project')
 @click.option('path', '--path', default=getcwd(), type=click.Path())
-def download(scheme: str, path):
+def download(project: str, path):
     """普通爬取"""
 
-    logger.info(f'start command. Target: {scheme}')
+    logger.info(f'start command. Target: {project}')
 
-    # 设置Scheme
-    configure.target_name = scheme
+    # 设置project
+    configure.project_package_path = project
 
-    # 引入Scheme包 - 预加载
-    __import__(scheme)
+    # 引入project包 - 预加载
+    __import__(project)
 
     # 去除Parser
     configure.action_classes = [_ for _ in configure.action_classes if not _.is_parser]
     configure.action_classes.append(DownloadSaveAction)
 
-    configure.processor_classes = [DownloadSaveProcessor]
+    configure.process_classes = [DownloadSaveProcess]
 
     # 加载各类组件
-    load()
+    start_engine()
     # 开启爬取
     scrape()
 
@@ -79,7 +79,7 @@ class PageContent(Model):
     str_content = Field()
 
 
-class DownloadSaveProcessor(Processor):
+class DownloadSaveProcess(Process):
     """保存PageContent对象"""
     file_index = 0
 

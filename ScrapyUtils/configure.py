@@ -5,48 +5,48 @@ from types import ModuleType
 from os import path
 from queue import Queue
 
-from ScrapyUtils.components import Component, ActionSuit, Action
-from ScrapyUtils.components.processor import Processor, ProcessorSuit
-from ScrapyUtils.core.pipeline import Pipeline
+from ScrapyUtils.components import Component, Action
+from ScrapyUtils.components.process import Process
+# from ScrapyUtils.core.pipeline import Pipeline
 from ScrapyUtils.libs import Scraper, Task, Consumer
 
 # preload
 # ----------------------------------------------------------------------
-target_name: str
+project_package_path: str
 
 # callable
 tasks_callable: Callable[[], Iterator[Task]]
 scraper_callable: Optional[Callable] = None
 
-# components
+# component classes
 action_classes: List[Type[Action]] = []
-processor_classes: List[Type[Processor]] = list()
+process_classes: List[Type[Process]] = list()
 
-# initial
+# initialed
 # ----------------------------------------------------------------------
+
+components: List[Component] = []
 
 scrapers: List[Scraper] = []
 
 # instances
 tasks: Queue = Queue()
 """等待爬取的任务"""
-failed: Queue = Queue()
+failed_tasks: Queue = Queue()
 """爬取失败的任务"""
 models: deque = deque()
 """等待处理的数据对象"""
-
-# suits
-action_suits: List[ActionSuit] = []
-processor_suit: Optional[ProcessorSuit] = None
+failed_models = deque()
+"""处理失败的数据对象"""
 
 scrape_consumers: List[Consumer] = []
 """爬取线程列表"""
-models_pipeline: Pipeline
+# models_pipeline: Pipeline
 """处理线程"""
 
 # settings variable
 # ----------------------------------------------------------------------
-SCHEME_PATH = path.sep
+PROJECT_PATH = path.sep
 
 registered_keys = [
     # 日志

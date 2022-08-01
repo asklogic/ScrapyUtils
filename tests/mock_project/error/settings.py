@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Setting for ${class_name} project.
+Setting for Error scheme.
 
 generate by Generate command.
 """

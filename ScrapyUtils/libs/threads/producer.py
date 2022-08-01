@@ -13,12 +13,12 @@ Todo:
 """
 from abc import abstractmethod, ABCMeta
 from collections import deque
+from collections.abc import Iterator
 from logging import getLogger
 from threading import Lock, Event
-from typing import Any, Dict, List, Tuple, Union, Callable, NoReturn
-from types import MethodType
+from typing import Any, Union, NoReturn
 
-from queue import Queue, Full
+from queue import Queue
 from time import sleep
 
 from ScrapyUtils.libs.threads.base_thread import BaseThread
@@ -77,7 +77,10 @@ class BaseProducer(BaseThread, metaclass=ABCMeta):
 
             try:
                 item = self.producing()
-                self.put_item(item)
+                if isinstance(item, Iterator):
+                    [self.put_item(_) for _ in item]
+                else:
+                    self.put_item(item)
 
                 self.current = self.current if self.current is not None else self.producing()
             except Exception as e:

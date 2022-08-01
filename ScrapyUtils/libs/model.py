@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, _process_class, asdict, astuple, Field, fields, _MISSING_TYPE
+from dataclasses import dataclass, field, _process_class, asdict, astuple, Field, _MISSING_TYPE
 from typing import Any, Dict, Union, List
 
 DEFAULT_VALUE = ''
@@ -28,13 +28,15 @@ class ModelMeta(type):
                     if not origin_type.__annotations__.get(attr):
                         origin_type.__annotations__[attr] = Any
 
-        # Hook here.
-        dataclass_type = _process_class(origin_type, True, True, True, False, False, False)
+        # Python3.9 -> Python3.10
+        default_kwargs = dataclass.__kwdefaults__
+        default_kwargs['cls'] = origin_type
+        dataclass_type = _process_class(**default_kwargs)
 
         # Add default_mapper in class property.
         # dataclass_type.default_mapper = default_mapper
 
-        # Extend will destory default __init__ with default
+        # Extend will destroy default __init__ with default
         # Add initial wrapper.
         current_init = dataclass_type.__init__
 
